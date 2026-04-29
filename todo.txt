@@ -1,1 +1,9 @@
 A nice little to do list to keep track of this NGSolve project for Spring Term 2026
+
+1. setup virtual environment on the PC 
+2. setup virtual environment on the Mac 
+3. Install NGSolve on the PC 
+4. Install NGSolve on the Mac 
+5. Download NGSolve tutorials into repository
+6. Work through the tutorials 
+7. Tasks from meeting with PV
