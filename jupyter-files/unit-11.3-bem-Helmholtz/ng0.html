@@ -1,0 +1,77 @@
+
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://unpkg.com/sunburst-chart"></script>
+
+  <style>
+    body { margin: 0 }
+    .tooltip {
+      white-space: pre-line !important;
+      max-width: 800px !important;
+      word-wrap: break-word !important;
+      padding: 10px !important;
+    }
+  </style>
+
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const data = 
+{ name: "all", calls: 1, size: 0, value: 1.169e+05, min: 1.169e+05, max: 1.169e+05, avg: 1.169e+05, children: [{ name: "ngcore::ParallelFor<int,ngcore::EnterTaskManager()::{lambda(int)#1}>(ngcore::T_Range<int>,ngcore::EnterTaskManager()::{lambda(int)#1},int,ngcore::TotalCosts)::{lambda(ngcore::TaskInfo&)#1}", calls: 1, size: 0.00184, value: 0.00184, min: 0.00184, max: 0.00184, avg: 0.00184} , { name: "timer setvalues", calls: 1, size: 0.1239, value: 1.169e+05, min: 1.169e+05, max: 1.169e+05, avg: 1.169e+05, children: [{ name: "ngcomp::IterateElements(ngcomp::FESpace const&,ngfem::VorB,ngcore::LocalHeap&,std::function<void(ngcomp::FESpace::Element,ngcore::LocalHeap&)>const&)::{lambda(ngcore::TaskInfo const&)#1}", calls: 1, size: 172.4, value: 1.169e+05, min: 1.169e+05, max: 1.169e+05, avg: 1.169e+05, children: [{ name: "ngbem evaluate potential (ip)", calls: 13050, size: 5.906e+04, value: 5.906e+04, min: 3.987, max: 11.42, avg: 4.526} , { name: "ngbem evaluate potential (ip)", calls: 13050, size: 5.771e+04, value: 5.771e+04, min: 3.902, max: 11.02, avg: 4.422} , { name: "ngbem evaluate potential (ir-simd)", calls: 1, size: 0.0829, value: 0.0829, min: 0.0829, max: 0.0829, avg: 0.0829}]} , { name: "ngcore::ParallelForRange<unsigned long,ngcomp::SetValues<std::complex<double>>(std::shared_ptr<ngfem::CoefficientFunction>,ngcomp::GridFunction&,ngfem::VorB,ngcomp::Region const*,ngfem::DifferentialOperator*,ngcore::LocalHeap&,bool,bool,int,std::optional<std::shared_ptr<ngcore::BitArray>>,int)::{lambda(ngcore::T_Range<unsigned long>)#3}>(ngcore::T_Range<unsigned long>,ngcomp::SetValues<std::complex<double>>(std::shared_ptr<ngfem::CoefficientFunction>,ngcomp::GridFunction&,ngfem::VorB,ngcomp::Region const*,ngfem::DifferentialOperator*,ngcore::LocalHeap&,bool,bool,int,std::optional<std::shared_ptr<ngcore::BitArray>>,int)::{lambda(ngcore::T_Range<unsigned long>)#3},int,ngcore::TotalCosts)::{lambda(ngcore::TaskInfo&)#1}", calls: 1, size: 0.5057, value: 0.5057, min: 0.5057, max: 0.5057, avg: 0.5057} , { name: "S_BaseVector::SetScalar", calls: 1, size: 0.002857, value: 0.01383, min: 0.01383, max: 0.01383, avg: 0.01383, children: [{ name: "ngcore::ParallelForRange<unsigned long,ngla::S_BaseVector<std::complex<double>>::SetScalar(double)::{lambda(ngcore::T_Range<unsigned long>)#1}>(ngcore::T_Range<unsigned long>,ngla::S_BaseVector<std::complex<double>>::SetScalar(double)::{lambda(ngcore::T_Range<unsigned long>)#1},int,ngcore::TotalCosts)::{lambda(ngcore::TaskInfo&)#1}", calls: 1, size: 0.01097, value: 0.01097, min: 0.01097, max: 0.01097, avg: 0.01097}]}]}]};
+
+const chart_type = 'time';
+
+    const color = d3.scaleOrdinal(d3.schemePaired);
+
+    let getTime = (t) =>
+    {
+       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
+       if(t>=0.1)   return t.toPrecision(4) + ' ms';
+       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
+
+       return (t/1e6).toPrecision(4) + ' ns';
+    };
+
+    const KB_ = 1024;
+    const MB_ = KB_*1024;
+    const GB_ = MB_*1024;
+    let getMemory = (m) =>
+    {
+       if(m>=GB_)  return (m/GB_).toPrecision(4) + ' GB';
+       if(m>=MB_)  return (m/MB_).toPrecision(4) + ' MB';
+       if(m>=KB_)  return (m/KB_).toPrecision(4) + ' KB';
+       return m.toPrecision(4) + ' B';
+    };
+
+    Sunburst()
+      .data(data)
+      .size('size')
+      .color(d => color(d.name))
+      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
+      .tooltipContent((d, node) => {
+        if(chart_type=="memory")
+        {
+          return `Total Memory: <i>${getMemory(d.value)}</i> <br>`
+               + `Memory: <i>${getMemory(d.size)}</i>`
+        }
+        else
+        {
+          return `Time: <i>${getTime(d.value)}</i> <br>`
+               + `calls: <i>${d.calls}</i> <br>`
+               + `min: <i>${getTime(d.min)}</i> <br>`
+               + `max: <i>${getTime(d.max)}</i> <br>`
+               + `avg: <i>${getTime(d.avg)}</i>`
+        }
+      })
+      (document.getElementById('chart'));
+
+      // Line breaks in tooltip
+      var all = document.getElementsByClassName('sunbirst-tooltip');
+      for (var i = 0; i < all.length; i++) {
+          all[i].white_space = "";
+      }
+  </script>
+</body>
+

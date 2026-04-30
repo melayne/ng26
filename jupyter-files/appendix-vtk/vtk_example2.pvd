@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<VTKFile type ="Collection" version="1.0" byte_order="LittleEndian">
+<Collection>
+<DataSet timestep="0" file="vtk_example2.vtu"/>
+<DataSet timestep="0.05" file="vtk_example2_step00001.vtu"/>
+<DataSet timestep="0.1" file="vtk_example2_step00002.vtu"/>
+<DataSet timestep="0.15" file="vtk_example2_step00003.vtu"/>
+<DataSet timestep="0.2" file="vtk_example2_step00004.vtu"/>
+<DataSet timestep="0.25" file="vtk_example2_step00005.vtu"/>
+<DataSet timestep="0.3" file="vtk_example2_step00006.vtu"/>
+<DataSet timestep="0.35" file="vtk_example2_step00007.vtu"/>
+<DataSet timestep="0.4" file="vtk_example2_step00008.vtu"/>
+<DataSet timestep="0.45" file="vtk_example2_step00009.vtu"/>
+<DataSet timestep="0.5" file="vtk_example2_step00010.vtu"/>
+<DataSet timestep="0.55" file="vtk_example2_step00011.vtu"/>
+<DataSet timestep="0.6" file="vtk_example2_step00012.vtu"/>
+<DataSet timestep="0.65" file="vtk_example2_step00013.vtu"/>
+<DataSet timestep="0.7" file="vtk_example2_step00014.vtu"/>
+<DataSet timestep="0.75" file="vtk_example2_step00015.vtu"/>
+<DataSet timestep="0.8" file="vtk_example2_step00016.vtu"/>
+<DataSet timestep="0.85" file="vtk_example2_step00017.vtu"/>
+<DataSet timestep="0.9" file="vtk_example2_step00018.vtu"/>
+<DataSet timestep="0.95" file="vtk_example2_step00019.vtu"/>
+<DataSet timestep="1" file="vtk_example2_step00020.vtu"/>
+</Collection>
+</VTKFile>
