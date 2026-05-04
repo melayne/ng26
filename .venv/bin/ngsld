@@ -1,0 +1,13 @@
+#!/bin/bash
+NGSCXX_DIR=$( cd $(dirname $0); pwd )
+PY_INCLUDE_FLAGS=-I$(python3 -c"import sysconfig;print(sysconfig.get_path('include'))")
+if [ -f /Library/Developer/CommandLineTools/usr/bin/c++ ]
+  then NGSCXX=/Library/Developer/CommandLineTools/usr/bin/c++
+  else NGSCXX=c++
+fi
+export CCACHE_NOHASHDIR=1
+
+Netgen_BUNDLE="`echo "$0" | sed -e 's/\/Contents\/MacOS\/ngsld//'`"
+Netgen_MACOS="$Netgen_BUNDLE/Contents/MacOS"
+
+$NGSCXX -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk  -L$Netgen_BUNDLE/Contents/MacOS  -undefined dynamic_lookup $*

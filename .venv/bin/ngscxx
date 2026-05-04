@@ -1,0 +1,17 @@
+#!/bin/bash
+NGSCXX_DIR=$( cd $(dirname $0); pwd )
+PY_INCLUDE_FLAGS=-I$(python3 -c"import sysconfig;print(sysconfig.get_path('include'))")
+if [ -f /Library/Developer/CommandLineTools/usr/bin/c++ ]
+  then NGSCXX=/Library/Developer/CommandLineTools/usr/bin/c++
+  else NGSCXX=c++
+fi
+export CCACHE_NOHASHDIR=1
+
+Netgen_BUNDLE="`echo "$0" | sed -e 's/\/Contents\/MacOS\/ngscxx//'`"
+Netgen_MACOS="$Netgen_BUNDLE/Contents/MacOS"
+
+
+if [ -f /usr/local/bin/ccache ]
+  then /usr/local/bin/ccache $NGSCXX -O3 -DNDEBUG   -DHAVE_NETGEN_SOURCES -DHAVE_DLFCN_H -DHAVE_CXA_DEMANGLE -DUSE_TIMEOFDAY -DMSG_NOSIGNAL=0 -DTCL -DLAPACK -DNGS_PYTHON -DUSE_UMFPACK -DNETGEN_PYTHON -DNG_PYTHON -DPYBIND11_SIMPLE_GIL_MANAGEMENT -DPARALLEL -DNG_MPI_WRAPPER -std=c++20 -Wno-undefined-var-template -Wno-vla-extension -DMAX_SYS_DIM=3 -Xarch_x86_64 -march=core-avx2 -fPIC -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk  -I/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11 -I$NGSCXX_DIR/../netgen/include -I$NGSCXX_DIR/../netgen/include/include $PY_INCLUDE_FLAGS -I$Netgen_BUNDLE/Contents/Resources/include $*
+  else $NGSCXX -O3 -DNDEBUG   -DHAVE_NETGEN_SOURCES -DHAVE_DLFCN_H -DHAVE_CXA_DEMANGLE -DUSE_TIMEOFDAY -DMSG_NOSIGNAL=0 -DTCL -DLAPACK -DNGS_PYTHON -DUSE_UMFPACK -DNETGEN_PYTHON -DNG_PYTHON -DPYBIND11_SIMPLE_GIL_MANAGEMENT -DPARALLEL -DNG_MPI_WRAPPER -std=c++20 -Wno-undefined-var-template -Wno-vla-extension -DMAX_SYS_DIM=3 -Xarch_x86_64 -march=core-avx2 -fPIC -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk  -I/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11 -I$NGSCXX_DIR/../netgen/include -I$NGSCXX_DIR/../netgen/include/include $PY_INCLUDE_FLAGS -I$Netgen_BUNDLE/Contents/Resources/include $*
+fi

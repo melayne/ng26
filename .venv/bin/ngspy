@@ -1,0 +1,2 @@
+#! /bin/bash
+LD_PRELOAD=$LD_PRELOAD: /Library/Frameworks/Python.framework/Versions/3.11/bin/python3 $*
