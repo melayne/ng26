@@ -1,6 +1,6 @@
 A nice little to do list to keep track of this NGSolve project for Spring Term 2026
 
-1. Make sure we are working on our own branches and can push and pull and merge as desired.
+1. DONE: Make sure we are working on our own branches and can push and pull and merge as desired.
 2. Run a test on last week's code with a linear input function and the left AND right boundaries being Dirichlet.
 3. Figure out how to make solution visualization.
 4. Make functions to implement GS steps (look for existing, and under their hoods)
