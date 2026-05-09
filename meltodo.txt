@@ -7,3 +7,4 @@ A nice little to do list to keep track of this NGSolve project for Spring Term 2
 5. GS smooth a function like PV asked for.
 6. Code a two level resizing and solving function (check for existing)
 7. Put this week's pieces together.
+8. Figure out markdown tags for VSCode
