@@ -2,9 +2,13 @@ A nice little to do list to keep track of this NGSolve project for Spring Term 2
 
 1. DONE: Make sure we are working on our own branches and can push and pull and merge as desired.
 2. DONE: (but don't like the results) Run a test on last week's code with a linear input function and the left AND right boundaries being Dirichlet.
-3. Figure out how to make solution visualization.
+3. DONE: Figure out how to make solution visualization.
 4. Make functions to implement GS steps (look for existing, and under their hoods)
 5. GS smooth a function like PV asked for.
 6. Code a two level resizing and solving function (check for existing)
 7. Put this week's pieces together.
 8. DONE ENOUGH: Figure out markdown tags for VSCode
+9. Make sure end of smoothing is passed to two-level solve
+10. Remove comment from smoothing "not yet"
+11. Measure errors and show it converges
+12. Make story version of method+results
