@@ -14,3 +14,6 @@ A nice little to do list to keep track of this NGSolve project for Spring Term 2
 11. Implement the intended KL method from paper
 12. Figure out how to store such a "run"
 13. Run many samples and figure out what to do with them
+
+
+1. check with multiplying by vectors BC and spd
