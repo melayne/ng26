@@ -1,7 +1,7 @@
 A nice little to do list to keep track of this NGSolve project for Spring Term 2026
 
 1. Figure out boundary conditions on prolongation and all versions of A coarse
-2. Check that the two A coarse matrices match (P^TAP and the bilinear form from fesc)
+2. DONE: Check that the two A coarse matrices match (P^TAP and the bilinear form from fesc)
 3. Figure out how to measure convergence in the different norms, make convergence plots
 4. Make the method usable for a parameter input number of levels
 5. Check functions for GS steps - making sure they do what we intend
@@ -17,3 +17,32 @@ A nice little to do list to keep track of this NGSolve project for Spring Term 2
 
 
 1. check with multiplying by vectors BC and spd
+
+
+Notes from meeting:
+A. solve the same problem in the coarse resolution and the fine resolution and compare accuracy of the two solutions
+B. if we do this on a sequence of progressively finer meshes, measure the error (u/mesh - uh/mesh) and observe the scaling of the error (1/h or 1/h^2) depending on the norm
+C. Use stiffness matrix for energy norm and mass matrix for L2 norm
+you can use the bilinear form a(u-uh,u-uh) then sqrt = sqrt sum int |nabla(u-uh)|^2 dx
+u_I = sum_i u(x_i)phi_i
+u_I = (u(x_i)), u_h=(u_{h,i})
+
+instead you can do sqrt (u_I-u_h)^T A (u_I-u_h) (energy norm) should behave like order h
+or the weaker norm (L2) sqrt (u_I - u_h)^T M (u_i-u_h)=sqrt(int_omega (u_I - u_h)^2) should behave like order h^2
+max norm is max|u-u_h| functions may be unbounded
+mass matrix int_omega phi_i phi_j = m_ij, M=(m_ij)
+
+D. we have two level method very close to working
+we could two or multilevel as a preconditioner for conjugate gradient
+some hybrid of custom vs built-in based on timing
+
+E. future tasks can include:
+    - possibly getting paid for doing more of this work and research in the summer 
+    - implementing the MLMC method from the paper with the random constant coefficients
+    - implementing methods on other PDEs
+    - teaching and providing tasks for RTG summer UG fellow
+    - collecting and formatting lecture materials on these topics
+    - implementing parallel versions if appropriate for the problem using MFEM
+
+
+
