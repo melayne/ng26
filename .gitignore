@@ -24,3 +24,6 @@ uv-cache/
 # Environment files
 .env
 .env.*
+
+# Folders to ignore
+in_progress/

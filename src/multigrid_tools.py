@@ -252,8 +252,6 @@ def build_form_setup(
 # ---------------------------------------------------------------------------
 # Gauss–Seidel (scipy CSR, free-DOF updates only)
 # ---------------------------------------------------------------------------
-
-
 def gauss_seidel_sweeps(
     A: sp.spmatrix,
     b: np.ndarray,
@@ -346,6 +344,52 @@ def gauss_seidel_sweeps(
     return x, history
 
 
+def smooth_custom_gs_residual(
+    A, b, x, free_ids, *,
+    nsweeps=5, omega=1.0, verbose=False
+) -> tuple[np.ndarray, list[float]]:
+    """
+    Residual-correction smoother using a custom forward GS solve for Ae = r.
+    Updates x in place and returns residual history on free DOFs.
+    """
+    A = A.tocsr()
+    x = x.copy()
+    diag = A.diagonal()
+
+    if np.any(np.abs(diag[free_ids]) < 1e-14):
+        raise ValueError("Zero or near-zero diagonal on a free DOF.")
+
+    history = []
+
+    for sweep in range(1, nsweeps + 1):
+        # 1) residual r = b - A x
+        r = b - A @ x
+
+        # 2) approximately solve A e = r by ONE forward GS sweep on e
+        e = np.zeros_like(x)
+        for i in free_ids:
+            row_start = A.indptr[i]
+            row_end = A.indptr[i + 1]
+            cols = A.indices[row_start:row_end]
+            vals = A.data[row_start:row_end]
+
+            sigma = vals @ e[cols] - diag[i] * e[i]   # sum_{j != i} Aij*e_j
+            e[i] = (r[i] - sigma) / diag[i]
+
+        # 3) correction update x <- x + omega * e
+        x[free_ids] += omega * e[free_ids]
+
+        # 4) monitor free residual norm
+        r_new = b - A @ x
+        rnorm = float(np.linalg.norm(r_new[free_ids]))
+        history.append(rnorm)
+
+        if verbose:
+            print(f"sweep {sweep:3d}  ||r_free||_2 = {rnorm:.6e}")
+
+    return x, history
+
+
 # ---------------------------------------------------------------------------
 # Single FE level
 # ---------------------------------------------------------------------------
@@ -357,7 +401,7 @@ class FELevel:
     fes: object
     a: BilinearForm
     f: LinearForm
-    gfu: GridFunction
+    gfu: GridFunction # Current iterate (current estimate) of the solution u
     free_ids: np.ndarray
     fixed_ids: np.ndarray
     A_csr: sp.csr_matrix = field(repr=False)
@@ -376,7 +420,8 @@ class FELevel:
         *,
         gfu=None,
         dirichlet_value: float | np.ndarray = 0.0,
-    ) -> "FELevel":
+) -> "FELevel":
+
         if gfu is None:
             gfu = GridFunction(fes)
         free_ids, fixed_ids = get_free_fixed_ids(fes)
@@ -403,6 +448,7 @@ class FELevel:
         dirichlet: str = "left|right|top|bottom",
         dirichlet_value: float | np.ndarray = 0.0,
     ) -> "FELevel":
+
         fes = H1(mesh, order=order, dirichlet=dirichlet)
         a, f = form_setup(fes)
         a.Assemble()
@@ -480,7 +526,7 @@ class FELevel:
         u.vec.data = self.a.mat.Inverse(self.fes.FreeDofs()) * self.f.vec
         return u
 
-    def smooth(
+    def smooth_GS(
         self,
         *,
         nsweeps: int = 5,
@@ -533,6 +579,61 @@ class FELevel:
             callback=_on_sweep if plotting_enabled else None,
         )
         self.set_vec_np(x)
+        self.enforce_dirichlet()
+        return hist
+
+    def smooth_ngsolve(
+        self,
+        *,
+        nsweeps: int = 5,
+        omega: float = 1.0,
+        verbose: bool = False,
+        scene=None,
+        plot_every: int = None,
+        plot_callback: Optional[Callable[[object], None]] = None,
+    ) -> list[float]:
+        """
+        Apply NGSolve's native smoother in-place on ``gfu``.
+
+        Parameters
+        ----------
+        scene : optional
+            NGSolve Draw scene object to refresh during smoothing.
+        plot_every : int, optional
+            Redraw cadence in sweeps when ``scene`` is provided. If ``None``,
+            plotting is disabled even when ``scene`` is passed.
+        plot_callback : callable(scene), optional
+            Custom redraw callback. If omitted and ``scene`` has ``Redraw()``,
+            ``scene.Redraw()`` is called.
+        """
+        if plot_every is not None and plot_every <= 0:
+            raise ValueError("plot_every must be >= 1")
+
+        plotting_enabled = scene is not None and plot_every is not None
+        smoother = self.a.mat.CreateSmoother(self.fes.FreeDofs(), GS=True)
+        rhs = self.f.vec.CreateVector()
+        correction = self.f.vec.CreateVector()
+        hist: list[float] = []
+
+        for sweep in range(1, nsweeps + 1):
+            rhs.data = self.f.vec - self.a.mat * self.gfu.vec
+            correction.data = omega * (smoother * rhs)
+            self.gfu.vec.data += correction
+            self.enforce_dirichlet()
+
+            rnorm = self.free_residual_norm()
+            hist.append(rnorm)
+            if verbose:
+                print(f"sweep {sweep:3d}  ||r_free||_2 = {rnorm:.6e}")
+
+            if not plotting_enabled or sweep % plot_every != 0:
+                continue
+            if plot_callback is not None:
+                plot_callback(scene)
+            elif hasattr(scene, "Redraw"):
+                scene.Redraw()
+                time.sleep(0.5)
+
         self.enforce_dirichlet()
         return hist
 
@@ -592,7 +693,7 @@ if __name__ == "__main__":
     )
 
     poisson_f.set_initial_guess(x0_initial)
-    poisson_f.smooth(scene=_scene, plot_every=1)
+    poisson_f.smooth_GS(scene=_scene, plot_every=1)
 
 
 # %%
