@@ -1,1 +1,29 @@
+# Python / uv virtual environments
 .venv/
+.venv*/
+__pypackages__/
+
+# uv local/project artifacts
+.python-version
+.uv/
+uv-cache/
+# Keep `uv.lock` tracked for reproducible installs
+
+.DS_Store
+**/.DS_Store
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# Folders to ignore
+in_progress/
