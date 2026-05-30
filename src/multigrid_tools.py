@@ -5,7 +5,7 @@
 Notes
 -----
 Building bilinear and linear forms
-    NGSolve forms are usually written directly in a notebook::
+    NGSolve forms are usually written directly::
 
         u, v = fes.TnT()
         a = BilinearForm(fes)
@@ -14,198 +14,139 @@ Building bilinear and linear forms
         f = LinearForm(fes)
         f.Assemble()
 
-    For multigrid you need the same PDE on a coarse mesh and a fine mesh.
-    This module offers two styles:
+    For multigrid we want the same PDE on multiple meshes, with varying mesh sizes.
+    The factory pattern lets you define the PDE once and reuse it per level.
 
-    1. **Plain function (recommended for coursework)** — define something
-       like ``assemble_poisson(fes)`` that returns ``(a, f)`` after
-       ``Assemble()``, or use :func:`poisson_setup` which is the same idea.
+    callback-based factory example::
 
-    2. **Factory** — :func:`add_integrators` and :func:`poisson_setup` return
-       a ``setup`` function (see below). Optional; useful if you want one
-       recipe object passed into a driver.
+        def bilinear_poisson(a, u, v):
+            a += InnerProduct(grad(u), grad(v)) * dx
+
+        def linear_rhs(f, u, v):
+            f += 1.0 * v * dx
+
+        setup = build_form_setup(bilinear=bilinear_poisson, linear=linear_rhs)
+        fes = H1(mesh, order=1, dirichlet="left|right|top|bottom")
+        a, f = setup(fes)
+        a.Assemble(); f.Assemble()
 
 Callback
-    A **callback** is a function you pass in so **another function calls it
-    later** when the right arguments exist.
+    A callback is a function passed into another function.
+    The receiving function calls the callback later when the right
+    arguments exist.
 
-    In :func:`add_integrators`, ``bilinear`` and ``linear`` are callbacks.
-    You write the ``a += ...`` and ``f += ...`` logic; ``add_integrators``
-    calls your functions inside ``setup(fes)`` after creating empty forms::
+    In ``build_form_setup``, ``bilinear`` and ``linear`` are callbacks.
+    You write the ``a += ...`` and ``f += ...`` logic; ``build_form_setup``
+    calls those callbacks inside ``setup(fes)`` after creating empty forms.
 
         def bilinear_fn(a, u, v):
             a += InnerProduct(grad(u), grad(v)) * dx
 
-        setup = add_integrators(bilinear=bilinear_fn)
+        def linear_fn(f, u, v):
+            f += 1.0 * v * dx
 
-    There are **no input forms**: ``a`` and ``f`` start empty inside
-    ``setup(fes)``. Your callback only adds integrators.
-
-    The same idea appears in :func:`gauss_seidel_sweeps` with ``callback=``
-    for plotting — GS calls your function each sweep.
-
-Closure
-    A **closure** is an inner function that **remembers variables from the
-    outer function** after the outer function has returned.
-
-    :func:`add_integrators` defines an inner ``setup(fes)`` that uses
-    ``bilinear`` and ``linear`` from the outer call, then returns ``setup``::
-
-        setup = add_integrators(bilinear=bilinear_fn)
-        # add_integrators is finished, but setup still remembers bilinear_fn
-
-        a, f = setup(fes_fine)
-        a.Assemble(); f.Assemble()
-
-    :func:`poisson_setup` is the same pattern with Poisson integrators
-    hard-coded inside ``setup``.
+        setup = build_form_setup(bilinear=bilinear_fn, linear=linear_fn)
 
 End-to-end flow with ``setup``
     1. Define recipe once::
 
-           setup = poisson_setup(rhs_cf=None)
-           # or setup = add_integrators(bilinear=..., linear=...)
+           setup = build_form_setup(bilinear=..., linear=...)
 
     2. Per mesh level::
 
-           fes = H1(mesh, order=1, dirichlet="...")
-           a, f = setup(fes)
-           a.Assemble(); f.Assemble()
+           fes_c = H1(mesh_c, order=1, dirichlet="...")
+           a_c, f_c = setup(fes_c)
+           a_c.Assemble(); f_c.Assemble()
 
-    3. Wrap in :class:`PoissonLevel` (pass ``mesh``, ``fes``, ``a``, ``f``)
-       or use :meth:`PoissonLevel.assemble` for Poisson-only convenience.
+           fes_f = H1(mesh_f, order=1, dirichlet="...")
+           a_f, f_f = setup(fes_f)
+           a_f.Assemble(); f_f.Assemble()
 
-    4. :class:`TwoLevelSetup` + :class:`TwoLevelSolver` for V-cycles.
+    3. Build level objects with ``FELevel``::
+
+           level_f = FELevel.from_forms(mesh_f, fes_f, a_f, f_f)
+           level_c = FELevel.from_forms(mesh_c, fes_c, a_c, f_c)
 
     Multigrid logic (GS, ``P``, ``PT``, residuals) does not depend on how
-    ``a`` and ``f`` were built — only that they are assembled.
+    ``a`` and ``f`` were built, only that they are assembled.
 
 When *not* to use the factory
-    For a single two-level Poisson problem, writing forms inline or using
-    a plain ``assemble_poisson(fes)`` helper is simpler and easier to debug
-    than callbacks and closures. Prefer :func:`poisson_setup` over
-    :func:`add_integrators` unless you need a custom PDE via callbacks.
+    For a single two-level Poisson problem, writing forms inline can be
+    simpler and easier to debug than callbacks and closures.
+    Prefer writing forms inline unless you need the same PDE across multiple
+    mesh levels.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Callable, Optional, Literal, TypedDict
 import numpy as np
 import scipy.sparse as sp
 import time
+import warnings
+
 import ngsolve as ng
 from ngsolve import BilinearForm, GridFunction, H1, InnerProduct, LinearForm, grad, dx
 
-# Builds (BilinearForm, LinearForm) for a given FESpace — plug in Poisson, elasticity, etc.
+from NGSolve_utils import *
+from preconditioners import gauss_seidel_sweeps
+
 FormSetupFn = Callable[[object], tuple[BilinearForm, LinearForm]]
 
 
-# ---------------------------------------------------------------------------
-# Matrix / DOF utilities
-# ---------------------------------------------------------------------------
+class LevelDataDict(TypedDict):
+    """Plain-dict form of :class:`LevelData`, for interop with dict-based code."""
+    level:     int
+    mesh:      ng.Mesh
+    fes:       object
+    ndof:      int
+    a:         BilinearForm
+    f:         LinearForm
+    A:         object
+    gfu:       GridFunction
+    free_ids:  np.ndarray
+    fixed_ids: np.ndarray
+    P:         Optional[object]
+    PT:        Optional[object]
 
 
-def get_free_fixed_ids(fes) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Get free and fixed DOF IDs for an NGSolve FESpace.
+@dataclass
+class LevelData:
+    """Per-level data returned by ``build_level_data``."""
+    level:     int
+    mesh:      ng.Mesh
+    fes:       object          # H1 FE space
+    ndof:      int
+    a:         BilinearForm
+    f:         LinearForm
+    A:         object          # a.mat — NGSolve sparse matrix
+    gfu:       GridFunction
+    free_ids:  np.ndarray
+    fixed_ids: np.ndarray
+    P:         Optional[object] = None  # prolongation: coarse -> fine
+    PT:        Optional[object] = None  # restriction:  fine -> coarse
 
-    Parameters
-    ----------
-    fes : ngsolve.FESpace
-        The finite element space to get free and fixed DOF IDs for.
-
-    Returns
-    -------
-    free_ids : np.ndarray
-        Array of indices of free DOFs.
-    fixed_ids : np.ndarray
-        Array of indices of fixed DOFs.
-    """
-    free_dofs = fes.FreeDofs()
-    free = np.array([bool(free_dofs[i]) for i in range(fes.ndof)], dtype=bool)
-    free_ids = np.flatnonzero(free)
-    fixed_ids = np.flatnonzero(~free)
-    return free_ids, fixed_ids
-
-
-def ng_matrix_to_csr(ng_mat) -> sp.csr_matrix:
-    """Convert an NGSolve BaseMatrix COO representation to scipy CSR."""
-    rows, cols, vals = ng_mat.COO()
-    height, width = ng_mat.shape
-    return sp.csr_matrix(
-        (vals, (rows, cols)),
-        shape=(height, width),
-    ).tocsr()
-
-
-def bilinear_form_to_csr(bf: BilinearForm) -> sp.csr_matrix:
-    """Export assembled BilinearForm.mat to scipy CSR."""
-    return ng_matrix_to_csr(bf.mat)
-
-
-def get_prolongation_operators(fes, level: Optional[int] = None):
-    """
-    Get prolongation operators, P and PT,for a given finite element 
-    space. The space must have multiple levels.
-
-    Parameters
-    ----------
-    fes : ngsolve.FESpace
-        The finite element space to get prolongation operators for.
-    level : int, optional
-        The level of the mesh to get prolongation operators for. If 
-        None, the highest level is used.
-
-    Returns
-    -------
-    Return (P, PT) NGSolve operators for coarse -> fine and fine -> coarse.
-
-    Notes
-    -----
-    P  : ndof_fine x ndof_coarse
-    PT : ndof_coarse x ndof_fine
-    """
-    if level is None:
-        level = fes.mesh.levels - 1
-    P = fes.Prolongation().CreateMatrix(level)
-    PT = P.CreateTranspose()
-    return P, PT
-
+    def to_typeddict(self) -> LevelDataDict:
+        """Return a plain ``dict`` view of this level (typed as :class:`LevelDataDict`)."""
+        return LevelDataDict(
+            level=self.level,
+            mesh=self.mesh,
+            fes=self.fes,
+            ndof=self.ndof,
+            a=self.a,
+            f=self.f,
+            A=self.A,
+            gfu=self.gfu,
+            free_ids=self.free_ids,
+            fixed_ids=self.fixed_ids,
+            P=self.P,
+            PT=self.PT,
+        )
 
 # ---------------------------------------------------------------------------
-# Problem-specific form builders (plug into FELevel.from_space)
+# Linear + Bilinaer form builder
 # ---------------------------------------------------------------------------
-def build_poisson_setup(rhs_cf=None) -> FormSetupFn:
-    """
-    Return a Poisson form-builder ``setup(fes)`` for ``-Δu = rhs``.
-
-    The returned function creates an unassembled pair ``(a, f)`` with
-    ``a += InnerProduct(grad(u), grad(v)) * dx`` and, when ``rhs_cf`` is
-    provided, ``f += rhs_cf * v * dx``. If ``rhs_cf`` is ``None``, no RHS
-    integrator is added (homogeneous right-hand side).
-
-    Parameters
-    ----------
-    rhs_cf : CoefficientFunction, optional
-        Source term coefficient used in ``f += rhs_cf * v * dx``.
-
-    Examples
-    --------
-    >>> setup = poisson_setup()
-    >>> a, f = setup(fes)
-    >>> a.Assemble(); f.Assemble()
-    """
-    def bilinear_poisson(a, u, v):
-        a += InnerProduct(grad(u), grad(v)) * dx
-
-    def linear_poisson(f, u, v):
-        if rhs_cf is not None:
-            f += rhs_cf * v * dx
-
-    return build_form_setup(bilinear=bilinear_poisson, linear=linear_poisson)
-
-
 def build_form_setup(
     *,
     bilinear: Optional[Callable[[BilinearForm, object, object], None]] = None,
@@ -231,7 +172,7 @@ def build_form_setup(
     ...     a += InnerProduct(grad(u), grad(v)) * dx
     >>> def linear_fn(f, u, v):
     ...     f += 1 * v * dx
-    >>> setup = add_integrators(bilinear=bilinear_fn, linear=linear_fn)
+    >>> setup = build_form_setup(bilinear=bilinear_fn, linear=linear_fn)
     >>> a, f = setup(fes)
     >>> a.Assemble(); f.Assemble()
     """
@@ -249,146 +190,6 @@ def build_form_setup(
     return setup
 
 
-# ---------------------------------------------------------------------------
-# Gauss–Seidel (scipy CSR, free-DOF updates only)
-# ---------------------------------------------------------------------------
-def gauss_seidel_sweeps(
-    A: sp.spmatrix,
-    b: np.ndarray,
-    x0: np.ndarray,
-    free_ids: np.ndarray,
-    *,
-    nsweeps: int = 5,
-    omega: float = 1.0,
-    verbose: bool = False,
-    callback: Optional[Callable[[np.ndarray, int, float], None]] = None,
-) -> tuple[np.ndarray, list[float]]:
-    """
-    Apply forward Gauss-Seidel sweeps on the linear system Ax = b.
-    Only the free degrees of freedom (DOFs) are updated; fixed DOFs
-    (such as Dirichlet nodes) remain unchanged.
-
-    Parameters
-    ----------
-    A : scipy.spmatrix
-        Sparse (square) system matrix in any scipy sparse format. Will be
-        converted to CSR internally.
-    b : np.ndarray
-        Right-hand side vector (ndarray of shape (ndof,)).
-    x0 : np.ndarray
-        Initial guess for the coefficient vector (ndarray of shape (ndof,)).
-    free_ids : np.ndarray
-        Indices of DOFs that should be updated (all others are fixed).
-        Can be a 1D numpy array of integer indices.
-    nsweeps : int, optional
-        Number of Gauss-Seidel passes to apply (default: 5).
-    omega : float, optional
-        Relaxation parameter (1.0 = classical Gauss-Seidel, <1.0 under-relaxation).
-    verbose : bool, optional
-        If True, print free-DOF residual norm at every sweep.
-    callback : callable(x, sweep_number, residual_norm), optional
-        Called after each sweep with the current iterate ``x``, 1-based sweep
-        number, and free-DOF residual norm. Useful for live plotting.
-
-    Returns
-    -------
-    x : np.ndarray
-        Updated coefficient vector after Gauss-Seidel iterations (ndarray, shape (ndof,)).
-    history : list of float
-        List of the free-DOF 2-norm of the residual (b - Ax) after each sweep.
-
-    Notes
-    -----
-    The Gauss-Seidel iterative method for solving a linear system Ax = b proceeds 
-    by iteratively updating each component of the solution vector x according to:
-
-        x[i] := (1/ A[i, i]) * (b[i] - sum_{j != i} A[i, j] * x[j])
-
-    for each degree of freedom (DOF) i, in sequence. In this implementation, only a subset 
-    of "free" DOFs, as indicated by `free_ids`, are updated, while all other DOFs (such as 
-    those associated with Dirichlet boundary conditions) remain fixed. The method supports
-    a relaxation parameter `omega` (with `omega=1.0` recovering the classical Gauss-Seidel
-    scheme, and `omega<1.0` giving under-relaxation).
-
-    After each sweep, the 2-norm of the free-DOF residual (restricted to the variable indices) 
-    is recorded and returned for monitoring convergence.
-    """
-    A = A.tocsr()
-    x = np.asarray(x0, dtype=float).copy()
-    b = np.asarray(b, dtype=float)
-    diag = A.diagonal()
-
-    if np.any(np.abs(diag[free_ids]) < 1e-14):
-        raise ValueError("Zero or near-zero diagonal on a free DOF.")
-
-    history: list[float] = []
-    for sweep in range(nsweeps):
-        for i in free_ids:
-            row_start = A.indptr[i]
-            row_end = A.indptr[i + 1]
-            cols = A.indices[row_start:row_end]
-            vals = A.data[row_start:row_end]
-            row_dot = vals @ x[cols]
-            sigma_i = row_dot - diag[i] * x[i]
-            x_gs = (b[i] - sigma_i) / diag[i]
-            x[i] = (1.0 - omega) * x[i] + omega * x_gs
-
-        residual = b - A @ x
-        rnorm = float(np.linalg.norm(residual[free_ids]))
-        history.append(rnorm)
-        if verbose:
-            print(f"sweep {sweep + 1:3d}, free residual norm = {rnorm:.3e}")
-        if callback is not None:
-            callback(x, sweep + 1, rnorm)
-
-    return x, history
-
-
-def smooth_custom_gs_residual(
-    A, b, x, free_ids, *,
-    nsweeps=5, omega=1.0, verbose=False
-) -> tuple[np.ndarray, list[float]]:
-    """
-    Residual-correction smoother using a custom forward GS solve for Ae = r.
-    Updates x in place and returns residual history on free DOFs.
-    """
-    A = A.tocsr()
-    x = x.copy()
-    diag = A.diagonal()
-
-    if np.any(np.abs(diag[free_ids]) < 1e-14):
-        raise ValueError("Zero or near-zero diagonal on a free DOF.")
-
-    history = []
-
-    for sweep in range(1, nsweeps + 1):
-        # 1) residual r = b - A x
-        r = b - A @ x
-
-        # 2) approximately solve A e = r by ONE forward GS sweep on e
-        e = np.zeros_like(x)
-        for i in free_ids:
-            row_start = A.indptr[i]
-            row_end = A.indptr[i + 1]
-            cols = A.indices[row_start:row_end]
-            vals = A.data[row_start:row_end]
-
-            sigma = vals @ e[cols] - diag[i] * e[i]   # sum_{j != i} Aij*e_j
-            e[i] = (r[i] - sigma) / diag[i]
-
-        # 3) correction update x <- x + omega * e
-        x[free_ids] += omega * e[free_ids]
-
-        # 4) monitor free residual norm
-        r_new = b - A @ x
-        rnorm = float(np.linalg.norm(r_new[free_ids]))
-        history.append(rnorm)
-
-        if verbose:
-            print(f"sweep {sweep:3d}  ||r_free||_2 = {rnorm:.6e}")
-
-    return x, history
-
 
 # ---------------------------------------------------------------------------
 # Single FE level
@@ -404,11 +205,7 @@ class FELevel:
     gfu: GridFunction # Current iterate (current estimate) of the solution u
     free_ids: np.ndarray
     fixed_ids: np.ndarray
-    A_csr: sp.csr_matrix = field(repr=False)
-    b_np: np.ndarray = field(repr=False)
     dirichlet_value: float | np.ndarray = field(default = 0.0)
-
-    # dirichlet_bcs: str = field(default = "left|right|top|bottom")
 
     @classmethod
     def from_forms(
@@ -420,7 +217,7 @@ class FELevel:
         *,
         gfu=None,
         dirichlet_value: float | np.ndarray = 0.0,
-) -> "FELevel":
+    ) -> "FELevel":
 
         if gfu is None:
             gfu = GridFunction(fes)
@@ -434,8 +231,6 @@ class FELevel:
             free_ids=free_ids,
             fixed_ids=fixed_ids,
             dirichlet_value=dirichlet_value,
-            A_csr=bilinear_form_to_csr(a),
-            b_np=f.vec.FV().NumPy().copy(),
         )
 
     @classmethod
@@ -465,17 +260,27 @@ class FELevel:
     def ndof(self) -> int:
         return self.fes.ndof
 
-    def vec_np(self) -> np.ndarray:
+    @property
+    def A_csr(self) -> sp.csr_matrix:
+        """Return current assembled stiffness matrix as scipy CSR."""
+        return bilinear_form_to_csr(self.a)
+
+    def b_np(self, *, inplace: bool = False) -> np.ndarray:
+        """Return assembled load vector as copy (default) or mutable view."""
+        arr = self.f.vec.FV().NumPy()
+        return arr if inplace else arr.copy()
+
+    def gfu_np(self) -> np.ndarray:
         return self.gfu.vec.FV().NumPy()
 
-    def set_vec_np(self, x: np.ndarray) -> None:
+    def set_gfu_np(self, x: np.ndarray) -> None:
         self.gfu.vec.FV().NumPy()[:] = x
 
     def enforce_dirichlet(self, values: float | np.ndarray | None = None) -> None:
         """Set fixed DOF coefficients using class default unless overridden."""
         if values is None:
             values = self.dirichlet_value
-        self.vec_np()[self.fixed_ids] = values
+        self.gfu_np()[self.fixed_ids] = values
 
     def set_initial_guess(self, cf, *, zero_boundary: bool = True) -> None:
         """Interpolate a coefficient function and optionally zero boundary DOFs."""
@@ -515,13 +320,16 @@ class FELevel:
         return float(np.linalg.norm(r_np[self.fixed_ids]))
 
     def max_on_fixed(self) -> float:
-        return float(np.max(np.abs(self.vec_np()[self.fixed_ids])))
+        return float(np.max(np.abs(self.gfu_np()[self.fixed_ids])))
 
     def max_on_free(self) -> float:
-        return float(np.max(np.abs(self.vec_np()[self.free_ids])))
+        return float(np.max(np.abs(self.gfu_np()[self.free_ids])))
 
     def direct_solve(self) -> GridFunction:
         """NGSolve direct solve with Dirichlet BCs."""
+
+        # Check SPD
+
         u = GridFunction(self.fes)
         u.vec.data = self.a.mat.Inverse(self.fes.FreeDofs()) * self.f.vec
         return u
@@ -556,7 +364,7 @@ class FELevel:
         plotting_enabled = scene is not None and plot_every is not None
 
         def _on_sweep(x_now: np.ndarray, sweep_number: int, _rnorm: float) -> None:
-            self.set_vec_np(x_now)
+            self.set_gfu_np(x_now)
             self.enforce_dirichlet()
             if not plotting_enabled:
                 return
@@ -570,15 +378,15 @@ class FELevel:
 
         x, hist = gauss_seidel_sweeps(
             self.A_csr,
-            self.b_np,
-            self.vec_np(),
+            self.b_np(),
+            self.gfu_np(),
             self.free_ids,
             nsweeps=nsweeps,
             omega=omega,
             verbose=verbose,
             callback=_on_sweep if plotting_enabled else None,
         )
-        self.set_vec_np(x)
+        self.set_gfu_np(x)
         self.enforce_dirichlet()
         return hist
 
@@ -637,314 +445,394 @@ class FELevel:
         self.enforce_dirichlet()
         return hist
 
-
-if __name__ == "__main__":
-    import ngsolve as ng
-    from ngsolve import BilinearForm, GridFunction, H1, InnerProduct, LinearForm, grad, dx, Mesh, x, y, sin, pi
-    from ngsolve.webgui import Draw
-    from netgen.geom2d import unit_square
-
-    def poisson_bilinear_fn(a, u, v):
-        """Add Poisson bilinear form in place"""
-        a += InnerProduct(grad(u), grad(v)) * dx
-
-    def homogeneous_linear_fn(f, u, v):
-        f += 0 * v * dx
-
-
-    poisson_setup = build_form_setup(bilinear=poisson_bilinear_fn, linear=homogeneous_linear_fn)
-    
-    mesh_c = Mesh(unit_square.GenerateMesh(maxh=0.04))
-    mesh_f = Mesh(unit_square.GenerateMesh(maxh=0.04))
-    mesh_f.Refine()
-
-    fes_f = H1(mesh_f, order=1, dirichlet="left|right|top|bottom")
-    fes_c = H1(mesh_c, order=1, dirichlet="left|right|top|bottom")
-    a_f, f_f = poisson_setup(fes_f)
-    a_c, f_c = poisson_setup(fes_c)
-    a_f.Assemble()
-    f_f.Assemble()
-    a_c.Assemble()
-    f_c.Assemble()
-
-    poisson_f = FELevel.from_forms(mesh_f, fes_f, a_f, f_f)
-    poisson_c = FELevel.from_forms(mesh_c, fes_c, a_c, f_c)
-
-    x0_slow = sin(pi*x) * sin(pi*y)
-    x0_fast = 0.1 * sin(30*pi*x/2) * sin(30*pi*y/2)
-    x0_initial = x0_slow + x0_fast
-
-    _scene = Draw(
-        poisson_f.gfu,
-        poisson_f.mesh,
-        "Gauss-Seidel smoothing",
-        deformation=True,
-        radius=1.2,
-        settings={
-            "camera": {
-                "transformations": [
-                    {"type": "rotateX", "angle": -45},
-                    # {"type": "rotateY", "angle": 30},
-                    # {"type": "rotateZ", "angle": 10},
-                ]
-            },
-            "Misc": {"line_thickness": 0.01}
-        },
-    )
-
-    poisson_f.set_initial_guess(x0_initial)
-    poisson_f.smooth_GS(scene=_scene, plot_every=1)
-
-
-# %%
-    x0_grf = GridFunction(poisson_f.fes)
-    x0_grf.Set(x0_initial)                  # interpolate CF onto FE space
-    x0_grf.vec.FV().NumPy()[poisson_f.fixed_ids] = 0.0  # optional, enforce BC
-    Draw(x0_grf, poisson_f.mesh, "Initial guess", deformation=True, radius=1.2)
-
-    Draw(poisson_f.gfu, poisson_f.mesh, "Gauss-Seidel smoothing", deformation=True, radius=1.2)
-
-# %%
-    P, PT = get_prolongation_operators(poisson_f.fes)
-    r_f = poisson_f.compute_residual_for_restriction()
-    r_c = PT.CreateColVector()
-    r_c.data = PT * r_f
-
-    # Coarse-grid direct solve: A_c e_c = r_c (free DOFs only)
-    e_c = r_c.CreateVector()
-    e_c.data = poisson_c.a.mat.Inverse(poisson_c.fes.FreeDofs()) * r_c
-
-    # Prolongate correction and update fine iterate
-    e_f = P.CreateColVector()
-    e_f.data = P * e_c
-    poisson_f.gfu.vec.data += e_f
-    poisson_f.enforce_dirichlet()
-
-    Draw(poisson_f.gfu, poisson_f.mesh, "After coarse correction", deformation=True, radius=1.2)
-# %%
-
-
-### SCRATCH WORK
-
-
 # ---------------------------------------------------------------------------
-# Two-level problem builder + solver
+# Multilevel data builder
 # ---------------------------------------------------------------------------
+def build_multilevel_data(
+    coarse_mesh: ng.Mesh,
+    form_setup: FormSetupFn,
+    *,
+    n_refines: int,
+    order: int = 1,
+    dirichlet: str = "left|right|top|bottom",
+    verbose: bool = False,
+) -> list[LevelData]:
+    """
+    Build and return per-level finite element data for a multigrid hierarchy.
+
+    Starting from ``coarse_mesh``, refines a working mesh ``n_refines`` times,
+    assembling forms and snapshotting mesh geometry at each level.
+
+    Parameters
+    ----------
+    coarse_mesh : ng.Mesh
+        Starting geometry.  Not modified.
+    form_setup : FormSetupFn
+        Callable ``setup(fes) -> (a, f)`` that adds integrators without
+        calling ``.Assemble()``.  Create one with ``build_form_setup``.
+    n_refines : int
+        Number of uniform refinements.  Produces ``n_refines + 1`` levels.
+    order : int
+        Polynomial order for the H1 space.
+    dirichlet : str
+        Boundary names to pin as Dirichlet conditions.
+    verbose : bool
+        Print a summary table while building.
+
+    Returns
+    -------
+    list[LevelData]
+        One dict per level, ordered coarse (index 0) to fine (index ``n_refines``).
+        Each dict contains:
+
+        ``level``     — integer level index
+        ``mesh``      — ``ng.Mesh`` geometry snapshot (independent object)
+        ``fes``       — H1 FE space built on ``mesh``
+        ``ndof``      — number of DOFs at this level
+        ``a``         — assembled :class:`BilinearForm`
+        ``f``         — assembled :class:`LinearForm`
+        ``A``         — ``a.mat``, the assembled stiffness matrix
+        ``gfu``       — :class:`GridFunction` for the current solution iterate
+        ``free_ids``  — indices of free (non-Dirichlet) DOFs
+        ``fixed_ids`` — indices of Dirichlet DOFs
+        ``P``         — prolongation operator, coarse → fine (``None`` on coarsest)
+        ``PT``        — restriction operator, fine → coarse (``None`` on coarsest)
+
+    Examples
+    --------
+    ::
+
+        from netgen.geom2d import unit_square
+
+        def poisson(a, u, v):
+            a += InnerProduct(grad(u), grad(v)) * dx
+        def rhs(f, u, v):
+            f += 1.0 * v * dx
+
+        coarse = ng.Mesh(unit_square.GenerateMesh(maxh=0.4))
+        levels = build_level_data(
+            coarse,
+            build_form_setup(bilinear=poisson, linear=rhs),
+            n_refines=3,
+            verbose=True,
+        )
+    """
+    if n_refines < 1:
+        raise ValueError("n_refines must be >= 1.")
+
+    nlevels = n_refines + 1
+    working = ng.Mesh(coarse_mesh.ngmesh.Copy())
+    level_data: list[LevelData] = []
+    pending_P = None
+
+    for lev in range(nlevels):
+        snapshot = ng.Mesh(working.ngmesh.Copy())
+        fes = H1(snapshot, order=order, dirichlet=dirichlet)
+
+        a, f = form_setup(fes)
+        a.Assemble()
+        f.Assemble()
+
+        free_ids, fixed_ids = get_free_fixed_ids(fes)
+
+        level_data.append(LevelData(
+            level=lev,
+            mesh=snapshot,
+            fes=fes,
+            ndof=int(fes.ndof),
+            a=a,
+            f=f,
+            A=a.mat,
+            gfu=GridFunction(fes),
+            free_ids=free_ids,
+            fixed_ids=fixed_ids,
+            P=pending_P,
+            PT=pending_P.CreateTranspose() if pending_P is not None else None,
+        ))
+
+        if verbose:
+            if lev == 0:
+                print(f"  {'lev':>3}  {'ndof':>7}  {'A':>13}  {'P (coarse->fine)':>16}  {'PT (fine->coarse)':>17}  {'nfree':>7}  {'nfixed':>6}")
+                print(f"  {'---':>3}  {'-------':>7}  {'-------------':>13}  {'----------------':>16}  {'-----------------':>17}  {'-------':>7}  {'------':>6}")
+            a_shape  = f"{a.mat.height}x{a.mat.width}"
+            p_shape  = f"{pending_P.height}x{pending_P.width}"  if pending_P is not None else "-"
+            pt_shape = f"{pending_P.width}x{pending_P.height}"  if pending_P is not None else "-"
+            tag = "  (coarse)" if lev == 0 else ("  (fine)" if lev == n_refines else "")
+            print(f"  {lev:>3}  {fes.ndof:>7}  {a_shape:>13}  {p_shape:>16}  {pt_shape:>17}  {len(free_ids):>7}  {len(fixed_ids):>6}{tag}")
+
+        if lev < n_refines:
+            working.Refine()
+            fes_next = H1(working, order=order, dirichlet=dirichlet)
+            pending_P = fes_next.Prolongation().CreateMatrix(working.levels - 1)
+
+    return level_data
 
 
-# @dataclass
-# class TwoLevelSetup:
-#     """Fine/coarse Poisson levels plus prolongation / restriction operators."""
-
-#     fine: PoissonLevel
-#     coarse: PoissonLevel
-#     P: object
-#     PT: object
-#     level: Optional[int] = None
-
-#     @classmethod
-#     def from_separate_meshes(
-#         cls,
-#         mesh_coarse: ng.Mesh,
-#         mesh_fine: ng.Mesh,
-#         *,
-#         order: int = 1,
-#         dirichlet: str = "left|right|top|bottom",
-#         rhs_cf=None,
-#     ) -> "TwoLevelSetup":
-#         """
-#         Build coarse and fine levels on separate meshes.
-
-#         Prolongation comes from the *fine* mesh hierarchy (one refinement
-#         above the coarse level of that hierarchy).
-#         """
-#         coarse = PoissonLevel.assemble(
-#             mesh_coarse, order=order, dirichlet=dirichlet, rhs_cf=rhs_cf,
-#         )
-#         fine = PoissonLevel.assemble(
-#             mesh_fine, order=order, dirichlet=dirichlet, rhs_cf=rhs_cf,
-#         )
-#         level = fine.fes.mesh.levels - 1
-#         P, PT = get_prolongation_operators(fine.fes, level=level)
-#         return cls(fine=fine, coarse=coarse, P=P, PT=PT, level=level)
-
-#     @classmethod
-#     def from_unit_square(
-#         cls,
-#         maxh: float = 0.04,
-#         *,
-#         order: int = 1,
-#         dirichlet: str = "left|right|top|bottom",
-#         rhs_cf=None,
-#     ) -> "TwoLevelSetup":
-#         """Coarse mesh + one uniform refinement for the fine mesh."""
-#         from netgen.geom2d import unit_square
-
-#         mesh_c = ng.Mesh(unit_square.GenerateMesh(maxh=maxh))
-#         mesh_f = ng.Mesh(unit_square.GenerateMesh(maxh=maxh))
-#         mesh_f.Refine()
-#         return cls.from_separate_meshes(
-#             mesh_c, mesh_f, order=order, dirichlet=dirichlet, rhs_cf=rhs_cf,
-#         )
-
-#     def validate(self, *, atol: float = 1e-10) -> None:
-#         """Run standard consistency checks; raise ValueError on failure."""
-#         f, c = self.fine, self.coarse
-#         P_shape = (f.ndof, c.ndof)
-#         PT_shape = (c.ndof, f.ndof)
-
-#         P_mat = ng_matrix_to_csr(self.P)
-#         if P_mat.shape != P_shape:
-#             raise ValueError(f"P shape {P_mat.shape}, expected {P_shape}")
-
-#         PT_mat = ng_matrix_to_csr(self.PT)
-#         if PT_mat.shape != PT_shape:
-#             raise ValueError(f"PT shape {PT_mat.shape}, expected {PT_shape}")
-
-#         A_galerkin = ng_matrix_to_csr(self.PT @ f.a.mat @ self.P)
-#         A_coarse = bilinear_form_to_csr(c.a)
-#         if not np.allclose(A_coarse.toarray(), A_galerkin.toarray(), atol=atol):
-#             raise ValueError("Galerkin check failed: PT @ A_f @ P != A_c")
 
 
-# @dataclass
-# class CycleStats:
-#     """Diagnostics collected during one V-cycle."""
-
-#     pre_smooth_history: list[float] = field(default_factory=list)
-#     residual_before: float = 0.0
-#     residual_after_correction: float = 0.0
-#     post_smooth_history: list[float] = field(default_factory=list)
-#     max_u_before: float = 0.0
-#     max_u_after_correction: float = 0.0
-#     max_u_after: float = 0.0
 
 
-# class TwoLevelSolver:
-#     """Two-level multigrid with custom GS smoothing and NGSolve coarse solve."""
+SmootherKind = Literal["gs", "ngsolve"]
+LevelAction = Literal["smooth", "direct"]
 
-#     def __init__(self, setup: TwoLevelSetup):
-#         self.setup = setup
-#         self._coarse_inv = setup.coarse.a.mat.Inverse(setup.coarse.fes.FreeDofs())
 
-#     @property
-#     def fine(self) -> PoissonLevel:
-#         return self.setup.fine
+@dataclass
+class LevelRefinementPolicy:
+    """
+    Per-level multigrid refinement policy.
 
-#     @property
-#     def coarse(self) -> PoissonLevel:
-#         return self.setup.coarse
+    Notes
+    -----
+    - ``down_*`` applies before restriction (fine -> coarse).
+    - ``up_*`` applies after prolongation correction (coarse -> fine).
+    - ``coarse_action`` controls behavior on the coarsest level.
+    """
 
-#     def restrict(self, r_fine):
-#         """Restrict fine residual to coarse grid."""
-#         r_c = self.setup.PT.CreateColVector()
-#         r_c.data = self.setup.PT * r_fine
-#         return r_c
+    down_action: LevelAction = "smooth"
+    up_action: LevelAction = "smooth"
+    coarse_action: LevelAction = "direct"
 
-#     def coarse_correction(self, r_c):
-#         """Solve A_c e_c = r_c on free DOFs."""
-#         e_c = r_c.CreateVector()
-#         e_c.data = self._coarse_inv * r_c
-#         return e_c
+    down_smoother: SmootherKind = "gs"
+    up_smoother: SmootherKind = "gs"
+    coarse_smoother: SmootherKind = "gs"
 
-#     def prolongate(self, e_c):
-#         """Prolongate coarse correction to fine grid."""
-#         e_f = self.setup.P.CreateColVector()
-#         e_f.data = self.setup.P * e_c
-#         e_f.FV().NumPy()[self.fine.fixed_ids] = 0.0
-#         return e_f
+    down_sweeps: int = 2
+    up_sweeps: int = 2
+    coarse_sweeps: int = 4
 
-#     def apply_correction(self, e_f) -> None:
-#         """Add prolongated correction and re-enforce BCs."""
-#         self.fine.gfu.vec.data += e_f
-#         self.fine.enforce_dirichlet(0.0)
+    down_omega: float = 1.0
+    up_omega: float = 1.0
+    coarse_omega: float = 1.0
 
-#     def v_cycle(
-#         self,
-#         *,
-#         n_pre: int = 5,
-#         n_post: int = 3,
-#         omega: float = 1.0,
-#         verbose: bool = False,
-#     ) -> CycleStats:
-#         """One multiplicative two-level V-cycle in-place on ``fine.gfu``."""
-#         stats = CycleStats()
-#         stats.max_u_before = self.fine.max_on_free()
-#         stats.residual_before = self.fine.free_residual_norm()
 
-#         stats.pre_smooth_history = self.fine.smooth(
-#             nsweeps=n_pre, omega=omega, verbose=verbose,
-#         )
+@dataclass
+class MultilevelHierarchy:
+    """
+    Mesh hierarchy data for multigrid.
 
-#         r_f = self.fine.compute_defect_for_restriction()
-#         e_c = self.coarse_correction(self.restrict(r_f))
-#         self.apply_correction(self.prolongate(e_c))
+    Conventions
+    -----------
+    Levels are ordered coarse -> fine:
+    ``level_data[0]`` is coarsest, ``level_data[-1]`` is finest.
 
-#         stats.residual_after_correction = self.fine.free_residual_norm()
-#         stats.max_u_after_correction = self.fine.max_on_free()
+    P and PT are indexed by the **fine** end of the operator they connect:
 
-#         stats.post_smooth_history = self.fine.smooth(
-#             nsweeps=n_post, omega=omega, verbose=verbose,
-#         )
-#         stats.max_u_after = self.fine.max_on_free()
-#         return stats
+    - ``level_data[i].P``  maps level ``i-1`` -> ``i``   (``None`` on coarsest).
+    - ``level_data[i].PT`` maps level ``i``   -> ``i-1`` (``None`` on coarsest).
 
-#     def solve(
-#         self,
-#         *,
-#         max_cycles: int = 20,
-#         tol: float = 1e-8,
-#         n_pre: int = 5,
-#         n_post: int = 3,
-#         omega: float = 1.0,
-#         verbose: bool = True,
-#     ) -> tuple[list[CycleStats], list[float]]:
-#         """
-#         Repeat V-cycles until ``free ||r||_2 < tol`` or ``max_cycles`` reached.
+    To restrict from level ``i``:   use ``level_data[i].PT``.
+    To prolongate to level ``i``:   use ``level_data[i].P``.  No index offset needed.
 
-#         Returns (cycle_stats, residual_history).
-#         """
-#         history: list[float] = []
-#         all_stats: list[CycleStats] = []
+    Parameters
+    ----------
+    level_data : list[LevelData]
+        Output of :func:`build_level_data`.
+    """
 
-#         for k in range(max_cycles):
-#             stats = self.v_cycle(
-#                 n_pre=n_pre, n_post=n_post, omega=omega, verbose=verbose,
-#             )
-#             all_stats.append(stats)
-#             rnorm = self.fine.free_residual_norm()
-#             history.append(rnorm)
-#             if verbose:
-#                 print(
-#                     f"cycle {k + 1:2d}: ||r||={rnorm:.3e}, "
-#                     f"max|u|={self.fine.max_on_free():.3e}"
-#                 )
-#             if rnorm < tol:
-#                 break
+    level_data: list[LevelData]
+    levels: list[FELevel] = field(init=False)
 
-#         return all_stats, history
+    def __post_init__(self) -> None:
+        if len(self.level_data) < 2:
+            raise ValueError("Multilevel hierarchy needs at least 2 levels.")
+        if self.level_data[0].P is not None or self.level_data[0].PT is not None:
+            raise ValueError("Coarsest level (index 0) must have P = PT = None.")
+        for i, d in enumerate(self.level_data[1:], start=1):
+            if d.P is None:
+                raise ValueError(f"Level {i} is missing P (prolongation).")
+            if d.PT is None:
+                raise ValueError(f"Level {i} is missing PT (restriction).")
+                
+        self.levels = [
+            FELevel.from_forms(d.mesh, d.fes, d.a, d.f) for d in self.level_data
+        ]
 
-#     def diagnostics(self) -> dict[str, float]:
-#         """Print-friendly error / residual metrics vs direct solve."""
-#         u = self.fine.vec_np()
-#         r_np = self.fine.compute_residual_vector().FV().NumPy()
-#         u_ref = self.fine.direct_solve().vec.FV().NumPy()
+    @property
+    def nlevels(self) -> int:
+        return len(self.level_data)
 
-#         return {
-#             "max_u_all": float(np.max(np.abs(u))),
-#             "max_u_free": float(np.max(np.abs(u[self.fine.free_ids]))),
-#             "max_u_fixed": float(np.max(np.abs(u[self.fine.fixed_ids]))),
-#             "free_residual_norm": float(np.linalg.norm(r_np[self.fine.free_ids])),
-#             "fixed_residual_norm": float(np.linalg.norm(r_np[self.fine.fixed_ids])),
-#             "direct_max_u": float(np.max(np.abs(u_ref))),
-#             "error_vs_direct": float(np.max(np.abs(u - u_ref))),
-#         }
+    @property
+    def coarsest_idx(self) -> int:
+        return 0
 
-#     def print_diagnostics(self) -> None:
-#         d = self.diagnostics()
-#         print(f"max |u| (free DOFs):     {d['max_u_free']:.6e}")
-#         print(f"free ||r||_2:            {d['free_residual_norm']:.6e}")
-#         print(f"fixed ||r||_2:           {d['fixed_residual_norm']:.6e}  (may be nonzero)")
-#         print(f"max |u| on fixed DOFs:   {d['max_u_fixed']:.6e}")
-#         print(f"direct solve max |u|:    {d['direct_max_u']:.6e}")
-#         print(f"error vs direct:         {d['error_vs_direct']:.6e}")
+    @property
+    def finest_idx(self) -> int:
+        return self.nlevels - 1
+
+
+class MultilevelSolver:
+    """
+    Initial multilevel V-cycle implementation with policy-based smoothing/actions.
+
+    Design goal: provide one operator-style entry point ``apply_preconditioner``
+    that can later be used by either a custom CG loop or an NGSolve wrapper.
+    """
+
+    def __init__(
+        self,
+        hierarchy: MultilevelHierarchy,
+        *,
+        policies: Optional[list[LevelRefinementPolicy]] = None,
+    ) -> None:
+        self.hierarchy = hierarchy
+        if policies is None:
+            policies = [LevelRefinementPolicy() for _ in range(hierarchy.nlevels)]
+        if len(policies) != hierarchy.nlevels:
+            raise ValueError("Expected one LevelPolicy per hierarchy level.")
+        self.policies = policies
+
+    def _apply_smoother(
+        self,
+        level: FELevel,
+        *,
+        smoother: SmootherKind,
+        nsweeps: int,
+        omega: float,
+        verbose: bool = False,
+    ) -> None:
+        if nsweeps <= 0:
+            warnings.warn(f"nsweeps must be > 0, got {nsweeps}", stacklevel=2)
+            return
+        if smoother == "gs":
+            level.smooth_GS(nsweeps=nsweeps, omega=omega, verbose=verbose)
+        elif smoother == "ngsolve":
+            level.smooth_ngsolve(nsweeps=nsweeps, omega=omega, verbose=verbose)
+        
+        raise ValueError(f"Unknown smoother kind: {smoother}")
+
+    def _apply_action(self, 
+        level_idx: int, 
+        phase: Literal["down", "up", "coarse"], 
+        *, 
+        verbose: bool
+    ) -> list[float]:
+
+        level = self.hierarchy.levels[level_idx]
+        policy = self.policies[level_idx]
+
+        if phase == "down":
+            action = policy.down_action
+            smoother = policy.down_smoother
+            nsweeps = policy.down_sweeps
+            omega = policy.down_omega
+        elif phase == "up":
+            action = policy.up_action
+            smoother = policy.up_smoother
+            nsweeps = policy.up_sweeps
+            omega = policy.up_omega
+        else:
+            action = policy.coarse_action
+            smoother = policy.coarse_smoother
+            nsweeps = policy.coarse_sweeps
+            omega = policy.coarse_omega
+
+        if action == "direct":
+            u = level.direct_solve()
+            level.gfu.vec.data = u.vec
+            level.enforce_dirichlet()
+            return
+        if action == "smooth":
+            self._apply_smoother(level, smoother=smoother, nsweeps=nsweeps, omega=omega, verbose=verbose)
+            return
+      
+        raise ValueError(f"Unknown action: {action}")
+
+    def _zero_level_iterate(self, level_idx: int) -> None:
+        level = self.hierarchy.levels[level_idx]
+        level.gfu_np()[:] = 0.0
+        level.enforce_dirichlet()
+
+    def _set_level_rhs(self, level_idx: int, rhs_vec) -> None:
+        level = self.hierarchy.levels[level_idx]
+        level.f.vec.data = rhs_vec
+
+    def _restrict_to_coarser(self, fine_idx: int):
+        """Restrict residual from level ``fine_idx`` to level ``fine_idx - 1``."""
+        fine = self.hierarchy.levels[fine_idx]
+        R = self.hierarchy.level_data[fine_idx].PT  # PT indexed by fine end
+        r_f = fine.compute_residual_for_restriction()
+        r_c = R.CreateColVector()
+        r_c.data = R * r_f
+        return r_c
+
+    def _prolongate_correction(self, coarse_idx: int):
+        """Prolongate coarse correction from level ``coarse_idx`` to level ``coarse_idx + 1``."""
+        fine_idx = coarse_idx + 1
+        coarse = self.hierarchy.levels[coarse_idx]
+        P = self.hierarchy.level_data[fine_idx].P  # P indexed by fine end
+        e_f = P.CreateColVector()
+        e_f.data = P * coarse.gfu.vec
+        return e_f
+
+    def _v_cycle_recursive(self, level_idx: int, *, verbose: bool = False) -> None:
+        if level_idx == self.hierarchy.coarsest_idx:
+            self._apply_action(level_idx, "coarse", verbose=verbose)
+            return
+
+        self._apply_action(level_idx, "down", verbose=verbose)
+
+        r_c = self._restrict_to_coarser(level_idx)
+        coarse_idx = level_idx - 1
+        self._set_level_rhs(coarse_idx, r_c)
+        self._zero_level_iterate(coarse_idx)
+
+        self._v_cycle_recursive(coarse_idx, verbose=verbose)
+
+        e_f = self._prolongate_correction(coarse_idx)
+        fine = self.hierarchy.levels[level_idx]
+        fine.gfu.vec.data += e_f
+        fine.enforce_dirichlet()
+
+        self._apply_action(level_idx, "up", verbose=verbose)
+
+    def v_cycle(self, *, finest_level_idx: Optional[int] = None, verbose: bool = False) -> float:
+        """
+        Run one V-cycle in-place and return finest free residual norm.
+        """
+        if finest_level_idx is None:
+            finest_level_idx = self.hierarchy.finest_idx
+        self._v_cycle_recursive(finest_level_idx, verbose=verbose)
+        return self.hierarchy.levels[finest_level_idx].free_residual_norm()
+
+    def apply_preconditioner(self, rhs_vec, *, finest_level_idx: Optional[int] = None, verbose: bool = False):
+        """
+        Apply one multigrid preconditioner action ``z = M^{-1} rhs``.
+
+        This method is state-safe: it restores level ``f.vec`` and ``gfu.vec``
+        after application and returns the correction vector ``z`` on the finest
+        level. That makes it suitable as a backend for either custom CG loops or
+        future NGSolve preconditioner wrappers.
+        """
+        if finest_level_idx is None:
+            finest_level_idx = self.hierarchy.finest_idx
+
+        saved_rhs = []
+        saved_u = []
+        for level in self.hierarchy.levels:
+            rhs_store = level.f.vec.CreateVector()
+            rhs_store.data = level.f.vec
+            saved_rhs.append(rhs_store)
+
+            u_store = level.gfu.vec.CreateVector()
+            u_store.data = level.gfu.vec
+            saved_u.append(u_store)
+
+        try:
+            for i, level in enumerate(self.hierarchy.levels):
+                level.f.vec.FV().NumPy()[:] = 0.0
+                level.gfu.vec.FV().NumPy()[:] = 0.0
+                level.enforce_dirichlet()
+                if i == finest_level_idx:
+                    level.f.vec.data = rhs_vec
+
+            self.v_cycle(finest_level_idx=finest_level_idx, verbose=verbose)
+
+            finest = self.hierarchy.levels[finest_level_idx]
+            z = finest.gfu.vec.CreateVector()
+            z.data = finest.gfu.vec
+            return z
+        finally:
+            for level, rhs_store, u_store in zip(self.hierarchy.levels, saved_rhs, saved_u):
+                level.f.vec.data = rhs_store
+                level.gfu.vec.data = u_store
+
