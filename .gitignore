@@ -2,6 +2,8 @@
 .venv/
 .venv*/
 __pypackages__/
+__pycache__/
+**/__pycache__/
 
 # uv local/project artifacts
 .python-version
