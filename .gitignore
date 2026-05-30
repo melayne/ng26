@@ -27,3 +27,4 @@ uv-cache/
 
 # Folders to ignore
 in_progress/
+src/__pycache__/
