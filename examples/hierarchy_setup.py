@@ -1,4 +1,5 @@
 #%%
+#%%
 import os
 import sys
 
@@ -8,6 +9,7 @@ from ngsolve.webgui import Draw
 from netgen.geom2d import unit_square
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from multigrid_cycles import (
 from multigrid_cycles import (
     build_form_setup,
     build_hierarchy,
