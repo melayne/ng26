@@ -10,7 +10,6 @@ from netgen.geom2d import unit_square
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from multigrid_cycles import (
-from multigrid_cycles import (
     build_form_setup,
     build_hierarchy,
     Level,
@@ -53,7 +52,6 @@ hierarchy = build_hierarchy(
 
 
 # %%
-<<<<<<< HEAD
 # ---------------------------------------------------------------------------
 # Set the initial guess on the finest level and draw it.
 # ---------------------------------------------------------------------------
@@ -69,5 +67,3 @@ scene = Draw(
 )
 
 # %%
-=======
->>>>>>> f42c5f4cdd01f536588b05e19ef55690053138f3
