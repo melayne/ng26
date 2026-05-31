@@ -1,0 +1,527 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+\section{Weak form}
+
+\section{Notes}
+Topics to look into:
+\begin{itemize}
+    \item Hilbert spaces
+    \item Sobolev spaces
+    \item H1 space
+    \item Square integrable functions
+    \item poincare inequality - with reference to bounds on functions using bounds on its deriv and geometric constraints on the domain
+\end{itemize}
+
+\subsection{Notation}
+
+\begin{itemize}
+    \item $H^1(0,1)$ is the space of all functions $u$ such that $u \in L^2(0,1)$ and $u^{\prime} \in L^2(0,1)$.
+    \item $H^1_0(0,1)$ is the space of all functions $u$ such that $u \in H^1(0,1)$ and $u(0) = u(1) = 0$.
+    \item Dirichlet boundary conditions: $u(0) = \alpha$ and $u(1) = \beta$
+    \item Neumann boundary conditions: $u'(0) = \alpha$ and $u'(1) = \beta$
+    \item Mixed boundary conditions: $u(0) = \alpha$ and $u'(1) = \beta$
+\end{itemize}
+
+In finite element methods and weak formulations, the notation
+\[
+\|v\|_0
+\]
+usually means the \(L^2\) norm of the function \(v\). It does \emph{not} mean the ``zero norm'' from sparse optimization.
+
+The subscript \(0\) means that we are measuring the function itself, with zero derivatives included.
+
+\[
+\|v\|_0 = \|v\|_{L^2(a,b)}
+=
+\left( \int_a^b |v(x)|^2 \, dx \right)^{1/2}.
+\]
+
+Therefore,
+\[
+\|v'\|_0
+=
+\left( \int_a^b |v'(x)|^2 \, dx \right)^{1/2}.
+\]
+
+So \(\|v\|_0\) measures the overall size, or magnitude, of the function \(v\) on the interval \([a,b]\). Equivalently,
+
+\[
+\|v\|_0^2
+=
+\int_a^b |v(x)|^2 \, dx,
+\]
+
+which is the area under the curve \(|v(x)|^2\).
+
+\subsection*{Connection to Sobolev Norms}
+
+The notation \(\|\cdot\|_0\), \(\|\cdot\|_1\), \(\|\cdot\|_2\), etc. is common in Sobolev spaces.
+
+The zeroth-order Sobolev norm is just the \(L^2\) norm:
+
+\[
+\|v\|_0 = \|v\|_{L^2(a,b)}.
+\]
+
+The first-order Sobolev norm is
+
+\[
+\|v\|_1 = \|v\|_{H^1(a,b)}
+=
+\left(
+\|v\|_0^2 + \|v'\|_0^2
+\right)^{1/2}.
+\]
+
+Written out fully,
+
+\[
+\|v\|_1
+=
+\left(
+\int_a^b |v(x)|^2 \, dx
++
+\int_a^b |v'(x)|^2 \, dx
+\right)^{1/2}.
+\]
+
+The second-order Sobolev norm is
+
+\[
+\|v\|_2 = \|v\|_{H^2(a,b)}
+=
+\left(
+\|v\|_0^2
++
+\|v'\|_0^2
++
+\|v''\|_0^2
+\right)^{1/2}.
+\]
+
+Written out fully,
+
+\[
+\|v\|_2
+=
+\left(
+\int_a^b |v(x)|^2 \, dx
++
+\int_a^b |v'(x)|^2 \, dx
++
+\int_a^b |v''(x)|^2 \, dx
+\right)^{1/2}.
+\]
+
+\subsection*{General Pattern}
+
+For Sobolev spaces, the subscript on the norm tells us how many derivatives are included.
+
+\[
+\|v\|_0
+\quad \text{measures} \quad
+v
+\]
+
+\[
+\|v\|_1
+\quad \text{measures} \quad
+v \text{ and } v'
+\]
+
+\[
+\|v\|_2
+\quad \text{measures} \quad
+v, \ v', \text{ and } v''.
+\]
+
+More generally,
+
+\[
+\|v\|_{H^k(a,b)}
+=
+\left(
+\sum_{j=0}^k \|v^{(j)}\|_{L^2(a,b)}^2
+\right)^{1/2}.
+\]
+
+Using the shorthand notation,
+
+\[
+\|v\|_k
+=
+\left(
+\sum_{j=0}^k \|v^{(j)}\|_0^2
+\right)^{1/2}.
+\]
+
+
+\subsection{General Notes}
+\textit{Taken from Numerical Mathematics by Jeffrey Ovall}
+Function spaces (vector spaces of functions) on the interval $(a,b)$:
+\begin{itemize}
+    \item $L^2(a,b)$: Consists of all measurable functions on (a,b) that are square integrable. i.e. $\nu \in L^2(a,b) \implies \int_a^b |\nu(x)|^2 dx < \infty$
+    \item For $\nu \in L^2(0,1)$, we define the norm by: $\|\nu\|_0 = \sqrt{\int_0^1 \nu(x)^2 dx}$
+    \item $H^1(a,b)$: Consists of all functions $\nu$ that are square integrable and have square integrable first derivatives. 
+        \begin{align*}
+            H^1(a,b) = \{ \nu \in L^2(a,b): \nu' \in L^2(a,b) \}
+        \end{align*}
+    \item $H^1_0(a,b)$: Consists of all functions $\nu \in H^1(a,b)$ that vanish at the endpoints $a$ and $b$.
+    \begin{align*}
+        H^1_0(a,b) = \{ \nu \in H^1(a,b): \nu(a) = \nu(b) = 0 \}
+    \end{align*}
+    \item $H^2(a,b)$: Consists of all functions $\nu$ that are square integrable and have square integrable first and second derivatives.
+    \begin{align*}
+        H^2(a,b) = \{ \nu \in L^2(a,b):  \nu'' \in L^2(a,b) \}
+    \end{align*}
+\end{itemize}
+
+\textbf{Linear and Bilinear Forms}:
+Let $V$, $W$, and $U$ be three vector spaces. Let $f: V \times W \to U$ be any map.
+\begin{itemize}
+    \item The map f is linear in its first argument if, for every $w \in W$, the map $V \to U, v \mapsto f(v, w)$ is linear. This can be rewritten as, the map $f : V \times W \to U$ is linear in its first argument if and only if for every $\lambda_1, \lambda_2 \in \mathbb{R}$ and $v_1, v_2 \in V$ and $w \in W$, we have
+    \begin{align*}
+        f(\lambda_1 v_1 + \lambda_2 v_2, w) = \lambda_1 f(v_1, w) + \lambda_2 f(v_2, w)
+    \end{align*}
+    \item The map f is \textit{linear} in its second argument if, for every $v \in V$, the map $W \to U, w \mapsto f(v, w)$ is linear. Similarly, the map $f : V \times W \to U$ is linear in its second argument if and only if for every $\lambda_1, \lambda_2 \in \mathbb{R}$ and $v \in V$ and $w_1, w_2 \in W$, we have
+    \begin{align*}
+        f(v, \lambda_1 w_1 + \lambda_2 w_2) = \lambda_1 f(v, w_1) + \lambda_2 f(v, w_2)
+    \end{align*}
+    \item The map f is \textit{bilinear} if it is linear in both arguments.
+\end{itemize}
+
+\noindent\textbf{Note:} With reference to FEA, the L.H.S of the weak form is a bilinear form and the R.H.S is a linear form.
+
+\subsection{Introduction}
+from numerical mathematics by jeffrey ovall \\
+
+\subsubsection{General weak formulation}
+
+
+Given a function $f$ and numbers $\alpha, \beta$, find a function $u$ such that
+\begin{align}
+-u^{\prime\prime}(x) = f(x) \quad \text{in } (0,1), \quad\quad u(0) = \alpha, \,\, u(1) = \beta \label{eq:classical-form-bvp}
+\end{align}
+
+The \textit{strong/classical} view of the model above requires that $u \in C^2(0,1) \cap C[0,1]$ satisfies the differential equation at each point in $(0,1)$ as well as the boundary conditions. (from section 6.1 of textbook).
+
+We can also view the problem in its weak form. Suppose that $u$ satisfies the differential equation and that $v$ is any sufficiently smooth function that satisfies $v(0) = v(1) = 0$. Then, we can integrate the differential equation over the domain $(0,1)$ and use integration by parts to get
+\begin{align*}
+    \int_0^1 f(x)v(x) dx = -\int_0^1 u^{\prime\prime}(x)v(x) dx  &= \int_0^1 u^{\prime}(x)v^{\prime}(x) dx - [u^{\prime}(x)v(x)]_{x = 0}^{x = 1} \\
+    &= \int_0^1 u^{\prime}(x)v^{\prime}(x) dx
+\end{align*}
+
+Note that the resulting equation no longer requires the second derivative of u. In fact, we can relax the smoothness assumptions on both $u$ and $f$. The above integral equation is the basis for the weak (variational) form of the problem.
+
+\begin{defn}
+    Let $f \in L^2(0,1)$. The weak or variational form of \eqref{eq:classical-form-bvp} is as follows: Find  $u \in H^1(0,1)$ such that $u(0) = \alpha$ and $u(1) = \beta$ and
+    \begin{align}
+        \int_0^1 u^{\prime}(x)v^{\prime}(x) dx = \int_0^1 f(x)v(x) dx \quad \forall v \in H^1_0(0,1)
+        \label{eq:weak-form-bvp}
+    \end{align}
+\end{defn}
+
+\ \\
+If we are interested in a problem with \textbf{mixed Dirichlet-Neumann boundary conditions}, the strong form of the mixed problem is 
+\begin{align}
+    -u^{\prime\prime}(x) = f(x) \quad \text{in } (0,1), \quad\quad u(0) = \alpha, \,\, u'(1) = \beta \label{eq:classical-form-bvp-mixed}
+\end{align}
+
+\noindent The weak form of the mixed problem is:
+\begin{align*}
+    \int_0^1 f(x)v(x) dx = -\int_0^1 u^{\prime\prime}(x)v(x) dx  &= \int_0^1 u^{\prime}(x)v^{\prime}(x) dx - [u^{\prime}(x)v(x)]_{x = 0}^{x = 1} \\
+    &= \int_0^1 u^{\prime}(x)v^{\prime}(x) dx - \beta v(1)
+\end{align*}
+
+\noindent Therefore, the weak form for this mixed BC problem is as follows: Find $u \in H^1(0,1)$ such that $u(0) = \alpha$ and $u'(1) = \beta$ and
+\begin{align}
+    \int_0^1 u^{\prime}(x)v^{\prime}(x) dx = \int_0^1 f(x)v(x) dx + \beta v(1) \quad \forall v \in H^1_0(0,1)
+    \label{eq:weak-form-bvp-mixed}
+\end{align}
+
+
+\subsection{Integration by Parts and Boundary Terms in the Weak Form}
+
+Suppose we start with the strong form of Poisson's equation on a domain $\Omega$:
+\begin{align*}
+    -\Delta u = f \qquad \text{in } \Omega.
+\end{align*}
+
+\noindent To derive the weak form, we multiply both sides by a test function $v$ and integrate over the domain:
+\begin{align*}
+    \int_\Omega (-\Delta u)v \, dx = \int_\Omega fv \, dx.
+\end{align*}
+
+\noindent The left-hand side contains second derivatives of $u$. The purpose of integration by parts is to move one derivative from $u$ onto the test function $v$. This lowers the differentiability requirement on $u$, which is one of the main reasons weak forms are useful.
+
+\noindent In multiple dimensions, integration by parts is based on the identity
+\begin{align*}
+    \nabla \cdot (v \nabla u)
+    =
+    \nabla v \cdot \nabla u + v \Delta u.
+\end{align*}
+
+\noindent Rearranging,
+\begin{align*}
+    -v \Delta u
+    =
+    \nabla u \cdot \nabla v - \nabla \cdot (v \nabla u).
+\end{align*}
+
+\noindent Therefore,
+\begin{align*}
+    \int_\Omega (-\Delta u)v \, dx
+    =
+    \int_\Omega \nabla u \cdot \nabla v \, dx
+    -
+    \int_\Omega \nabla \cdot (v \nabla u) \, dx.
+\end{align*}
+
+\noindent The first term is still an integral over the whole domain $\Omega$:
+\begin{align*}
+    \int_\Omega \nabla u \cdot \nabla v \, dx.
+\end{align*}
+
+\noindent The second term is converted into a boundary integral using the divergence theorem:
+\begin{align*}
+    \int_\Omega \nabla \cdot (v \nabla u) \, dx
+    =
+    \int_{\partial \Omega} v \nabla u \cdot n \, ds,
+\end{align*}
+\noindent where $n$ is the outward unit normal vector on the boundary $\partial \Omega$. Since,
+\begin{align*}
+    \nabla u \cdot n = \frac{\partial u}{\partial n},
+\end{align*}
+we get
+\begin{align*}
+    \int_\Omega \nabla \cdot (v \nabla u) \, dx
+    =
+    \int_{\partial \Omega} v \frac{\partial u}{\partial n} \, ds.
+\end{align*}
+
+\noindent Thus,
+\begin{align*}
+    \int_\Omega (-\Delta u)v \, dx
+    =
+    \int_\Omega \nabla u \cdot \nabla v \, dx
+    -
+    \int_{\partial \Omega} \frac{\partial u}{\partial n}v \, ds.
+\end{align*}
+
+\noindent Putting this back into the original equation gives the weak form with the boundary term kept:
+\begin{align*}
+    \int_\Omega \nabla u \cdot \nabla v \, dx
+    -
+    \int_{\partial \Omega} \frac{\partial u}{\partial n}v \, ds
+    =
+    \int_\Omega fv \, dx.
+\end{align*}
+
+Integration by parts does not eliminate the domain integral. Instead, it transforms the expression into a new domain integral plus a boundary term:
+\begin{align*}
+    \text{integration by parts}
+    =
+    \text{domain integral}
+    +
+    \text{boundary integral}.
+\end{align*}
+
+\noindent In one dimension, this is the familiar formula
+\begin{align*}
+    \int_a^b -u''v \, dx
+    =
+    \int_a^b u'v' \, dx
+    -
+    \left[u'v\right]_a^b.
+\end{align*}
+
+\noindent The term $\left[u'v\right]_a^b$ only depends on the endpoints $a$ and $b$. In higher dimensions, the endpoints are replaced by the boundary $\partial \Omega$, so
+\begin{align*}
+    \left[u'v\right]_a^b
+    \quad \longrightarrow \quad
+    \int_{\partial \Omega} \frac{\partial u}{\partial n}v \, ds.
+\end{align*}
+
+\noindent Some boundary terms may disappear depending on the boundary conditions. For Dirichlet boundary conditions, we often build the boundary condition directly into the function space. For example, if
+\begin{align*}
+    u = u_D \qquad \text{on } \Gamma_D,
+\end{align*}
+\noindent then the test functions are usually chosen to vanish on the Dirichlet boundary:
+\begin{align*}
+    v = 0 \qquad \text{on } \Gamma_D.
+\end{align*}
+
+\noindent In that case, the boundary integral over $\Gamma_D$ becomes zero because it contains the factor $v$:
+\begin{align*}
+    \int_{\Gamma_D} \frac{\partial u}{\partial n}v \, ds = 0.
+\end{align*}
+
+This is why, in the standard weak form with essential Dirichlet boundary conditions built into the space, the boundary term often disappears.
+
+However, if we do \textbf{not} build the Dirichlet condition into the function space, then the test functions $v$ do not necessarily vanish on $\Gamma_D$. In that case, the boundary term must be kept:
+\begin{align*}
+    \int_\Omega \nabla u \cdot \nabla v \, dx
+    -
+    \int_{\partial \Omega} \frac{\partial u}{\partial n}v \, ds
+    =
+    \int_\Omega fv \, dx.
+\end{align*}
+
+This is the situation in methods where the Dirichlet condition is imposed by an additional equation rather than being built directly into the space.
+
+\subsection{Nonhomogeneous Dirichlet Data and Affine Spaces}
+
+For homogeneous Dirichlet boundary conditions,
+\begin{align*}
+    u = 0 \qquad \text{on } \Gamma_D,
+\end{align*}
+the solution and test functions can both live in the space
+\begin{align*}
+    V_0 = \{v \in H^1(\Omega): v=0 \text{ on } \Gamma_D\}.
+\end{align*}
+This is a vector space: if $v_1,v_2 \in V_0$, then $v_1+v_2 \in V_0$, and if $\alpha \in \mathbb{R}$, then $\alpha v_1 \in V_0$.
+
+However, for nonhomogeneous Dirichlet boundary conditions,
+\begin{align*}
+    u = u_D \qquad \text{on } \Gamma_D,
+\end{align*}
+where $u_D \neq 0$, the admissible set is
+\begin{align*}
+    V_{u_D}
+    =
+    \{u \in H^1(\Omega): u=u_D \text{ on } \Gamma_D\}.
+\end{align*}
+This set is not a vector space. For example, if $u_1,u_2 \in V_{u_D}$, then on $\Gamma_D$,
+\begin{align*}
+    u_1 = u_D,
+    \qquad
+    u_2 = u_D.
+\end{align*}
+Therefore,
+\begin{align*}
+    u_1 + u_2 = 2u_D
+    \qquad \text{on } \Gamma_D,
+\end{align*}
+so in general $u_1+u_2 \notin V_{u_D}$. Similarly, if $\alpha \neq 1$, then
+\begin{align*}
+    \alpha u_1 = \alpha u_D
+    \qquad \text{on } \Gamma_D,
+\end{align*}
+so $\alpha u_1 \notin V_{u_D}$ in general.
+
+Thus, $V_{u_D}$ is not a vector space. It is an \textbf{affine space}, meaning it is a shifted vector space. We write
+\begin{align*}
+    V_{u_D} = u_D + V_0,
+\end{align*}
+where $u_D$ is one function satisfying the prescribed boundary data, and $V_0$ is the homogeneous Dirichlet space.
+
+This motivates the standard finite element decomposition
+\begin{align*}
+    u = u_0 + u_D,
+\end{align*}
+where
+\begin{align*}
+    u_D = \text{a known extension of the boundary data into } \Omega,
+\end{align*}
+and
+\begin{align*}
+    u_0 = \text{the unknown correction satisfying } u_0=0 \text{ on } \Gamma_D.
+\end{align*}
+
+Indeed, on the Dirichlet boundary,
+\begin{align*}
+    u_0 = u-u_D = u_D-u_D = 0.
+\end{align*}
+Therefore,
+\begin{align*}
+    u_0 \in V_0.
+\end{align*}
+This is useful because $V_0$ is a true vector space, so the unknown correction $u_0$ can be represented using finite element basis functions with free coefficients. Substituting
+\begin{align*}
+    u = u_0 + u_D
+\end{align*}
+into the weak form gives
+\begin{align*}
+    \int_\Omega \nabla (u_0+u_D) \cdot \nabla v_0 \, dx
+    =
+    \int_\Omega f v_0 \, dx
+    \qquad \forall v_0 \in V_0.
+\end{align*}
+Expanding the left-hand side,
+\begin{align*}
+    \int_\Omega \nabla u_0 \cdot \nabla v_0 \, dx
+    +
+    \int_\Omega \nabla u_D \cdot \nabla v_0 \, dx
+    =
+    \int_\Omega f v_0 \, dx.
+\end{align*}
+Since $u_D$ is known, we move its contribution to the right-hand side:
+\begin{align*}
+    \int_\Omega \nabla u_0 \cdot \nabla v_0 \, dx
+    =
+    \int_\Omega f v_0 \, dx
+    -
+    \int_\Omega \nabla u_D \cdot \nabla v_0 \, dx.
+\end{align*}
+So the nonhomogeneous Dirichlet problem for $u$ is converted into a homogeneous Dirichlet problem for $u_0$. Once $u_0$ is computed, the full solution is recovered by
+\begin{align*}
+    u = u_0 + u_D.
+\end{align*}
+
+\noindent\textbf{Summary:}
+\begin{itemize}
+    \item Homogeneous Dirichlet data gives a vector space of admissible functions.
+    \item Nonhomogeneous Dirichlet data gives an affine space of admissible functions.
+    \item An affine space is a shifted vector space.
+    \item To use standard finite element machinery, we write $u=u_0+u_D$.
+    \item The unknown $u_0$ satisfies homogeneous Dirichlet conditions and therefore lives in a vector space.
+    \item The known function $u_D$ carries the prescribed nonzero boundary data.
+\end{itemize}
+
+
+\subsubsection{A finite Element Method}
+
+
+
+% \noindent\textbf{How to Derive a Weak Equation From a Classical Equation:}
+
+% Consider the diffusion equation:
+% \begin{align}
+%     \nabla \cdot \left( -c \nabla u \right) = f
+% \end{align}
+% where $c$ is the diffusion coefficient and $f$ is the source term. If $u$ is a solution to the original PDE, it is also a solution to
+% \begin{align}
+%     \int_\omega \nabla \cdot \left( -c \nabla u \right) v = \int_\omega f v
+% \end{align}
+% which is the result of multiplying the PDE with an arbitrary test function $v$ and integrating over the domain $\omega$.
+% \subsection{Problem Setup:}
+
+% Consider 1D heat transfer at steady state with no heat source. We are interested in the temperature, $T$, as a function of the position, $x$, in the domain $1 \leq x \leq 5$. Assume that the heat conductivity is unity everywhere. Then, the heat flux, $q$, in the positive x-direction is given by the gradient of the temperature T:
+% \begin{align}
+%     q = - \frac{\partial T}{\partial x}
+%     \label{eq:heat-flux}
+% \end{align}
+% and the conservation of the heat flux (with no heat source) says
+% \begin{align}
+%     \frac{\partial q}{\partial x} = 0
+%     \label{eq:flux-conservation}
+% \end{align}
+% The solution to this equation gives us the temperature profile in the domain. 
+
+% \noindent\subsubsection{The weak formulation:}
+
+% \noindent\subsubsection{Why the weak form?}
+% Equation \ref{eq:flux-conservation} involves the first derivative of the heat flux, $q$, or the second derivative of the temperature, $T$, which may cause numerical instability. For example, thermal conductivity mismatches encountered at material interfaces cause the first derivative of the temperature to be discontinuous and the second derivative no available numerically. The main idea of the weak form is to turn the differential equation into an integral equation, which is easier to solve numerically.
+
+% The general idea behind the finite element method is to discretize the domain into small elements and then integrate over each element. To turn the differential equation \eqref{eq:flux-conservation} into an integral equation, we multiply by a test function and integrate over the domain.
+
+% \section{References}
+% \begin{thebibliography}{9}
+
+% \bibitem{comsol-weak-form}
+% COMSOL, ``Brief Introduction to the Weak Form,'' \emph{COMSOL Blog}.
+% \url{https://www.comsol.com/blogs/brief-introduction-weak-form/}
+
+% \end{thebibliography}
+
+\end{document}
