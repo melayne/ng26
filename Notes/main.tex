@@ -1,0 +1,59 @@
+\documentclass{report}
+\input{setup/preamble}
+\graphicspath{{images/}}
+
+\makeindex
+% Define theorem environments
+
+% \newtheoremstyle{name}
+%   {space above}     % 1
+%   {space below}     % 2  
+%   {body font}       % 3
+%   {indent amount}   % 4
+%   {theorem head font} % 5
+%   {punctuation after theorem head} % 6
+%   {space after theorem head} % 7
+%   {theorem head spec} % 8
+%   {space after theorem head} % 9
+
+
+
+% Modern approach using hooks - no additional packages needed
+
+\usepackage{subfiles} % Best loaded last in the preamble
+% \AddToHook{cmd/section/before}{\clearpage}
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+% \newcommand\textbox[1]{%
+%   \parbox{.333\textwidth}{#1}%
+% }
+
+\title{Multifile LaTeX Document Example}
+\author{Your Name}
+\date{\today}
+\makeindex[columns=1]
+\setcounter{tocdepth}{0}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+
+
+
+\setcounter{section}{1}
+% \section{Chapter 1}
+
+
+% \subfile{chapter_notes/ch1}
+\section{Notation}
+\subfile{FEA/notes.tex}
+\subfile{FEA/NGSolve_notes.tex}
+\subfile{numeric_methods/matrix_decomposition.tex}
+\subfile{numeric_methods/jacobi_method.tex}
+\subfile{FEA/two_level_notes.tex}
+\printindex
+\end{document}

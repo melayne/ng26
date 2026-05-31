@@ -1,0 +1,27 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+\section{NGSolve Notes}
+\textbf{CoefficientFunctions}: A CoefficientFunction is a function which can be evaluated on a mesh, and may be used to provide the coefficient or a right-hand-side to the variational formulation. Because typical finite element procedures iterate over elements, and map integration points from a reference element to a physical element, the evaluation of a CoefficientFunction requires a mapped integration point. The mapped integration point contains the coordinate, as well as the Jacobian, but also element number and region index. This allows the efficient evaluation of a wide class of functions needed for finite element computations.
+
+\ \\
+\textbf{TestFunction and TrialFunction}: TestFunction and TrialFunction are symbolic objects used to define the variational (weak) form of a partial differential equation. They act as placeholders for the unknown solution and the weighting function during the construction of bilinear and linear forms, allowing you to write equations in a natural mathematical syntax.
+\textbf{Key Concepts and Usage}
+\begin{itemize}
+    \item \textbf{Definition.}
+    They are created from a defined space (\texttt{fes}), typically using
+    \texttt{u = fes.TrialFunction()} and \texttt{v = fes.TestFunction()},
+    or simultaneously with \texttt{u, v = fes.TnT()}.
+    \item \textbf{Symbolic operation.}
+    They are used to symbolically express bilinear forms (e.g.,
+    \(a(u,v) = \int_\Omega \nabla u \cdot \nabla v \, dx\))
+    before assembly.
+    \item \textbf{Spaces.}
+    Test and trial functions belong to a \texttt{FESpace}
+    (e.g.\ \(H^1\), \(L^2\), \(H(\mathrm{div})\)) that defines their
+    continuity and polynomial order.
+\end{itemize}
+
+\textbf{GridFunction}: A GridFunction is a function defined on a mesh that can be used to store and manipulate the solution of a partial differential equation. It is a container for the coefficient vector of a finite element space, and can be used to store the solution of a partial differential equation.
+
+
+\end{document}

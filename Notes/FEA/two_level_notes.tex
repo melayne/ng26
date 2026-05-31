@@ -1,0 +1,50 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+\section{Two Level Finite Element Methods}
+
+We are want to solve 
+$$  
+Au = f.
+$$
+Let $u$ be the exact solution and let $u_h$ be our \textit{current} numerical approximation. Then define the error 
+as the difference between the exact solution and the current approximation.
+$$
+e = u - u_h.
+$$
+Since we do not know the exact solution, we can never compute the error exactly. Define the residual as
+$$
+r_h = f - Au_h,
+$$
+which tells us how badly our current approximation fails to satisfy the equation. Unlike the true error, we can compute the residual $r_h$, because we know $f$, $A$, and $u_h$. We also know how the error and the residual are related.
+$$
+r_h = f - Au_h = f - A(u - e) = f - Au + Ae = Ae_h.
+$$
+In an ideal world, we would solve $Ae_h = r_h$ exactly, then update 
+$$
+u_h \leftarrow u_h + e_h.
+$$
+But solving $Ae_h = r_h$ on a fine grid is as expensive as solving the original equation. This is why we require two-, or multi-, level methods.
+
+A general two-level method works as follows:
+\begin{enumerate}
+    \item Start with an approximation, initial guess, $u_h$.
+    \item Presmooth on fine mesh using a simple iterative method (e.g. Gauss-Seidel or Jacobi).
+    \item Compute the residual $r_h$.
+    \item Restrict the residual to the coarse grid, $r_H = I_h r_h$. \\
+    \begin{itemize*}
+        \item $I_h$ is the restriction operator which maps the fine grid to the coarse grid.
+    \end{itemize*}
+    \item Solve the coarse correction equation explicitly, $A_H e_H = r_H$ on the coarse grid.
+    \item Prolongate the coarse correction to the fine grid, $e_h = P e_H$. \\
+    \begin{itemize*}
+        \item $P$ is the prolongation operator which maps the coarse grid to the fine grid.
+    \end{itemize*}
+    \item Postsmooth on fine mesh using a simple iterative method (e.g. Gauss-Seidel or Jacobi).
+    \item Update the fine solution $u_h \leftarrow u_h + e_h$.
+\end{enumerate}
+
+\noindent \textbf{Note:} The most common way to construct the restriction and prolongation operators is to use the same finite element space on the fine and coarse grids. This is because the restriction and prolongation operators are the same as the interpolation operators.
+$$
+I_h = P^T
+$$
+\end{document}

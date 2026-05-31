@@ -1,0 +1,199 @@
+%=======================
+% PACKAGES
+%=======================
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage[reqno]{amsmath}
+\usepackage{amssymb, amscd, amsthm, amstext}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{lipsum}
+\usepackage[T1]{fontenc}
+\usepackage{imakeidx}
+\usepackage{systeme}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{thmtools}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{bigdelim} 
+\usepackage{tikz}
+\usepackage{pdfpages}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{fancyvrb}
+\usepackage{listings}
+\usepackage{subcaption}  % Add to preamble
+\usepackage[inline]{enumitem}
+%=======================
+% PACKAGE SETTINGS
+%=======================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+\usepackage{bookmark}
+
+%=======================
+% NEW COMMANDS
+%=======================
+
+% Symbols
+\newcommand\R{\ensuremath{\mathbb{R}}}
+\newcommand\Z{\ensuremath{\mathbb{Z}}}
+\renewcommand\O{\ensuremath{\emptyset}}
+\newcommand\B{\ensuremath{\mathcal{B}\ }}
+
+% Mathematical notation
+\newcommand{\inv}{^{-1}}
+
+% Redefining symbols
+\let\svlim\lim \def\lim{\svlim\limits}
+\let\implies\Rightarrow
+\let\impliedby\Leftarrow
+\let\iff\Leftrightarrow
+\let\epsilon\varepsilon
+
+\newcommand\Tstrut{\rule{0pt}{2.6ex}}         % = `top' strut
+\newcommand\Bstrut{\rule[-0.9ex]{0pt}{0pt}}   % = `bottom' strut
+%=======================
+% STYLING AND FORMATTING
+%=======================
+    % Define theorem environments
+
+    % \newtheoremstyle{name}
+    %   {space above}     % 1
+    %   {space below}     % 2  
+    %   {body font}       % 3
+    %   {indent amount}   % 4
+    %   {theorem head font} % 5
+    %   {punctuation after theorem head} % 6
+    %   {space after theorem head} % 7
+    %   {theorem head spec} % 8
+    %   {space after theorem head} % 9
+
+% Theorem
+
+% Definition
+% \newtheoremstyle{DefStyle}
+%     {10pt}
+%     {10pt}%
+%     {}
+%     {}%
+%     {\bfseries}
+%     {:}%
+%     { }
+%     {}%
+%     {}
+    
+% Note
+\newtheoremstyle{DefStyle}
+    {10pt}
+    {10pt}%
+    {}
+    {}%
+    {\bfseries}
+    {:}%
+    { }
+    {}%
+    {}
+    
+
+\theoremstyle{DefStyle}
+% \theoremstyle{plain}
+% \theoremstyle{definition}
+
+
+\newtheorem{thm}{Theorem}
+\newtheorem{exmp}{Example}
+\newtheorem{defn}{Definition}
+\newtheorem{note}{Note}
+
+% \declaretheoremstyle[
+%     headfont=\bfseries\sffamily, bodyfont=\normalfont,
+%     % mdframed={
+%     %     linewidth=2pt,
+%     %     rightline=false, topline=false, bottomline=false,
+%     %     linecolor=ForestGreen, backgroundcolor=ForestGreen!5,
+%     % }
+% ]{sdef}
+
+
+\declaretheoremstyle[
+    headfont=\bfseries\sffamily\color{ForestGreen!70!black}, bodyfont=\normalfont,
+    mdframed={
+        linewidth=2pt,
+        rightline=false, topline=false, bottomline=false,
+        linecolor=ForestGreen, backgroundcolor=ForestGreen!5,
+    }
+]{thmgreenbox}
+
+\declaretheorem{Theorem}
+% \declaretheorem[style=sdef]{sdef}
+\declaretheorem[style=thmgreenbox]{greenboxtheorem}
+
+
+\newtcolorbox{noot}[3][]
+{
+  arc=0mm,
+  colback  = white,
+  colframe = #2!50,
+  coltitle = #2!20!black,   
+  title    = {Side-note: #3},
+  fonttitle=\sffamily,
+  breakable,
+  #1,
+}
+
+\newenvironment{sidenote}[1]{\begin{noot}{gray}{#1}}{\end{noot}}
+
+\titleformat{\chapter}[frame]
+  {\normalfont}
+  {\filright
+   \footnotesize
+   \enspace ch. \arabic{chapter}.\enspace}
+  {8pt}
+  {\Large\bfseries\filcenter}
+\usepackage[dotinlabels]{titletoc}
+\titlecontents{chapter}[1.5em]{}{\contentslabel{2.3em}}{\hspace*{-2.3em}}{\hfill\contentspage}
+\titlespacing*{\chapter} {0pt}{0pt}{40pt}     % this alters "before" spacing (the second length argument) to 0
+
+\newcommand{\nchapter}[2]{%
+    \setcounter{chapter}{#1}%
+    \addtocounter{chapter}{-1}%
+    \chapter{#2}
+}
+
+\newcommand{\nsection}[3]{%
+    \setcounter{chapter}{#1}%
+    \setcounter{section}{#2}%
+    \addtocounter{section}{-1}%
+    \section{#3}
+}%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usetikzlibrary{decorations.pathreplacing,calc}
+\newcommand{\ntikzmark}[2]{#2\hspace{0.5em}\tikz[overlay,remember picture,baseline=(#1.base)]{\node[inner sep=0pt] (#1) {};}}
+
+\newcommand{\makebrace}[3]{%
+    \begin{tikzpicture}[overlay, remember picture]
+        \draw [decoration={brace,amplitude=0.5em},decorate]
+        let \p1=(#1), \p2=(#2) in
+        ({max(\x1,\x2)}, {\y1+0.8em}) -- node[right=0.6em] {#3} ({max(\x1,\x2)}, {\y2});
+    \end{tikzpicture}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newenvironment{idef}[2]{%
+    \par%
+    \vspace{0.5em}%
+    \noindent\textbf{#1:} \index{#2}
+}{%
+    \par%
+    \vspace{0.5em}%
+}
