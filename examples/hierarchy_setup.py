@@ -1,3 +1,4 @@
+#%%
 import os
 import sys
 
@@ -6,7 +7,7 @@ from ngsolve import H1, InnerProduct, Mesh, grad, dx, x, y, sin, pi
 from netgen.geom2d import unit_square
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from multigrid_tools_temp import (
+from multigrid_cycles import (
     build_form_setup,
     build_hierarchy,
     Level,
@@ -47,3 +48,5 @@ hierarchy = build_hierarchy(
     verbose=True,
 )
 
+
+# %%
