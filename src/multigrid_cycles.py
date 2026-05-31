@@ -154,12 +154,39 @@ class Level:
     _boundary_ids: dict = field(default_factory=dict, repr=False, compare=False)
 
     # -- construction -------------------------------------------------------
+    @staticmethod
+    def transfer_available(fes) -> bool:
+        """True if ``fes`` can build a prolongation to the immediately coarser level.
+
+        This holds exactly when the underlying mesh has been refined at least
+        once (``fes.mesh.levels > 1``). Note that ``fes.Prolongation()`` itself is
+        not a usable signal: it always returns a ``Prolongation`` object, and
+        ``CreateMatrix`` on an unrefined mesh silently returns a width-0 matrix
+        rather than raising.
+        """
+        return fes.mesh.levels > 1
+
     @classmethod
     def from_forms(cls, mesh, fes, a, f, *, P=None, PT=None,
-                   gfu=None, dirichlet_value=0.0, dirichlet="") -> "Level":
+                   gfu=None, dirichlet_value=0.0, dirichlet="",
+                   auto_transfer: bool = True) -> "Level":
+        """Build a :class:`Level` from assembled forms.
+
+        Grid-transfer operators are populated automatically: if ``P`` is not
+        given and ``auto_transfer`` is true and the space supports it
+        (:meth:`transfer_available`), the coarse->fine prolongation to the
+        immediately coarser level is built from ``fes.Prolongation()``. ``PT`` is
+        derived as ``P.CreateTranspose()`` whenever ``P`` is available and ``PT``
+        was not supplied. Pass ``auto_transfer=False`` (or explicit ``P``/``PT``)
+        to override -- e.g. to force a coarsest level on an already-refined mesh.
+        """
         if gfu is None:
             gfu = GridFunction(fes)
         free_ids, fixed_ids = get_free_fixed_ids(fes)
+        if P is None and auto_transfer and cls.transfer_available(fes):
+            P = fes.Prolongation().CreateMatrix(fes.mesh.levels - 1)
+        if PT is None and P is not None:
+            PT = P.CreateTranspose()
         return cls(mesh=mesh, fes=fes, a=a, f=f, gfu=gfu,
                    free_ids=free_ids, fixed_ids=fixed_ids,
                    P=P, PT=PT, dirichlet_value=dirichlet_value, dirichlet=dirichlet)

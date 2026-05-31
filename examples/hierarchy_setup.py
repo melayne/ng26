@@ -1,12 +1,14 @@
+#%%
 import os
 import sys
 
 import ngsolve as ng
 from ngsolve import H1, InnerProduct, Mesh, grad, dx, x, y, sin, pi
+from ngsolve.webgui import Draw
 from netgen.geom2d import unit_square
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from multigrid_tools_temp import (
+from multigrid_cycles import (
     build_form_setup,
     build_hierarchy,
     Level,
@@ -43,7 +45,24 @@ hierarchy = build_hierarchy(
     n_refines=2,                 # -> 3 levels (coarse, mid, fine)
     order=1,
     dirichlet=DIRICHLET,
-    dirichlet_value=0.0,
+    dirichlet_value={"left": 1.0, "right": 0.0, "top": 0.0, "bottom": 0.0},
     verbose=True,
 )
 
+
+# %%
+# ---------------------------------------------------------------------------
+# Set the initial guess on the finest level and draw it.
+# ---------------------------------------------------------------------------
+fine = hierarchy.finest
+fine.set_initial_guess(x0_cf)        # interpolates x0_cf and pins Dirichlet DOFs
+
+scene = Draw(
+    fine.gfu,
+    fine.mesh,
+    "initial guess (finest)",
+    deformation=True,
+    settings={"camera": {"transformations": [{"type": "rotateX", "angle": -45}]}},
+)
+
+# %%
