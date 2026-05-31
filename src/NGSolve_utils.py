@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 from typing import Optional
-from ngsolve import BilinearForm, LinearForm, GridFunction, grad, dx
+from ngsolve import BilinearForm, LinearForm, GridFunction, InnerProduct, grad, dx
 
 
 # ---------------------------------------------------------------------------
@@ -100,6 +100,48 @@ def apply_dirichlet(vec, fixed_ids, values: "float | np.ndarray" = 0.0):
         )
     arr[fixed_ids] = values
     return vec
+
+
+def vector_norm(vec, mat=None, *, free_ids: Optional[np.ndarray] = None) -> float:
+    """Norm of an NGSolve vector, optionally weighted by a matrix.
+
+    Generic, stateless helper that knows nothing about FE levels: it only
+    needs a vector and (optionally) a metric matrix.
+
+    Parameters
+    ----------
+    vec : ngsolve.BaseVector
+        The vector to measure.
+    mat : ngsolve matrix / operator, optional
+        Metric ``B``. If given, returns the weighted norm ``sqrt(vec^T B vec)``
+        (e.g. pass the stiffness matrix for the energy norm, or the mass matrix
+        for the discrete-``L2`` norm). For a meaningful weighted norm on a
+        constrained problem, ``vec`` should already be zero on fixed DOFs so they
+        do not contribute. If ``None`` (default), the Euclidean norm is returned.
+    free_ids : np.ndarray, optional
+        Only used for the Euclidean case (``mat is None``); restricts the norm to
+        these entries. Ignored when ``mat`` is given.
+
+    Returns
+    -------
+    float
+        ``sqrt(vec^T B vec)`` if ``mat`` is given, else the Euclidean norm.
+
+    Notes
+    -----
+    For an SPD metric the quadratic form is non-negative; tiny negative values
+    from round-off are clamped to zero before the square root.
+    """
+    if mat is None:
+        arr = vec.FV().NumPy() if hasattr(vec, "FV") else np.asarray(vec)
+        if free_ids is not None:
+            arr = arr[free_ids]
+        return float(np.linalg.norm(arr))
+
+    Bv = vec.CreateVector()
+    Bv.data = mat * vec
+    quad = float(InnerProduct(vec, Bv))
+    return float(np.sqrt(max(quad, 0.0)))
 
 
 def ng_matrix_to_csr(ng_mat) -> sp.csr_matrix:
