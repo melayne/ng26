@@ -29,3 +29,29 @@ uv-cache/
 
 # Folders to ignore
 in_progress/
+
+# LaTeX build artifacts (keep .tex sources and .pdf outputs)
+*.aux
+*.lof
+*.lot
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.idx
+*.ilg
+*.ind
+*.glo
+*.gls
+*.glg
+*.nav
+*.snm
+*.vrb
+*.dvi
+*.xdv

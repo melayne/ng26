@@ -1,0 +1,34 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Jacobi Method}
+\begin{center}
+    \begin{minipage}{0.95\textwidth}
+    \raggedright
+    \begin{itemize*}[label=\textbullet, itemjoin=\hspace{2em}]
+        \item \textbf{Linear system:} $Ax=b$
+        \item \textbf{Residual:} $r=b-Ax_k$
+        \item \textbf{Error:} $e=x-x_k$
+    \end{itemize*} \\
+    \vspace{1em}
+    \begin{itemize*}[label=\textbullet, itemjoin=\hspace{2em}]
+        \item \textbf{Preconditioner:} $P\approx A$
+    \end{itemize*}
+    \end{minipage}
+\end{center}
+
+The Jacobi method is a simple iterative method for solving linear systems of equations. It is a first-order method, and is given by the following update rule:
+
+$$
+x^{k+1} = D^{-1} (b - (L + U)x^k)
+$$
+
+where $D$ is the diagonal of the matrix $A$, $L$ is the lower triangular part of $A$, and $U$ is the upper triangular part of $A$.
+
+Source: 
+\begin{itemize}
+    \item \textit{A Multigrid Tutorial} by Briggs, et al. (2000)
+    \item https://yaningliucudenver.github.io/Numerical-Analysis-I/bookchapter3-2.html
+\end{itemize}
+
+\end{document}

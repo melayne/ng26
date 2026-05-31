@@ -1,0 +1,122 @@
+\documentclass[../main.tex]{subfiles}
+\begin{document}
+
+\section{Matrix Decomposition}
+Let $A \in \mathbb{R}^{m \times n}$ be the matrix that solves the system described by $Ax = b$ for $x \in \mathbb{R}^n$ and $b \in \mathbb{R}^m$.
+
+\[
+    A= \begin{bmatrix}
+        a_{1,1} & a_{1,2} & \cdots & a_{1,n}\\
+        a_{2,1} & a_{2,2} & \cdots & a_{2,n}\\
+        \vdots  & \vdots  & \ddots & \vdots\\
+        a_{m,1} & a_{m,2} & \cdots & a_{m,n}
+    \end{bmatrix},
+    \qquad
+    x= \begin{bmatrix}
+        x_1\\
+        x_2\\
+        \vdots\\
+        x_n
+    \end{bmatrix},
+    \qquad
+    b= \begin{bmatrix}
+        b_1\\
+        b_2\\
+        \vdots\\
+        b_m
+    \end{bmatrix}.
+\]
+
+After performing \href{https://en.wikipedia.org/wiki/Gaussian_elimination}{Gaussian elimination} on $A$, $U$ (row reduction of $A$) is in row echelon form if:
+
+\begin{itemize}
+    \item All zero rows are at the bottom.
+    \item The first nonzero entry in a row (from the left) is located to the right of the first nonzero entry in every row above.
+\end{itemize}
+
+The rank of $A$ is the number of nonzero rows in $U$. We say the system $A\mathbf{x} = \mathbf{b}$ is inconsistent (i.e. no solution) if $\text{rank}(A) < \text{rank}([A\mathbf{b}])$. The system has a unique solution when $\text{rank}(A) = \text{rank}([A\mathbf{b}]) = n$ (i.e. $\text{rank}(A)$ equals the number of variables in the system). The system has infinitely many solutions when $\text{rank}(A) = \text{rank}([A\mathbf{b}]) \text{ and rank}(A) < n$.
+
+\subsection{LU Decomposition}
+
+Any non-singular matrix $A$ can be decomposed into a product of a lower triangular matrix $L$ and an upper triangular matrix $U$ such that $A = LU$, using the procedures of Gaussian elimination.
+
+\begin{thm}
+    If $A$ can be reduced by Gaussian elimination to row echelon form using only operations of the form "add $c$ times row $j$ to row $i$" (that is, without scaling rows and without interchanging rows), then $A$ has an LU decomposition of the form $A = LU$, where $L$ is lower triangular and $U$ is upper triangular.
+
+    In particular, after performing Gaussian elimination on $A$, the matrix $U$ is the corresponding row echelon form of $A$, and $L$ is given by
+    \[
+        L = \begin{pmatrix}
+        1 & 0 & 0 & \cdots & 0 \\
+        -c_{2,1} & 1 & 0 & \cdots & 0 \\
+        -c_{3,1} & -c_{3,2} & 1 & \cdots & 0 \\
+        \vdots & \vdots & \vdots & \ddots & \vdots \\
+        -c_{m,1} & -c_{m,2} & -c_{m,3} & \cdots c& 1
+        \end{pmatrix}
+    \]
+    where each entry corresponds to the elementary row operation "add $c_{i,j}$ times row $j$ to row $i$" performed during Gaussian elimination.
+\end{thm}
+
+If $A$ can be decomposed into $A = LU$, then $\mathbf{x}$ can be solved for by:
+
+\begin{enumerate}
+    \item Let $\mathbf{y} = U\mathbf{x}$ and solve the system for $L\mathbf{y} = \mathbf{b}$.
+    \item Once $\mathbf{y}$ is found, the upper triangular system $U\mathbf{x} = \mathbf{y}$ can be solved with back substitution for $\mathbf{x}$.
+\end{enumerate}
+
+If we transform $A$ into $U$ by Gaussian elimination, the lower triangular matrix$L$ can be found by performing negations of the same operations on the identity matrix in reverse order. There are other methods to find $L$ and $U$, such as the Doolittle algorithm and the Crout algorithm.
+
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{|c|p{0.82\textwidth}|}
+        \hline
+        \textbf{Steps} & \\ \hline
+        1. & Initialize $L$ to an identity matrix, $\mathbb{I}$ of dimension $n\times n$, and $U=A$. \\ \hline
+        2. & For $i=1,\ldots,n$ do Step 3. \\ \hline
+        3. & \hspace{1.5em}For $j=i+1,\ldots,n$ do Steps 4--5. \\ \hline
+        4. & \hspace{3em}Set $l_{ji}=u_{ji}/u_{ii}$. \\ \hline
+        5. & \hspace{3em}Perform $U_j=(U_j-l_{ji}U_i)$ (where $U_i$, $U_j$ represent the $i$ and $j$ rows of the matrix $\mathbf{U}$, respectively). \\ \hline
+    \end{tabular}
+\end{table}
+
+Once we have $L$ and $U$, we can solve for as many right-hand side vectors $\mathbf{b}$ as desired very quickly using a two-step process. First, let $\mathbf{y}=U\mathbf{x}$ and then solve $L\mathbf{y}=\mathbf{b}$ for $\mathbf{y}$ by forward substitution.
+\subsubsection*{Pseudocode for forward substitution}
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|p{0.72\textwidth}|}
+    \hline
+    \textbf{Steps} & \\ \hline
+    1. & Set $y_1=b_1/l_{11}$. \\ \hline
+    2. & For $i=2,3,\ldots,n$ do Step 3. \\ \hline
+    3. & \[
+    y_i=\left(b_i-\sum_{j=1}^{i-1} l_{ij}y_j\right)\big/l_{ii}
+    \] \\ \hline
+    \end{tabular}
+\end{table}
+Then solve $U\mathbf{x}=\mathbf{y}$ for $\mathbf{x}$ using backward substitution.
+\subsubsection*{Pseudocode for backward substitution}
+\begin{table}[!htbp]
+    \centering
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|c|p{0.72\textwidth}|}
+    \hline
+    \textbf{Steps} & \\ \hline
+    1. & Set $x_n=y_n/u_{nn}$. \\ \hline
+    2. & For $i=n-1,n-2,\ldots,1$ do Step 3. \\ \hline
+    3. & \[
+    x_i=\left(y_i-\sum_{j=i+1}^{n} u_{ij}x_j\right)\big/u_{ii}
+    \] \\ \hline
+    \end{tabular}
+\end{table}
+
+We can also easily solve for $A^{-1}$ and $\det(A)$ once $L$ and $U$ are known. For more details, see \href{https://johnfoster.pge.utexas.edu/numerical-methods-book/LinearAlgebra_LU.html}{Numerical Methods for Engineers}.
+
+
+\noindent Sources:
+\begin{itemize}
+    \item \url{https://ubcmath.github.io/MATH307/systems/lu.html}
+    \item \url{https://johnfoster.pge.utexas.edu/numerical-methods-book/LinearAlgebra_LU.html}
+\end{itemize}
+
+\end{document}
