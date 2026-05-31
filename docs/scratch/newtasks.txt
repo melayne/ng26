@@ -8,7 +8,7 @@ show that the length of time it takes should grow linearly with # of unknowns
 
 present next Wednesday in class 30 minutes slides, not just notebooks  
 
-UG Student Dia Patel meet maybe next week
+UG Student Diya Patel meet maybe next week
 
 PreConditioned CG
 (subpar Penn State version)
