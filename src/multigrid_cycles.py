@@ -37,7 +37,8 @@ Quick start
     hierarchy = build_hierarchy(coarse, setup, n_refines=3, dirichlet="left|right|top|bottom")
 
     solver = MultigridSolver(hierarchy)
-    res = solver.solve(max_cycles=20, tol=1e-10, verbose=True)
+    # tol is a *relative* reduction factor: stop when ||r|| <= tol * ||r0||.
+    res, level_res = solver.solve(max_cycles=20, tol=1e-10, verbose=True)
     u = hierarchy.finest.gfu          # solution GridFunction
 """
 
@@ -169,21 +170,22 @@ class Level:
     @classmethod
     def from_forms(cls, mesh, fes, a, f, *, P=None, PT=None,
                    gfu=None, dirichlet_value=0.0, dirichlet="",
-                   auto_transfer: bool = True) -> "Level":
+                   built_P: bool = True) -> "Level":
         """Build a :class:`Level` from assembled forms.
 
-        Grid-transfer operators are populated automatically: if ``P`` is not
-        given and ``auto_transfer`` is true and the space supports it
-        (:meth:`transfer_available`), the coarse->fine prolongation to the
-        immediately coarser level is built from ``fes.Prolongation()``. ``PT`` is
-        derived as ``P.CreateTranspose()`` whenever ``P`` is available and ``PT``
-        was not supplied. Pass ``auto_transfer=False`` (or explicit ``P``/``PT``)
-        to override -- e.g. to force a coarsest level on an already-refined mesh.
+        The prolongation ``P`` (coarse->fine) and its transpose ``PT``
+        (fine->coarse) are populated automatically: if ``P`` is not given and
+        ``built_P`` is true and the space supports it
+        (:meth:`transfer_available`), the prolongation to the immediately coarser
+        level is built from ``fes.Prolongation()``. ``PT`` is derived as
+        ``P.CreateTranspose()`` whenever ``P`` is available and ``PT`` was not
+        supplied. Pass ``built_P=False`` (or explicit ``P``/``PT``) to override
+        -- e.g. to force a coarsest level on an already-refined mesh.
         """
         if gfu is None:
             gfu = GridFunction(fes)
         free_ids, fixed_ids = get_free_fixed_ids(fes)
-        if P is None and auto_transfer and cls.transfer_available(fes):
+        if P is None and built_P and cls.transfer_available(fes):
             P = fes.Prolongation().CreateMatrix(fes.mesh.levels - 1)
         if PT is None and P is not None:
             PT = P.CreateTranspose()
@@ -328,7 +330,7 @@ class Level:
         r.data = b - self.a.mat * x
         return r
 
-    def vector_norm(self, r, *, norm: "NormKind | object" = "l2") -> float:
+    def vector_norm(self, r, *, norm: "NormKind | object" = "energy") -> float:
         """Norm of a vector over this level's free DOFs.
 
         ``norm`` selects the metric:
@@ -366,7 +368,7 @@ class Level:
 
         return _vector_norm(r, op)
 
-    def residual_norm(self, b=None, x=None, *, norm: "NormKind | object" = "l2") -> float:
+    def residual_norm(self, b=None, x=None, *, norm: "NormKind | object" = "energy") -> float:
         """Norm of the residual ``b - A x`` over free DOFs (see :meth:`vector_norm`)."""
         b = self.f.vec if b is None else b
         x = self.gfu.vec if x is None else x
@@ -374,41 +376,53 @@ class Level:
         r.FV().NumPy()[self.fixed_ids] = 0.0
         return self.vector_norm(r, norm=norm)
 
-    def free_residual_norm(self, b=None, x=None) -> float:
-        """Euclidean free-residual norm (kept for backward compatibility)."""
-        return self.residual_norm(b, x, norm="l2")
-
     # -- solves / smoothing -------------------------------------------------
     def coarse_solve(self, b, x) -> None:
         """Exact solve ``A x = b`` on free DOFs (fixed DOFs of ``x`` untouched)."""
         x.data = self.a.mat.Inverse(self.fes.FreeDofs()) * b
 
-    def smooth(self, b, x, *, kind: SmootherKind = "native",
-               nsweeps: int = 2, omega: float = 1.0, verbose: bool = False) -> None:
-        """Relax ``A x = b`` in place on free DOFs using the chosen smoother."""
+    def smooth(self, b, x, *, kind: str = "native",
+               nsweeps: int = 2, omega: float = 1.0, verbose: bool = False,
+               backward: bool = False) -> None:
+        """Relax ``A x = b`` in place on free DOFs using the chosen smoother.
+
+        ``backward=True`` uses a backward Gauss-Seidel sweep (post-smoothing leg).
+        """
         if nsweeps <= 0:
             return
         if kind == "native":
-            self._smooth_native(b, x, nsweeps=nsweeps, omega=omega, verbose=verbose)
+            self._smooth_native(b, x, nsweeps=nsweeps, omega=omega,
+                                verbose=verbose, backward=backward)
         elif kind == "gs":
-            self._smooth_scipy_gs(b, x, nsweeps=nsweeps, omega=omega, verbose=verbose)
+            self._smooth_scipy_gs(b, x, nsweeps=nsweeps, omega=omega,
+                                  verbose=verbose, backward=backward)
         else:
             raise ValueError(f"Unknown smoother kind: {kind!r} (use 'native' or 'gs').")
 
-    def _smooth_native(self, b, x, *, nsweeps, omega, verbose) -> None:
-        r = x.CreateVector()
+    def _smooth_native(self, b, x, *, nsweeps, omega, verbose, backward) -> None:
+        sm = self.smoother
+        x0 = x.CreateVector()
         for sweep in range(1, nsweeps + 1):
-            r.data = b - self.a.mat * x
-            x.data += omega * (self.smoother * r)
+            if backward:
+                x0.data = x
+                sm.SmoothBack(x, b)
+                if omega != 1.0:
+                    x.data = x0.data + omega * (x.data - x0.data)
+            else:
+                r = b - self.a.mat * x
+                x.data += omega * (sm * r)
             if verbose:
+                r = b - self.a.mat * x
                 rn = float(np.linalg.norm(r.FV().NumPy()[self.free_ids]))
-                print(f"    [native] sweep {sweep:3d}  ||r_free|| = {rn:.6e}")
+                tag = "back" if backward else "fwd"
+                print(f"    [native {tag}] sweep {sweep:3d}  ||r_free|| = {rn:.6e}")
 
-    def _smooth_scipy_gs(self, b, x, *, nsweeps, omega, verbose) -> None:
+    def _smooth_scipy_gs(self, b, x, *, nsweeps, omega, verbose, backward) -> None:
         b_np = b.FV().NumPy()
         x_np = x.FV().NumPy().copy()
+        free = self.free_ids[::-1] if backward else self.free_ids
         x_np, _ = gauss_seidel_sweeps(
-            self.A_csr, b_np, x_np, self.free_ids,
+            self.A_csr, b_np, x_np, free,
             nsweeps=nsweeps, omega=omega, verbose=verbose,
         )
         x.FV().NumPy()[:] = x_np
@@ -452,6 +466,17 @@ class MultigridHierarchy:
     def coarsest(self) -> Level:
         return self.levels[0]
 
+    def info(self) -> None:
+        """Print a compact per-level hierarchy summary table."""
+        print(f"  {'lev':>3}  {'ndof':>7}  {'A':>13}  {'P(c->f)':>12}  {'nfree':>7}  {'nfixed':>6}")
+        print(f"  {'---':>3}  {'-------':>7}  {'-------------':>13}  {'------------':>12}  {'-------':>7}  {'------':>6}")
+        for lev, level in enumerate(self.levels):
+            a_shape = f"{level.a.mat.height}x{level.a.mat.width}"
+            p_shape = f"{level.P.height}x{level.P.width}" if level.P is not None else "-"
+            tag = "  (coarse)" if lev == self.coarsest_idx else ("  (fine)" if lev == self.finest_idx else "")
+            print(f"  {lev:>3}  {level.fes.ndof:>7}  {a_shape:>13}  {p_shape:>12}  "
+                  f"{len(level.free_ids):>7}  {len(level.fixed_ids):>6}{tag}")
+
 
 def build_hierarchy(
     coarse_mesh: ng.Mesh,
@@ -475,10 +500,6 @@ def build_hierarchy(
     levels: list[Level] = []
     pending_P = None
 
-    if verbose:
-        print(f"  {'lev':>3}  {'ndof':>7}  {'A':>13}  {'P(c->f)':>12}  {'nfree':>7}  {'nfixed':>6}")
-        print(f"  {'---':>3}  {'-------':>7}  {'-------------':>13}  {'------------':>12}  {'-------':>7}  {'------':>6}")
-
     for lev in range(n_refines + 1):
         snapshot = ng.Mesh(working.ngmesh.Copy())
         fes = H1(snapshot, order=order, dirichlet=dirichlet)
@@ -495,19 +516,14 @@ def build_hierarchy(
         )
         levels.append(level)
 
-        if verbose:
-            a_shape = f"{a.mat.height}x{a.mat.width}"
-            p_shape = f"{pending_P.height}x{pending_P.width}" if pending_P is not None else "-"
-            tag = "  (coarse)" if lev == 0 else ("  (fine)" if lev == n_refines else "")
-            print(f"  {lev:>3}  {fes.ndof:>7}  {a_shape:>13}  {p_shape:>12}  "
-                  f"{len(level.free_ids):>7}  {len(level.fixed_ids):>6}{tag}")
-
         if lev < n_refines:
             working.Refine()
             fes_next = H1(working, order=order, dirichlet=dirichlet)
             pending_P = fes_next.Prolongation().CreateMatrix(working.levels - 1)
-
-    return MultigridHierarchy(levels)
+    hierarchy = MultigridHierarchy(levels)
+    if verbose:
+        hierarchy.info()
+    return hierarchy
 
 
 # Backwards-compatible alias for the name used in the test script.
@@ -538,76 +554,179 @@ class MultigridSolver:
         self.cfg = config or VCycleConfig()
 
     # -- core recursion -----------------------------------------------------
+    def _smooth_record(self, level, b, x, nsweeps, norm, *, verbose=False,
+                       backward: bool = False):
+        """Smooth one sweep at a time, recording the free-residual norm after each.
+
+        Returns a list of length ``nsweeps`` (the residual ``norm`` after sweep
+        1, 2, ..., nsweeps). Costs one extra residual evaluation per sweep, so it
+        is only used when level recording is active.
+        """
+        out: list[float] = []
+        for _ in range(nsweeps):
+            level.smooth(b, x, kind=self.cfg.smoother, nsweeps=1,
+                         omega=self.cfg.omega, verbose=verbose, backward=backward)
+            r = level.residual(b, x)
+            r.FV().NumPy()[level.fixed_ids] = 0.0
+            out.append(level.vector_norm(r, norm=norm))
+        return out
+
     def v_cycle(self, idx: int, b, x, *, verbose: bool = False,
+                rec_cycle: Optional[dict] = None,
                 rec: Optional[dict] = None,
-                norm: "NormKind | object" = "l2") -> None:
+                norm: "NormKind | object" = "energy",
+                debug: bool = False) -> None:
         """Approximately solve ``A_idx x = b`` in place (one V-cycle).
 
-        If ``rec`` is a dict, the residual norm of this level's equation is
-        stored as ``rec[idx]``, measured in ``norm`` (see ``Level.vector_norm``).
-        For the coarsest level it is the residual *before* the direct solve (the
-        size of the coarse correction problem); for every other level it is the
-        residual *after pre-smoothing* (the quantity that gets restricted). The
-        ``"l2"`` norm reuses residuals already computed by the cycle and adds no
-        extra matrix-vector products; weighted norms add one mat-vec per level.
+        If ``rec_cycle`` is a dict, one residual norm per level (in ``norm``) is
+        stored as ``rec_cycle[idx]``: for the coarsest level it is measured
+        *before* the coarse solve; on every other level it is measured *after
+        pre-smoothing* (the residual that gets restricted). This reuses work the
+        cycle already performs and is cheap.
+
+        If ``rec`` is a dict, per-sweep norms are stored as
+        ``rec[idx] = {"down": [...], "up": [...]}`` (see ``record_levels`` in
+        :meth:`solve`). This smooths one sweep at a time and costs extra mat-vecs.
+
+        If ``debug`` is true, prints the current level and the shapes of the
+        vectors/operators involved (``x``, ``b``, ``r``, ``PT``, ``r_c``, ``P``),
+        indented by depth, to trace the transfer dimensions on both legs.
         """
         level = self.h.levels[idx]
+        pad = "  " * (self.h.finest_idx - idx)  # indent by descent depth
 
+        # If at coarsest level, solve the coarse problem directly or with smoothing.
         if idx == self.h.coarsest_idx:
-            if rec is not None:
-                rec[idx] = level.residual_norm(b, x, norm=norm)
+            if debug:
+                print(f"{pad}[lvl {idx}] coarsest: "
+                      f"x={len(x)}, b={len(b)}, A={level.a.mat.height}x{level.a.mat.width}, "
+                      f"direct={self.cfg.coarse_direct}")
+
             if self.cfg.coarse_direct:
+                before = None
+                if rec is not None or rec_cycle is not None:
+                    before = level.residual_norm(b, x, norm=norm)
+                    if rec_cycle is not None:
+                        rec_cycle[idx] = before
                 level.coarse_solve(b, x)
+                if rec is not None:
+                    after = level.residual_norm(b, x, norm=norm)
+                    rec[idx] = {"down": [before], "up": [after]}
+            elif rec is not None:
+                down = self._smooth_record(level, b, x, self.cfg.coarse_sweeps,
+                                           norm, verbose=verbose)
+                rec[idx] = {"down": down, "up": []}
+                if rec_cycle is not None:
+                    rec_cycle[idx] = down[-1]
             else:
                 level.smooth(b, x, kind=self.cfg.smoother,
                              nsweeps=self.cfg.coarse_sweeps,
                              omega=self.cfg.omega, verbose=verbose)
+                if rec_cycle is not None:
+                    rec_cycle[idx] = level.residual_norm(b, x, norm=norm)
             return
 
-        level.smooth(b, x, kind=self.cfg.smoother,
-                     nsweeps=self.cfg.pre_sweeps, omega=self.cfg.omega, verbose=verbose)
+        if debug:
+            print(f"{pad}[lvl {idx}] down: x={len(x)}, b={len(b)}, "
+                  f"A={level.a.mat.height}x{level.a.mat.width}, "
+                  f"PT={level.PT.height}x{level.PT.width}, P={level.P.height}x{level.P.width}")
+
+        # pre-smoothing (descent)
+        if rec is not None:
+            down = self._smooth_record(level, b, x, self.cfg.pre_sweeps,
+                                       norm, verbose=verbose)
+        else:
+            level.smooth(b, x, kind=self.cfg.smoother,
+                         nsweeps=self.cfg.pre_sweeps, omega=self.cfg.omega, verbose=verbose)
 
         r = level.residual(b, x)
         r.FV().NumPy()[level.fixed_ids] = 0.0
-        if rec is not None:
-            rec[idx] = level.vector_norm(r, norm=norm)
+        if rec_cycle is not None:
+            rec_cycle[idx] = level.vector_norm(r, norm=norm)
 
         r_c = level.PT.CreateColVector()
         r_c.data = level.PT * r
 
+        if debug:
+            print(f"{pad}[lvl {idx}] restrict: r={len(r)} --PT({level.PT.height}x"
+                  f"{level.PT.width})--> r_c={len(r_c)}  (to lvl {idx - 1})")
+
         e_c = r_c.CreateVector()
         e_c.FV().NumPy()[:] = 0.0
-        self.v_cycle(idx - 1, r_c, e_c, verbose=verbose, rec=rec, norm=norm)
+        self.v_cycle(idx - 1, r_c, e_c, verbose=verbose, rec_cycle=rec_cycle,
+                     rec=rec, norm=norm, debug=debug)
 
         e_f = level.P.CreateColVector()
         e_f.data = level.P * e_c
         x.data += e_f
 
-        level.smooth(b, x, kind=self.cfg.smoother,
-                     nsweeps=self.cfg.post_sweeps, omega=self.cfg.omega, verbose=verbose)
+        if debug:
+            print(f"{pad}[lvl {idx}] prolong: e_c={len(e_c)} --P({level.P.height}x"
+                  f"{level.P.width})--> e_f={len(e_f)}  (back to lvl {idx})")
+
+        # post-smoothing (ascent): backward GS on the way up (NGSolve MG pattern)
+        if rec is not None:
+            up = self._smooth_record(level, b, x, self.cfg.post_sweeps,
+                                     norm, verbose=verbose, backward=True)
+            rec[idx] = {"down": down, "up": up}
+        else:
+            level.smooth(b, x, kind=self.cfg.smoother,
+                         nsweeps=self.cfg.post_sweeps, omega=self.cfg.omega,
+                         verbose=verbose, backward=True)
 
     # -- drivers ------------------------------------------------------------
     def solve(self, *, max_cycles: int = 20, tol: float = 1e-10,
               verbose: bool = False, record_levels: bool = False,
-              norm: "NormKind | object" = "l2"):
+              norm: "NormKind | object" = "energy", debug: bool = False):
         """Iterate V-cycles on the finest level's real problem ``A x = f``.
 
-        Dirichlet data is taken from ``finest.gfu`` (set it via
-        ``finest.set_initial_guess`` or ``finest.enforce_dirichlet`` first).
-        ``norm`` selects the residual metric used both for the convergence test
-        and the recorded histories (``"l2"``, ``"A"``/energy, ``"M"``/mass, or a
-        custom operator; see ``Level.vector_norm``).
+        Uses ``self.h.finest`` for ``b = f.vec`` and ``x = gfu.vec``. Smoothing
+        counts and the coarse solver come from ``self.cfg`` (:class:`VCycleConfig`),
+        set when constructing :class:`MultigridSolver`.
+
+        Before calling, set the initial iterate and Dirichlet data on the finest
+        level, e.g. ``finest.set_initial_guess(...)`` or
+        ``finest.enforce_dirichlet(finest.gfu.vec)``.
+
+        Parameters
+        ----------
+        max_cycles : int, default 20
+            Maximum number of V-cycles to apply. The loop may stop earlier if
+            ``tol`` is satisfied.
+        tol : float, default 1e-10
+            Relative residual tolerance. Stops when the finest-level residual
+            (in ``norm``) satisfies ``||r|| <= tol * ||r0||``, where ``||r0||``
+            is measured before the first cycle. Use ``tol=0.0`` to always run
+            exactly ``max_cycles`` cycles.
+        verbose : bool, default False
+            If True, print the initial residual and one line per cycle with
+            finest-level ``||r||`` and contraction rate.
+        record_levels : bool, default False
+            If True, also record per-sweep residual norms on each level during
+            each cycle (extra mat-vecs; see ``sweep_hist``). If False, only the
+            cheap per-level snapshots in ``level_hist`` are recorded.
+        norm : str or matrix-like, default ``"energy"``
+            Norm for convergence and all recorded residuals. Passed to
+            :meth:`Level.residual_norm` / :meth:`Level.vector_norm`: ``"l2"``,
+            ``"energy"`` (alias ``"A"``), ``"mass"`` (alias ``"M"``), or a custom
+            operator understood by those methods.
+        debug : bool, default False
+            If True, print a dimension trace for the **first** V-cycle only
+            (level indices and vector/operator shapes during restriction and
+            prolongation); see :meth:`v_cycle`.
 
         Returns
         -------
-        list[float]
-            History of finest-level residual norms (one per cycle), unless
-            ``record_levels`` is set.
-        (list[float], list[list[float]])
-            When ``record_levels=True``, also returns ``level_hist`` indexed by
-            level (``level_hist[idx][c]`` is the residual norm of level ``idx``
-            recorded during cycle ``c``; see :meth:`v_cycle` for the exact point
-            at which each level is measured).
+        hist : list[float]
+            Finest-level residual norm after each V-cycle (same ``norm``).
+        level_hist : list[list[float]]
+            One residual norm per level per cycle, measured during the cycle
+            (coarsest: before the coarse solve; other levels: after pre-smoothing).
+            ``level_hist[idx][c]`` is cycle ``c`` (0-based).
+        sweep_hist : list[list[dict]] | None
+            Present only when ``record_levels=True``. ``sweep_hist[idx][c]`` is
+            ``{"down": [...], "up": [...]}`` of per-sweep norms on level ``idx``
+            during cycle ``c`` (see :meth:`v_cycle`).
         """
         fine = self.h.finest
         x = fine.gfu.vec
@@ -616,29 +735,37 @@ class MultigridSolver:
 
         nlabel = norm if isinstance(norm, str) else "B"
         hist: list[float] = []
-        level_hist: "list[list[float]] | None" = (
+        level_hist: list[list[float]] = [[] for _ in range(self.h.nlevels)]
+        sweep_hist: "list[list[dict]] | None" = (
             [[] for _ in range(self.h.nlevels)] if record_levels else None
         )
         r0 = fine.residual_norm(b, x, norm=norm)
         if verbose:
             print(f"cycle {0:3d}  ||r||_{nlabel} = {r0:.6e}")
         for cyc in range(1, max_cycles + 1):
-            rec = {} if record_levels else None
-            self.v_cycle(self.h.finest_idx, b, x, rec=rec, norm=norm)
-            if level_hist is not None:
+            rec_cycle: dict[int, float] = {}
+            rec_sweeps = {} if record_levels else None
+            if debug and cyc == 1:
+                print(f"--- v_cycle dimension trace (cycle {cyc}) ---")
+            # only trace the first cycle to avoid flooding the console
+            self.v_cycle(self.h.finest_idx, b, x, rec_cycle=rec_cycle,
+                         rec=rec_sweeps, norm=norm, debug=debug and cyc == 1)
+            for idx in range(self.h.nlevels):
+                level_hist[idx].append(rec_cycle.get(idx, float("nan")))
+            if sweep_hist is not None:
                 for idx in range(self.h.nlevels):
-                    level_hist[idx].append(rec.get(idx, float("nan")))
+                    sweep_hist[idx].append(rec_sweeps.get(idx))
             fine.enforce_dirichlet(x)
             rn = fine.residual_norm(b, x, norm=norm)
             hist.append(rn)
             if verbose:
                 rate = rn / hist[-2] if len(hist) > 1 else rn / r0
                 print(f"cycle {cyc:3d}  ||r||_{nlabel} = {rn:.6e}  (rate {rate:.3f})")
-            if rn <= tol:
+            if rn <= tol * r0:
                 break
         if record_levels:
-            return hist, level_hist
-        return hist
+            return hist, level_hist, sweep_hist
+        return hist, level_hist
 
     # def apply(self, rhs, *, x=None):
     #     """Preconditioner action ``z = M^{-1} rhs`` (one V-cycle from zero).

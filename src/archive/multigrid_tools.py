@@ -293,7 +293,7 @@ class FELevel:
         Return NGSolve vector r = f - A u (full algebraic residual).
 
         Note: r[fixed_ids] is generally **nonzero** — boundary rows are not
-        the discrete PDE residual. Use ``free_residual_norm()`` for convergence.
+        the discrete PDE residual. Use ``residual_norm(norm="l2")`` for convergence.
         """
         r = self.f.vec.CreateVector()
         r.data = self.f.vec - self.a.mat * self.gfu.vec
@@ -310,9 +310,23 @@ class FELevel:
         r.FV().NumPy()[self.fixed_ids] = 0.0
         return r
 
-    def free_residual_norm(self) -> float:
-        r_np = self.compute_residual_vector().FV().NumPy()
-        return float(np.linalg.norm(r_np[self.free_ids]))
+    def residual_norm(self, *, norm="l2") -> float:
+        """Norm of r on free DOFs. Supports ``'l2'`` and ``'A'``/``'energy'``."""
+        r = self.compute_residual_vector()
+        r.FV().NumPy()[self.fixed_ids] = 0.0
+        r_np = r.FV().NumPy()
+        if isinstance(norm, str):
+            key = norm.lower()
+            if key in ("l2", "euclidean"):
+                return float(np.linalg.norm(r_np[self.free_ids]))
+            if key in ("a", "energy"):
+                Ar = self.a.mat.CreateColVector()
+                Ar.data = self.a.mat * r
+                return float(np.sqrt(float(np.dot(r_np, Ar.FV().NumPy()))))
+            raise ValueError(f"Unknown norm {norm!r}; use 'l2' or 'A'.")
+        Br = self.a.mat.CreateColVector()
+        Br.data = norm * r
+        return float(np.sqrt(float(np.dot(r_np, Br.FV().NumPy()))))
 
     def fixed_residual_norm(self) -> float:
         """Norm of r on Dirichlet DOFs (often nonzero even when BCs are correct)."""
@@ -429,7 +443,7 @@ class FELevel:
             self.gfu.vec.data += correction
             self.enforce_dirichlet()
 
-            rnorm = self.free_residual_norm()
+            rnorm = self.residual_norm(norm="l2")
             hist.append(rnorm)
             if verbose:
                 print(f"sweep {sweep:3d}  ||r_free||_2 = {rnorm:.6e}")
@@ -792,7 +806,7 @@ class MultilevelSolver:
         if finest_level_idx is None:
             finest_level_idx = self.hierarchy.finest_idx
         self._v_cycle_recursive(finest_level_idx, verbose=verbose)
-        return self.hierarchy.levels[finest_level_idx].free_residual_norm()
+        return self.hierarchy.levels[finest_level_idx].residual_norm(norm="l2")
 
     def apply_preconditioner(self, rhs_vec, *, finest_level_idx: Optional[int] = None, verbose: bool = False):
         """
