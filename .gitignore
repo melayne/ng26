@@ -19,6 +19,7 @@ uv-cache/
 .idea/
 *.swp
 *.swo
+pyproject.toml
 
 # Logs
 *.log
