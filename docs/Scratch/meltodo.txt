@@ -1,0 +1,47 @@
+A nice little to do list to keep track of this NGSolve project for Spring Term 2026
+
+updated as of end of Week 8
+1. DONE: Confirm A is spd by checking it against random vectors
+2. DONE: Finish fixing whatever is messing with my coarse solve
+3. DONE: Get my two-level (GS fine), then solve on coarse, then (GS back) and report perfected
+4. Compare a manual-coded GS in PV's style against the NGSolve one to see if they are the same
+5. Code up the two level from 3 as a preconditioner then a CG solve.
+6. DONE: Find the norm functions that are built into NGSolve
+7. Find the norm functions that are built into numpy/scipy
+8. DONE: Code a function to check in norm of how close the approximated solution is to the known original
+9. Make a wrapper that will do an input number of levels like the lecture notes from this Week
+10. Make a sequence of meshes of fine-coarse and CG at each level recording the result 
+11. Make plots showing the difference in those results in both norms
+12. Make a visual heat map of how the smoothing affects a matrix
+13. Start on the KL paper (don't forget to check for prebuilt tools)
+
+############################################
+
+
+Notes from meeting:
+A. solve the same problem in the coarse resolution and the fine resolution and compare accuracy of the two solutions
+B. if we do this on a sequence of progressively finer meshes, measure the error (u/mesh - uh/mesh) and observe the scaling of the error (1/h or 1/h^2) depending on the norm
+C. Use stiffness matrix for energy norm and mass matrix for L2 norm
+you can use the bilinear form a(u-uh,u-uh) then sqrt = sqrt sum int |nabla(u-uh)|^2 dx
+u_I = sum_i u(x_i)phi_i
+u_I = (u(x_i)), u_h=(u_{h,i})
+
+instead you can do sqrt (u_I-u_h)^T A (u_I-u_h) (energy norm) should behave like order h
+or the weaker norm (L2) sqrt (u_I - u_h)^T M (u_i-u_h)=sqrt(int_omega (u_I - u_h)^2) should behave like order h^2
+max norm is max|u-u_h| functions may be unbounded
+mass matrix int_omega phi_i phi_j = m_ij, M=(m_ij)
+
+D. we have two level method very close to working
+we could two or multilevel as a preconditioner for conjugate gradient
+some hybrid of custom vs built-in based on timing
+
+E. future tasks can include:
+    - possibly getting paid for doing more of this work and research in the summer 
+    - implementing the MLMC method from the paper with the random constant coefficients
+    - implementing methods on other PDEs
+    - teaching and providing tasks for RTG summer UG fellow
+    - collecting and formatting lecture materials on these topics
+    - implementing parallel versions if appropriate for the problem using MFEM
+
+
+
