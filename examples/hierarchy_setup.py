@@ -46,7 +46,7 @@ hierarchy = build_hierarchy(
     n_refines=2,                 # -> 3 levels (coarse, mid, fine)
     order=1,
     dirichlet=DIRICHLET,
-    dirichlet_value={"left": 1.0, "right": 0.0, "top": 0.0, "bottom": 0.0},
+    dirichlet_value={"left": 1.0, "right": 1.0, "top": 1.0, "bottom": 0.0},
     verbose=True,
 )
 
