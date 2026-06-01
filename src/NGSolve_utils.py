@@ -113,11 +113,12 @@ def vector_norm(vec, mat=None, *, free_ids: Optional[np.ndarray] = None) -> floa
     vec : ngsolve.BaseVector
         The vector to measure.
     mat : ngsolve matrix / operator, optional
-        Metric ``B``. If given, returns the weighted norm ``sqrt(vec^T B vec)``
-        (e.g. pass the stiffness matrix for the energy norm, or the mass matrix
-        for the discrete-``L2`` norm). For a meaningful weighted norm on a
-        constrained problem, ``vec`` should already be zero on fixed DOFs so they
-        do not contribute. If ``None`` (default), the Euclidean norm is returned.
+        Metric ``B``. If given, returns ``sqrt(vec^T B vec)``. With the
+        stiffness matrix ``A``, that is the discrete ``A``-seminorm ``||v||_A``
+        (for an error vector ``e`` this is the usual energy error norm). It is
+        **not** ``sqrt(v^T A^{-1} v)``. For a constrained problem, ``vec``
+        should be zero on fixed DOFs. If ``mat`` is ``None``, the Euclidean
+        norm on ``free_ids`` (if given) or the full vector is returned.
     free_ids : np.ndarray, optional
         Only used for the Euclidean case (``mat is None``); restricts the norm to
         these entries. Ignored when ``mat`` is given.
