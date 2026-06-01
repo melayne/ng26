@@ -1,7 +1,7 @@
 - Neal getting the custom v-cycles on our hierarchy solidly working
 - run tolerance-based convergence study
 - manually pcg builtin on hierarchy
-- code P/PT (if Neal doesn't do it first)
+- code P/PT (if Neal doesn't do it first) DONE
 - docs
 - look at notes on pictures I took of the board
 - Neal focusing on for a fixed tolerance, how many iterations does it take
