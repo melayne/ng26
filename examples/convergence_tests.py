@@ -1,7 +1,7 @@
 """
-Demo: using multigrid_tools_temp.py for
+Demo: using ``multigrid_cycles`` for
   (1) a single-level smoother (no coarse correction), and
-  (2) a single V-cycle (and, for context, a full multi-cycle solve).
+  (2) V-cycles / tolerance studies on a built hierarchy.
 
 Model problem (2D Poisson, homogeneous Dirichlet on all sides):
     -Laplace(u) = f   on the unit square,  u = 0 on the boundary
@@ -79,43 +79,51 @@ def l2_error(u_exact, level) -> float:
 
 def l2_residual(level, b=None, x=None) -> float:
     """Discrete residual norm ``||r||_2`` for ``r = b - A x`` on free DOFs."""
-    return level.residual_norm(b, x, norm="l2")
+    return level.residual_norm(b, x)
 
 
 def energy_error(u_exact, level) -> float:
     """Energy error ``||e||_A = sqrt(e^T A e)`` for ``e = u_h - u_exact``."""
-    gfu_exact = ng.GridFunction(level.fes)
-    gfu_exact.Set(u_exact)
-
-    err_vec = level.gfu.vec.CreateVector()
-    err_vec.data = level.gfu.vec - gfu_exact.vec
-    err_vec.FV().NumPy()[level.fixed_ids] = 0.0
-    return level.vector_norm(err_vec, norm="energy")
+    return level.error_norm(u_exact=u_exact)
 
 
-def energy_residual(level, b=None, x=None) -> float:
-    """``sqrt(r^T A r)`` for ``r = b - A x`` (not ``sqrt(r^T A^{-1} r)``)."""
-    return level.residual_norm(b, x, norm="energy")
+def hist_series(hist, key: str = "l2") -> list[float]:
+    """One finest-level history from ``MultigridSolver.solve`` (``hist`` dict)."""
+    if isinstance(hist, dict):
+        return list(hist[key])
+    return list(hist)
 
 
-def plot_residual_vs_cycle(
+def plot_hist_vs_cycle(
     hist,
     *,
+    key: str = "l2",
     r0: float | None = None,
     ax=None,
     title: str | None = None,
-    ylabel: str = r"$\|r\|_2$ (finest)",
+    ylabel: str | None = None,
     show: bool = True,
 ):
-    """Finest-level residual history from ``MultigridSolver.solve`` (``hist``)."""
-    ncyc = len(hist)
+    """Plot ``hist[key]`` after each V-cycle (cycle index starts at 1)."""
+    series = hist_series(hist, key)
+    if ylabel is None:
+        if key in ("l2", "euclidean", "2"):
+            ylabel = r"$\|r\|_2$ (finest)"
+        elif key in ("energy", "A"):
+            ylabel = r"$\|u_{\mathrm{exact}} - u_h\|_A$ (finest)"
+        elif key in ("update_dual", "dual", "mg-dual", "preconditioned"):
+            ylabel = r"$\sqrt{r_{\mathrm{before}}^T \Delta x}$ (finest)"
+        else:
+            ylabel = f"{key} (finest)"
+
+    ncyc = len(series)
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 4))
     else:
         fig = ax.figure
 
     cycles = np.arange(1, ncyc + 1, dtype=float)
-    ax.semilogy(cycles, hist, "o-", ms=7, lw=1.5, label="after cycle")
+    ax.semilogy(cycles, series, "o-", ms=7, lw=1.5, label="after cycle")
 
     if r0 is not None:
         ax.semilogy([0.0], [r0], "s", ms=8, label="initial")
@@ -134,10 +142,10 @@ def plot_residual_vs_cycle(
     return ax
 
 
-def plot_energy_residual_vs_cycle(hist, **kwargs):
-    """Plot ``hist`` when ``solve(..., norm='energy')`` (``sqrt(r^T A r)``)."""
-    kwargs.setdefault("ylabel", r"$\sqrt{r^T A r}$ (finest)")
-    return plot_residual_vs_cycle(hist, **kwargs)
+def plot_residual_vs_cycle(hist, **kwargs):
+    """L2 finest residual history (alias for ``plot_hist_vs_cycle(..., key='l2')``)."""
+    kwargs.setdefault("key", "l2")
+    return plot_hist_vs_cycle(hist, **kwargs)
 
 
 poisson_setup = build_form_setup(bilinear=poisson_bilinear, linear=poisson_linear)
@@ -346,6 +354,7 @@ hierarchy = build_hierarchy(
     order=1,
     dirichlet=DIRICHLET,
     dirichlet_value=0.0,
+    u_exact=u_exact,
     verbose=True,
 )
 
@@ -363,18 +372,40 @@ fine.set_initial_guess(x0_cf, enforce_bc=True)
 print(f"\n  before cycle  ||r_free||_2 = {fine.residual_norm():.6e}"
       f"   L2 err = {l2_error(u_exact, fine):.6e}")
 
-# --- Option A: the driver, capped to a single cycle (sets BC, returns history)
+# --- Multi-cycle driver (relative L2 residual stopping)
 r0 = fine.residual_norm()
-hist, level_res = solver.solve(max_cycles = 25, tol=1e-8, verbose=False, record_levels=False)
-num_cycles = len(hist)
-print(f"  after {num_cycles} cycles $||r_free||_2 = {hist[-1]:.6e}"
+hist, level_hist = solver.solve(
+    max_cycles=25,
+    tol=1e-8,
+    verbose=False,
+    record_levels=False,
+    norms=("l2", "dual"),
+    stop_norm="l2",
+)
+l2_hist = hist_series(hist, "l2")
+dual_hist = hist_series(hist, "dual")
+num_cycles = len(l2_hist)
+print(f"  after {num_cycles} cycles  ||r_free||_2 = {l2_hist[-1]:.6e}"
+      f"   dual = {dual_hist[-1]:.6e}"
       f"   L2 err = {l2_error(u_exact, fine):.6e}")
 
-plot_energy_residual_vs_cycle(hist, 
-                              r0=r0, 
-                              title = f"Single V-cycle on a 3-level hierarchy \n tol = 1e-10"
-                            )
-
+fig, (ax_l2, ax_dual) = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
+plot_hist_vs_cycle(
+    hist,
+    key="l2",
+    r0=r0,
+    ax=ax_l2,
+    title="L2 residual (finest, tol=1e-8)",
+    show=False,
+)
+plot_hist_vs_cycle(
+    hist,
+    key="dual",
+    ax=ax_dual,
+    title=r"Update dual $\sqrt{r_{\mathrm{before}}^T \Delta x}$ (full V-cycle, finest)",
+    show=False,
+)
+fig.tight_layout()
 plt.show()
 
 #%%
@@ -399,41 +430,72 @@ study_cfg = VCycleConfig(
     coarse_direct=True,
 )
 
-# Smooth x0 so ||r0||_A is comparable across refinements (HF x0_cf skews cycle counts).
+# Zero IC so ||r0||_2 is comparable across refinements (HF x0_cf skews cycle counts).
 x0_study = 0.0
 
 mesh_c = Mesh(unit_square.GenerateMesh(maxh=0.1))
-results = [] # list of tuples (n_refines, ndof, n_cycles, time, r0, r_fin, ok)
+results = []  # (ndof, n_cycles, r0, r_fin, dual_fin, ok)
 
 print(f"  {'n_ref':>5}  {'ndof':>8}  {'cycles':>6}  {'time(s)':>9}  "
-      f"{'||r0||':>10}  {'||r_fin||':>10}  {'tol||r0||':>10}  ok")
-      
+      f"{'||r0||':>10}  {'||r_fin||':>10}  {'dual_fin':>10}  {'tol||r0||':>10}  ok")
+
+fig_study, (ax_dual_hist, ax_cycles, ax_dual_ndof) = plt.subplots(3, 1, figsize=(8, 10))
+
 for n_refines in [1, 2, 3, 4, 5, 6]:
     hierarchy = build_hierarchy(
         mesh_c, poisson_setup, n_refines=n_refines,
         order=1, dirichlet=DIRICHLET, dirichlet_value=0.0,
+        u_exact=u_exact,
     )
     fine = hierarchy.finest
     solver = MultigridSolver(hierarchy, study_cfg)
     fine.set_initial_guess(x0_study, enforce_bc=True)
-    r0 = fine.residual_norm(norm="l2")
+    r0 = fine.residual_norm()
     t0 = time.perf_counter()
-    hist, _ = solver.solve(max_cycles=100, tol=TOL, norm="l2")
+    hist, _ = solver.solve(
+        max_cycles=100, tol=TOL, norms=("l2", "dual"), stop_norm="l2",
+    )
     elapsed = time.perf_counter() - t0
-    r_fin = hist[-1]
+    l2_hist = hist_series(hist, "l2")
+    dual_hist = hist_series(hist, "dual")
+    r_fin = l2_hist[-1]
+    dual_fin = dual_hist[-1]
     ok = r_fin <= TOL * r0
-    results.append((fine.ndof, len(hist), r0, r_fin, ok))
-    print(f"  {n_refines:5d}  {fine.ndof:8d}  {len(hist):6d}  {elapsed:9.3f}  "
-          f"{r0:10.3e}  {r_fin:10.3e}  {TOL * r0:10.3e}  {ok}")
+    results.append((fine.ndof, len(l2_hist), r0, r_fin, dual_fin, ok))
 
-ndofs, n_cycles, *_ = zip(*results)
-plt.figure(figsize=(7, 4))
-plt.scatter(np.asarray(ndofs), np.asarray(n_cycles))
-plt.xlabel("fine ndof")
-plt.ylabel("V-cycles to reach tol")
-plt.title(fr"fixed tol = {TOL:g}," + r" $\|r\|_{L2}$ norm, $x_0=0$")
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
+    cycles = np.arange(1, len(dual_hist) + 1, dtype=float)
+    ax_dual_hist.semilogy(
+        cycles, dual_hist, "o-", ms=5, lw=1.2, label=f"ndof={fine.ndof}",
+    )
+
+    print(f"  {n_refines:5d}  {fine.ndof:8d}  {len(l2_hist):6d}  {elapsed:9.3f}  "
+          f"{r0:10.3e}  {r_fin:10.3e}  {dual_fin:10.3e}  {TOL * r0:10.3e}  {ok}")
+
+ndofs, n_cycles, _, _, dual_fins, _ = zip(*results)
+ndofs_a = np.asarray(ndofs)
+n_cycles_a = np.asarray(n_cycles)
+dual_fins_a = np.asarray(dual_fins)
+
+ax_dual_hist.set_xlabel("V-cycle")
+ax_dual_hist.set_ylabel(r"$\sqrt{r_{\mathrm{before}}^T \Delta x}$ (finest)")
+ax_dual_hist.set_title(
+    fr"Dual norm per cycle (tol = {TOL:g}, stop $\|r\|_2$, $x_0=0$)"
+)
+ax_dual_hist.legend(loc="upper right", fontsize=8)
+ax_dual_hist.grid(True, alpha=0.3)
+
+ax_cycles.plot(ndofs_a, n_cycles_a, "o-", ms=7, lw=1.5)
+ax_cycles.set_ylabel("V-cycles to tol")
+ax_cycles.set_title(fr"Stopping on $\|r\|_2$ (tol = {TOL:g}, $x_0=0$)")
+ax_cycles.grid(True, alpha=0.3)
+
+ax_dual_ndof.semilogy(ndofs_a, dual_fins_a, "s-", ms=7, lw=1.5, color="C1")
+ax_dual_ndof.set_xlabel("fine ndof")
+ax_dual_ndof.set_ylabel(r"final $\sqrt{r^T \Delta x}$")
+ax_dual_ndof.set_title("Final dual norm at stop (finest)")
+ax_dual_ndof.grid(True, alpha=0.3)
+
+fig_study.tight_layout()
 plt.show()
 
 #%%
@@ -467,22 +529,26 @@ for h_coarse in [0.01, 0.02, 0.04, 0.08]:
     hierarchy = build_hierarchy(
         mesh_c, poisson_setup, n_refines=n_refines,
         order=1, dirichlet=DIRICHLET, dirichlet_value=0.0,
+        u_exact=u_exact,
     )
     fine = hierarchy.finest
     solver = MultigridSolver(hierarchy, study_cfg)
     fine.set_initial_guess(x0_study, enforce_bc=True)
-    r0 = fine.residual_norm(norm="l2")
+    r0 = fine.residual_norm()
     t0 = time.perf_counter()
-    hist, _ = solver.solve(max_cycles=100, tol=TOL, norm="l2")
+    hist, _ = solver.solve(
+        max_cycles=100, tol=TOL, norms=("l2",), stop_norm="l2",
+    )
     elapsed = time.perf_counter() - t0
-    r_fin = hist[-1]
+    l2_hist = hist_series(hist, "l2")
+    r_fin = l2_hist[-1]
     ok = r_fin <= TOL * r0
     results.append((
         h_coarse, n_refines, hierarchy.nlevels, fine.ndof,
-        len(hist), r0, r_fin, ok,
+        len(l2_hist), r0, r_fin, ok,
     ))
     print(f"  {h_coarse:6.3f}  {n_refines:5d}  {hierarchy.nlevels:4d}  {fine.ndof:8d}  "
-          f"{len(hist):6d}  {elapsed:9.3f}  {r0:10.3e}  {r_fin:10.3e}  {TOL * r0:10.3e}  {ok}")
+          f"{len(l2_hist):6d}  {elapsed:9.3f}  {r0:10.3e}  {r_fin:10.3e}  {TOL * r0:10.3e}  {ok}")
 
 _, _, n_levels, ndofs, n_cycles, *_ = zip(*results)
 ndof_fine = ndofs[0]
@@ -494,7 +560,7 @@ plt.plot(n_levels, n_cycles, "o-", label=f"fine ndof = {ndof_fine}")
 plt.xlabel("number of multigrid levels")
 plt.ylabel("V-cycles to reach tol")
 plt.title(
-    fr"fixed finest $h \approx {h_finest:g}$, tol = {TOL:g}, $\|r\|_A$, $x_0=0$"
+    fr"fixed finest $h \approx {h_finest:g}$, tol = {TOL:g}, $\|r\|_2$, $x_0=0$"
 )
 plt.grid(True, alpha=0.3)
 plt.legend()
@@ -506,7 +572,6 @@ plt.show()
 
 
 #%%
-from ngsolve import BaseMatrix, solvers  # type: ignore[import-untyped]
 
 class VCyclePreconditioner(BaseMatrix):
     """y = M^{-1} x  via one V-cycle on A z = x, z0 = 0."""
@@ -516,20 +581,9 @@ class VCyclePreconditioner(BaseMatrix):
         self.level = level
         self.idx = mg_solver.h.finest_idx
 
-    # def IsComplex(self):
-    #     return False
-
-    # def Shape(self):
-    #     n = len(self.level.gfu.vec)
-    #     return (n, n)
-
-    # def CreateVector(self, col):
-    #     return self.level.gfu.vec.CreateVector()
-
     def Mult(self, x, y):
         y.FV().NumPy()[:] = 0.0
         self.solver.v_cycle(self.idx, x, y)
-        self.level.enforce_dirichlet(y)
         y.FV().NumPy()[self.level.fixed_ids] = 0.0
 
 # --- after you built hierarchy + MultigridSolver(hierarchy, study_cfg) ---
@@ -550,141 +604,3 @@ print("PCG (NGSolve CG + your V-cycle):", n_cg, "iterations")
 
 
 
-
-
-
-
-# #%%
-# # ===========================================================================
-# # (3) Per-level residual each cycle (default) + optional per-sweep detail.
-# # ===========================================================================
-
-# print()
-# print("=" * 70)
-# print("(3) Per-level residual each cycle (default recording)")
-# print("=" * 70)
-
-# fine.set_initial_guess(x0_cf, enforce_bc=True)
-# r0_energy = fine.residual_norm(norm="energy")
-# hist, level_hist = solver.solve(max_cycles=8, tol=1e-12, norm="energy")
-
-# ncyc = len(hist)
-# plot_energy_residual_vs_cycle(
-#     hist, r0=r0_energy, title="Finest energy residual vs cycle",
-# )
-
-# header = "  cycle  " + "".join(f"level {i:>2}     " for i in range(hierarchy.nlevels))
-# print(header)
-# for c in range(ncyc):
-#     row = "".join(f"{level_hist[i][c]:.4e}  " for i in range(hierarchy.nlevels))
-#     print(f"  {c + 1:>4}   {row}")
-# print("\n  hist[c] = finest residual after cycle c+1.")
-# print("  level_hist[idx][c] = residual on level idx during cycle c+1")
-# print("  (coarsest before direct solve; others after pre-smoothing).")
-
-# print()
-# print("=" * 70)
-# print("(3b) Per-sweep detail (record_levels=True)")
-# print("=" * 70)
-
-# fine.set_initial_guess(x0_cf, enforce_bc=True)
-# hist, level_hist, sweep_hist = solver.solve(
-#     max_cycles=8, tol=1e-12, record_levels=True, norm="energy",
-# )
-
-# ncyc = len(hist)
-
-# # Per-level residual after pre-smooth / before coarse solve (one point per cycle).
-# L = np.asarray(level_hist).T
-# plt.figure(figsize=(7, 4))
-# plt.semilogy(np.arange(1, ncyc + 1), L, "o-")
-# plt.xlabel("cycle")
-# plt.ylabel(r"$\|r\|_E$")
-# plt.legend([f"level {i}" for i in range(L.shape[1])])
-# plt.grid(True, alpha=0.3)
-# plt.tight_layout()
-# plt.show()
-
-
-# def _fmt(seq):
-#     return "[" + ", ".join(f"{v:.2e}" for v in seq) + "]"
-
-
-# for c in range(ncyc):
-#     print(f"\n  cycle {c + 1}:")
-#     for idx in range(hierarchy.nlevels - 1, -1, -1):  # finest -> coarsest
-#         rec = sweep_hist[idx][c]
-#         tag = "(fine)" if idx == hierarchy.finest_idx else ("(coarse)" if idx == 0 else "")
-#         print(f"    level {idx} {tag:>8}  down={_fmt(rec['down'])}  up={_fmt(rec['up'])}")
-
-# print("\n  down[k] = residual after pre-smooth sweep k (descent);")
-# print("  up[k]   = residual after post-smooth sweep k (ascent).")
-# print("  coarsest: down=[before direct solve], up=[after direct solve ~ 0].")
-
-# # %%
-
-# import os
-# import sys
-
-# import ngsolve as ng
-# from ngsolve import H1, InnerProduct, Mesh, grad, dx, x, y, sin, pi
-# from netgen.geom2d import unit_square
-
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-# from multigrid_cycles import (
-#     build_form_setup,
-#     build_hierarchy,
-#     Level,
-#     MultigridSolver,
-#     VCycleConfig,
-# )
-
-# # ---------------------------------------------------------------------------
-# # Shared problem definition
-# # ---------------------------------------------------------------------------
-# DIRICHLET = "left|right|top|bottom"
-# u_exact = sin(pi * x) * sin(pi * y)
-# rhs_cf = 2 * pi * pi * sin(pi * x) * sin(pi * y)   # = -Laplace(u_exact)
-
-# # An initial guess that mixes a smooth mode with a rough (high-frequency) mode,
-# # so the effect of smoothing vs. a full V-cycle is visible.
-# x0_cf = sin(pi * x) * sin(pi * y) + 0.3 * sin(6 * pi * x) * sin(6 * pi * y)
-
-
-# def poisson_bilinear(a, u, v):
-#     a += InnerProduct(grad(u), grad(v)) * dx
-
-
-# def poisson_linear(f, u, v):
-#     f += rhs_cf * v * dx
-
-
-# poisson_setup = build_form_setup(bilinear=poisson_bilinear, linear=poisson_linear)
-
-
-# def l2_error(level) -> float:
-#     """L2 norm of (current iterate - exact solution) on a level's mesh."""
-#     return float(ng.sqrt(ng.Integrate((level.gfu - u_exact) ** 2 * dx, level.mesh)))
-
-
-# # ===========================================================================
-# # (2) SINGLE V-CYCLE: build a hierarchy, then run exactly one cycle.
-# # ===========================================================================
-# print()
-# print("=" * 70)
-# print("(2) Single V-cycle on a 3-level hierarchy")
-# print("=" * 70)
-
-# mesh_c = Mesh(unit_square.GenerateMesh(maxh=0.05))
-# hierarchy = build_hierarchy(
-#     mesh_c,
-#     poisson_setup,
-#     n_refines=2,                 # -> 3 levels (coarse, mid, fine)
-#     order=1,
-#     dirichlet=DIRICHLET,
-#     dirichlet_value=0.0,
-#     verbose=True,
-# )
-# # %%
-
-# %%
