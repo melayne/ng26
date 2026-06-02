@@ -277,7 +277,7 @@ if not _ipython:
     plt.show()
 
 # ===========================================================================
-# (2) Coarse Grid Correction
+# (1b) Coarse Grid Correction
 # ===========================================================================
 
 # Coarse mesh must be the *parent* of poisson_level.mesh (same base as section 1).
@@ -595,7 +595,7 @@ gfu = fine.gfu
 gfu.vec[:] = 0.0
 fine.set_initial_guess(x0_study, enforce_bc=True)  # or leave 0
 
-inv = solvers.CGSolver(mat=a.mat, pre=pre, maxiter=200, tol=1e-10, printrates=True)
+inv = solvers.CGSolver(mat=a.mat, pre=pre, maxiter=200, tol=1e-8, printrates=True)
 gfu.vec.data = inv * f.vec
 
 n_cg = inv.iterations
@@ -604,3 +604,27 @@ print("PCG (NGSolve CG + your V-cycle):", n_cg, "iterations")
 
 
 
+
+# %%
+
+fine = hierarchy.finest
+a, f = fine.a, fine.f   # BilinearForm / LinearForm on finest
+
+pre = VCyclePreconditioner(solver, fine)
+gfu = fine.gfu
+gfu.vec[:] = 0.0
+fine.set_initial_guess(x0_study, enforce_bc=True)  # or leave 0
+
+
+inv = solvers.CGSolver(
+    mat=a.mat,
+    freedofs=fine.fes.FreeDofs(),   # BitArray, not fine.free_ids
+    maxiter=2000, tol=1e-8, printrates=True,
+)
+gfu.vec.data = inv * f.vec
+
+n_cg = inv.iterations
+print("PCG (NGSolve CG + your V-cycle):", n_cg, "iterations")
+
+
+# %%
