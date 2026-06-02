@@ -15,13 +15,16 @@ zero-initialized correction as ``x``; ``f.vec`` on any level is not overwritten.
 
 Restriction ``r_c = PT * r`` and prolongation ``x += P * e_c`` implement the
 standard correction scheme.
+
+Diagnostics (``MultigridSolver.solve`` / ``record_norms``): three norm families —
+L2 residual ``||r||_2``, energy error ``||u_exact - x||_A``, and update-dual
+``sqrt(r_before^T dx)``. See the comment above ``NormKind``.
 """
 
 from __future__ import annotations
 
 import os
 import sys
-import time
 import warnings
 from dataclasses import dataclass, field
 from typing import Callable, Literal, Optional
@@ -37,7 +40,7 @@ _SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-from NGSolve_utils import (  # noqa: E402
+from NGSolve_utils import (
     apply_dirichlet,
     bilinear_form_to_csr,
     boundary_dof_ids,
@@ -48,8 +51,20 @@ from preconditioners import gauss_seidel_sweeps
 
 FormSetupFn = Callable[[object], "tuple[BilinearForm, LinearForm]"]
 SmootherKind = Literal["gs", "native"]
-# "l2": ||v||_2 on free DOFs.
-# "A" / "energy": sqrt(v^T A v) — energy norm for errors e; for residuals r this is r^T A r, not ||r||_{A^{-1}}.
+# Norm names fall into three families (do not mix them up):
+#
+# 1) Residual L2 (stopping / algebraic):  "l2"  ->  ||r||_2
+#    Use in solve(..., stop_norm="l2").  Level.residual_norm().
+#
+# 2) Energy ERROR (needs u_exact):  "energy", "A" in record_norms / error_norm
+#    ->  ||e||_A = sqrt(e^T A e),  e = u_exact - x.
+#    NOT a residual norm.  Requires level._gfu_exact (see solve() guard).
+#
+# 3) Dual / preconditioned (needs r_before, dx):  "update_dual", etc.
+#    ->  sqrt(r_before^T dx)  ~  ||r||_{A^{-1}}  when dx ~ A^{-1} r_before.
+#
+# Residuals are measured in L2 only (Level.residual_norm, solve stop_norm).
+# Energy norm sqrt(e^T A e) is only for the error e via error_norm / record_norms.
 NormKind = Literal[
     "l2",
     "euclidean",
@@ -75,7 +90,8 @@ _DUAL_NORM_KEYS = {
     "preconditioned",
 }
 
-_ENERGY_NORM_KEYS = {
+# Only for ||u_exact - x||_A in record_norms / error_norm — not for residuals.
+_ENERGY_ERROR_NORM_KEYS = {
     "energy",
     "A",
 }
@@ -160,6 +176,11 @@ class Level:
         Scalar, array, CoefficientFunction, or boundary dict for BC enforcement.
     dirichlet
         Boundary pattern label from space construction.
+    u_exact
+        Optional exact solution (coefficient or grid function) for error norms.
+    _gfu_exact
+        Cached exact solution on this mesh when ``u_exact`` was passed to
+        ``from_forms``.
     """
 
     mesh: ng.Mesh
@@ -179,19 +200,8 @@ class Level:
     _smoother: object = field(default=None, repr=False, compare=False)
     _boundary_ids: dict = field(default_factory=dict, repr=False, compare=False)
 
-    u_exact: GridFunction | None = None
-    _gfu_exact: ng.GridFunction | None = None
-
-
-
-    # gfu_exact = ng.GridFunction(level.fes)
-    # gfu_exact.Set(u_exact)
-
-    # err_vec = level.gfu.vec.CreateVector()
-    # err_vec.data = level.gfu.vec - gfu_exact.vec
-    # err_vec.FV().NumPy()[level.fixed_ids] = 0.0
-    # return level.vector_norm(err_vec, norm="energy")
-
+    u_exact: "ng.CoefficientFunction | GridFunction | None" = None
+    _gfu_exact: GridFunction | None = None
 
     # -- construction -------------------------------------------------------
     @staticmethod
@@ -213,7 +223,8 @@ class Level:
     @classmethod
     def from_forms(cls, mesh, fes, a, f, *, P=None, PT=None,
                    gfu=None, dirichlet_value=0.0, dirichlet="",
-                   built_P: bool = True, u_exact: GridFunction | None = None
+                   built_P: bool = True,
+                   u_exact: "ng.CoefficientFunction | GridFunction | None" = None,
                 ) -> "Level":
         """Construct one multigrid level from assembled forms on a single mesh.
 
@@ -239,7 +250,9 @@ class Level:
         built_P
             If True, auto-create ``P``/``PT`` when the mesh supports it.
         u_exact
-            Exact solution for error calculation.
+            Manufactured or reference solution (``CoefficientFunction`` or
+            ``GridFunction``). Stored as ``_gfu_exact`` for ``error_norm`` /
+            ``record_norms`` energy keys.
         Returns
         -------
         Level
@@ -425,89 +438,55 @@ class Level:
         r.data = b - self.a.mat * x
         return r
 
-    def exact_error(self, x,  u_exact = None):
-        """Compute error ``u_exact - x``."""
+    def _exact_vec(self, u_exact=None):
+        """Coefficient vector for the exact solution on this level."""
+        if u_exact is not None and hasattr(u_exact, "vec"):
+            return u_exact.vec
 
-        u_exact = self.u_exact if u_exact is None else u_exact
-        if u_exact is None:
-            raise ValueError("u_exact is not set")
+        if u_exact is not None:
+            tmp = GridFunction(self.fes)
+            tmp.Set(u_exact)
+            return tmp.vec
 
+        if self._gfu_exact is not None:
+            return self._gfu_exact.vec
+
+        if self.u_exact is not None:
+            tmp = GridFunction(self.fes)
+            tmp.Set(self.u_exact)
+            return tmp.vec
+
+        raise ValueError("u_exact is not set on this level")
+
+
+    def exact_error(self, x, u_exact=None):
         e = x.CreateVector()
-        e.data = u_exact.vec - x.vec
+        e.data = self._exact_vec(u_exact) - x
         return e
 
-    def vector_norm(self, vec, *, norm: "NormKind | object" = "l2") -> float:
-        """Norm of a coefficient vector on this level.
 
-        Parameters
-        ----------
-        r
-            Vector to measure (zero on fixed DOFs for ``"A"`` / ``"energy"``).
-        norm
-            ``"l2"`` — Euclidean norm on ``free_ids``.
-            ``"A"`` / ``"energy"`` — ``sqrt(vec^T A vec)`` with this level's ``a.mat``.
-            Or any NGSolve operator ``B`` for ``sqrt(r^T B r)``.
+    def vector_norm(self, vec, *, op=None) -> float:
+        """``sqrt(vec^T op vec)`` if ``op`` is given, else ``||vec||_2`` on free DOFs."""
+        return _vector_norm(vec, op, free_ids=self.free_ids)
 
-        Returns
-        -------
-        float
+    def energy_norm(self, vec) -> float:
+        """``||v||_A = sqrt(v^T A v)`` with this level's stiffness matrix."""
+        return self.vector_norm(vec, op=self.a.mat)
 
-        Notes
-        -----
-        For error ``e``, ``norm="energy"`` is ``||e||_A``. For residual ``r``,
-        the energy error norm is ``sqrt(vec^T A^{-1} vec)`` (not implemented here;
-        use ``"l2"`` for standard residual monitoring, or pass an inverse operator).
-        ``"mass"`` / ``"M"`` is not implemented yet.
-        """
-        if isinstance(norm, str):
-            key = norm.lower()
-            if key in ("l2", "euclidean", "2"):
-                return _vector_norm(vec, free_ids=self.free_ids)
-            if key in ("a", "energy"):
-                op = self.a.mat
-            elif key in ("m", "mass"):
-                raise NotImplementedError(
-                    "Mass-matrix ('M'/'mass') norm is not implemented yet; the "
-                    "mass matrix will be provided via the form setup. For now use "
-                    "'l2', 'A', or pass a matrix/operator directly."
-                )
-            else:
-                raise ValueError(   
-                    f"Unknown norm {norm!r}; use 'l2', 'A', or pass an operator."
-                )
-        else:
-            op = norm  # assume a BaseMatrix-like operator with `op * vec`
-
-        return _vector_norm(vec, op)
-
-    def residual_norm(self, b=None, x=None, *, norm: "NormKind | object" = "l2") -> float:
-        """Residual norm ``||b - A x||`` on free DOFs.
-
-        Parameters
-        ----------
-        b, x
-            Defaults to ``f.vec`` and ``gfu.vec``.
-        norm
-            ``"l2"`` (default) — standard relative residual test for ``solve``.
-            ``"A"`` / ``"energy"`` — ``sqrt(r^T A r)``, not ``||r||_{A^{-1}}``.
-
-        Returns
-        -------
-        float
-        """
+    def residual_norm(self, b=None, x=None) -> float:
+        """``||b - A x||_2`` on free DOFs (algebraic residual for stopping)."""
         b = self.f.vec if b is None else b
         x = self.gfu.vec if x is None else x
         r = self.residual(b, x)
         r.FV().NumPy()[self.fixed_ids] = 0.0
-        return self.vector_norm(r, norm=norm)
+        return self.vector_norm(r)
 
-    def error_norm(self, u_exact, x, *, norm: "NormKind | object" = "energy") -> float:
-        """Error norm ``||u_exact - x||`` on free DOFs."""
-        u_exact = self.u_exact if u_exact is None else u_exact
+    def error_norm(self, x=None, *, u_exact=None) -> float:
+        """``||u_exact - x||_A`` on free DOFs."""
         x = self.gfu.vec if x is None else x
-        e = self.error(u_exact, x)
+        e = self.exact_error(x, u_exact=u_exact)
         e.FV().NumPy()[self.fixed_ids] = 0.0
-        return self.vector_norm(e, norm=norm)
+        return self.energy_norm(e)
 
     # -- solves / smoothing -------------------------------------------------
     def coarse_solve(self, b, x) -> None:
@@ -652,6 +631,7 @@ def build_hierarchy(
     order: int = 1,
     dirichlet: str = "left|right|top|bottom",
     dirichlet_value: "float | np.ndarray | ng.CoefficientFunction | dict" = 0.0,
+    u_exact: "ng.CoefficientFunction | GridFunction | None" = None,
     verbose: bool = False,
 ) -> MultigridHierarchy:
     """Uniform refinement hierarchy with per-level forms and transfers.
@@ -670,6 +650,10 @@ def build_hierarchy(
         Boundary pattern for the FE space.
     dirichlet_value
         Stored on each level for BC enforcement.
+    u_exact
+        Optional exact solution, forwarded to ``Level.from_forms`` on every
+        level (interpolated onto each mesh). Enables ``solve(..., norms=...,
+        "energy")`` and ``error_norm`` on the finest level.
     verbose
         Print ``info()`` after construction.
 
@@ -701,6 +685,7 @@ def build_hierarchy(
             PT=pending_P.CreateTranspose() if pending_P is not None else None,
             dirichlet_value=dirichlet_value,
             dirichlet=dirichlet,
+            u_exact=u_exact,
         )
         levels.append(level)
 
@@ -764,26 +749,6 @@ class MultigridSolver:
         self.h = hierarchy
         self.cfg = config or VCycleConfig()
 
-    # -- core recursion -----------------------------------------------------
-    # def record_norms(self, level, b, x, r0, norms):
-    #     out: list[float] = [[] for _ in norms] 
-
-    #     for i, norm in enumerate(norms):
-    #             if any(norm in _ENERGY_NORM_KEYS for norm in norms):
-    #                 v = level.exact_error(x, level.u_exact)
-    #                 v.FV().NumPy()[level.fixed_ids] = 0.0
-    #                 out[i].append(level.vector_norm(v, norm=norm))
-    #             if any(norm in _L2_NORM_KEYS for norm in norms):
-    #                 v = r1
-    #                 v.FV().NumPy()[level.fixed_ids] = 0.0
-    #                 out[i].append(level.vector_norm(v, norm=norm))
-    #             if any(norm in _MASS_NORM_KEYS for norm in norms):
-    #                 raise NotImplementedError("Mass norm not implemented")
-    #             if any(norm in _DUAL_NORM_KEYS for norm in norms):
-    #                 quad = float(InnerProduct(r0, level.gfu.vec))
-    #                 out[i].append(float(np.sqrt(max(quad, 0.0))))
-
-    #     return out
 
     def _as_tuple(self, norms):
         """Allow either a single norm string or a list/tuple of norm strings."""
@@ -837,7 +802,13 @@ class MultigridSolver:
         r_before=None,
         dx=None,
     ):
-        """Evaluate requested diagnostics at the current state.
+        """Evaluate diagnostics at the current state ``(b, x)``.
+
+        Each name in ``norms`` selects one branch:
+
+        * ``"l2"`` — ``||r_after||_2`` with ``r_after = b - A x``.
+        * ``"energy"`` / ``"A"`` — ``||u_exact - x||_A`` (needs ``level._gfu_exact``).
+        * ``"update_dual"``, etc. — ``sqrt(r_before^T dx)`` (needs both vectors).
 
         Parameters
         ----------
@@ -851,16 +822,18 @@ class MultigridSolver:
             Norm names to record.
 
         r_after
-            Current residual after the update, r_after = b - A x_after.
-            Used for residual norms.
+            Residual at the state being measured, ``b - A x``. Required for L2
+            keys unless recomputed from ``(b, x)``. For a single snapshot with
+            no prior MG step (e.g. ``solve`` cycle 0), pass the current
+            residual here — the name means “residual at this state,” not “after
+            a V-cycle.”
 
         r_before
-            Residual before the update, r_before = b - A x_before.
-            Used for update_dual.
+            Residual before a local update: ``b - A x_before``. Required for
+            dual keys together with ``dx``.
 
         dx
-            Update vector, dx = x_after - x_before.
-            Used for update_dual.
+            Update ``x_after - x_before``. Required for dual keys.
 
         Returns
         -------
@@ -883,15 +856,15 @@ class MultigridSolver:
             if norm in _L2_NORM_KEYS:
                 v = self._copy_vec(r_after)
                 self._zero_fixed(level, v)
-                out[norm] = level.vector_norm(v, norm="l2")
+                out[norm] = level.vector_norm(v)
 
             # ------------------------------------------------------------
             # Exact/manufactured energy error: sqrt(e^T A e)
             # where e = u_exact - x.
             # ------------------------------------------------------------
-            elif norm in _ENERGY_NORM_KEYS:
+            elif norm in _ENERGY_ERROR_NORM_KEYS:
                 e = self._exact_error_vec(level, x)
-                out[norm] = level.vector_norm(e, norm="energy")
+                out[norm] = level.energy_norm(e)
 
             # ------------------------------------------------------------
             # Approximate dual/update norm: sqrt(r_before^T dx)
@@ -942,7 +915,7 @@ class MultigridSolver:
         verbose=False,
         backward: bool = False,
         ):
-        """Run single-sweep smooths and record norms if needed."""
+        """Run one smoothing block (``nsweeps``) and record norms once after it."""
         norms = self._as_tuple(norms)
         out = {norm: [] for norm in norms}
 
@@ -993,65 +966,6 @@ class MultigridSolver:
             out[norm].append(vals[norm])
 
         return out
-
-    # def _smooth_record(self, level, b, x, nsweeps, norms, *, verbose=False,
-    #                    backward: bool = False):
-    #     """Run single-sweep smooths and record residual norms.
-
-    #     Parameters
-    #     ----------
-    #     level, b, x
-    #         Level and vectors for ``smooth``.
-    #     nsweeps
-    #         Number of sweeps to record.
-    #     norms: list[NormKind | object]
-    #         Norms to record for each sweep.
-    #     backward
-    #         Forward or backward GS.
-
-    #     Returns
-    #     -------
-    #     list[float]
-    #         Residual norm after each sweep.
-    #     """
-        
-    #     out: list[float] = [[] for _ in norms] 
-    #     is_dual = any(norm in _DUAL_NORM_KEYS for norm in norms)
-
-    #     for _ in range(nsweeps):
-    #         r0 = level.residual(b, x) if (is_dual) else None
-            
-    #         level.smooth(b, x, kind=self.cfg.smoother, nsweeps=1,
-    #                      omega=self.cfg.omega, verbose=verbose, backward=backward)
-
-    #         out = self.record_norms(level, b, x, r0, norms)
-
-    #         # for i, norm in enumerate(norms):
-    #         #     if is_energy:
-    #         #         v = level.exact_error(x, level.u_exact)
-    #         #         v.FV().NumPy()[level.fixed_ids] = 0.0
-    #         #         out[i].append(level.vector_norm(v, norm=norm))
-    #         #     if is_l2:
-                    
-    #         #         v.FV().NumPy()[level.fixed_ids] = 0.0
-    #         #         out[i].append(level.vector_norm(v, norm=norm))
-    #         #     if is_mass:
-    #         #         v = level.residual(b, x)
-    #         #         out[i].append(level.vector_norm(v, norm=norm))
-    #         #     if is_dual:
-    #         #         ...
-
-
-    #         # if norm == "energy" and level.u_exact is not None:
-    #         #     v = level.error(level.u_exact, x)
-    #         #     v.FV().NumPy()[level.fixed_ids] = 0.0
-    #         # else:
-    #         #     v = level.residual(b, x)
-    #         #     v.FV().NumPy()[level.fixed_ids] = 0.0
-
-    #         # out.append(level.vector_norm(v, norm=norm))
-    #     return out
-
 
     def v_cycle(
         self,
@@ -1382,217 +1296,6 @@ class MultigridSolver:
 
             rec_cycle[idx] = vals
 
-            
-    # def v_cycle(self, idx: int, b, x, *, verbose: bool = False,
-    #             rec_cycle: Optional[dict] = None,
-    #             rec: Optional[dict] = None,
-    #             norms: "NormKind | object" | list[NormKind | object] = "l2",
-    #             debug: bool = False) -> None:
-    #     """One V-cycle: approximate ``A_idx x = b`` in place.
-
-    #     Parameters
-    #     ----------
-    #     idx
-    #         Level index (0 = coarsest).
-    #     b, x
-    #         RHS and iterate/correction (``x`` updated in place).
-    #     verbose
-    #         Per-sweep smoother output.
-    #     rec_cycle
-    #         If set, filled with one residual norm per level per cycle.
-    #     rec
-    #         If set, per-level ``{"down": [...], "up": [...]}`` sweep norms.
-    #     norm
-    #         Residual norm type for recording.
-    #     debug
-    #         Print vector and operator dimensions.
-
-    #     Notes
-    #     -----
-    #     Does not modify ``f.vec``. Coarsest: direct or iterative solve.
-    #     Finer levels: pre-smooth, restrict, recurse, prolong, post-smooth.
-    #     """
-    #     norms = self._as_tuple(norms)
-    #     level = self.h.levels[idx]
-    #     pad = "  " * (self.h.finest_idx - idx)  # indent by descent depth
-
-    #     # If at coarsest level, solve the coarse problem directly or with smoothing.
-    #     if idx == self.h.coarsest_idx:
-    #         if debug:
-    #             print(f"{pad}[lvl {idx}] coarsest: "
-    #                   f"x={len(x)}, b={len(b)}, A={level.a.mat.height}x{level.a.mat.width}, "
-    #                   f"direct={self.cfg.coarse_direct}")
-
-    #         if self.cfg.coarse_direct:
-    #             before = None
-    #             if rec is not None or rec_cycle is not None:
-
-    #                 if norm == "energy" and level.u_exact is not None:
-    #                     before = level.error_norm(level.u_exact, x, norm=norm)
-    #                 else:
-    #                     before = level.residual_norm(b, x, norm=norm)
-    #                 if rec_cycle is not None:
-    #                     rec_cycle[idx] = before
-    #             level.coarse_solve(b, x)
-    #             if rec is not None:
-    #                 if norm == "energy" and level.u_exact is not None:
-    #                     after = level.error_norm(level.u_exact, x, norm=norm)
-    #                 else:
-    #                     after = level.residual_norm(b, x, norm=norm)
-    #                 rec[idx] = {"down": [before], "up": [after]}
-
-    #         elif rec is not None:
-    #             down = self._smooth_record(level, b, x, self.cfg.coarse_sweeps,
-    #                                        norm, verbose=verbose)
-    #             rec[idx] = {"down": down, "up": []}
-    #             if rec_cycle is not None:
-    #                 rec_cycle[idx] = down[-1]
-
-    #         else:
-    #             level.smooth(b, x, kind=self.cfg.smoother,
-    #                          nsweeps=self.cfg.coarse_sweeps,
-    #                          omega=self.cfg.omega, verbose=verbose)
-    #             if rec_cycle is not None:
-    #                 if norm == "energy" and level.u_exact is not None:
-    #                     rec_cycle[idx] = level.error_norm(level.u_exact, x, norm=norm)
-    #                 else:
-    #                     rec_cycle[idx] = level.residual_norm(b, x, norm=norm)
-    #         return
-
-    #     if debug:
-    #         print(f"{pad}[lvl {idx}] down: x={len(x)}, b={len(b)}, "
-    #               f"A={level.a.mat.height}x{level.a.mat.width}, "
-    #               f"PT={level.PT.height}x{level.PT.width}, P={level.P.height}x{level.P.width}")
-
-    #     # pre-smoothing (descent)
-    #     if rec is not None:
-    #         down = self._smooth_record(level, b, x, self.cfg.pre_sweeps,
-    #                                    norm, verbose=verbose)
-    #     else:
-    #         level.smooth(b, x, kind=self.cfg.smoother,
-    #                      nsweeps=self.cfg.pre_sweeps, omega=self.cfg.omega, verbose=verbose)
-
-    #     r = level.residual(b, x)
-    #     r.FV().NumPy()[level.fixed_ids] = 0.0
-    #     if rec_cycle is not None:
-    #         if norm == "energy" and level.u_exact is not None:
-    #             rec_cycle[idx] = level.error_norm(level.u_exact, x, norm=norm)
-    #         else:
-    #             rec_cycle[idx] = level.vector_norm(r, norm=norm)
-
-    #     r_c = level.PT.CreateColVector()
-    #     r_c.data = level.PT * r
-
-    #     if debug:
-    #         print(f"{pad}[lvl {idx}] restrict: r={len(r)} --PT({level.PT.height}x"
-    #               f"{level.PT.width})--> r_c={len(r_c)}  (to lvl {idx - 1})")
-
-    #     e_c = r_c.CreateVector()
-    #     e_c.FV().NumPy()[:] = 0.0
-    #     self.v_cycle(idx - 1, r_c, e_c, verbose=verbose, rec_cycle=rec_cycle,
-    #                  rec=rec, norm=norm, debug=debug)
-
-    #     e_f = level.P.CreateColVector()
-    #     e_f.data = level.P * e_c
-    #     x.data += e_f
-
-    #     if debug:
-    #         print(f"{pad}[lvl {idx}] prolong: e_c={len(e_c)} --P({level.P.height}x"
-    #               f"{level.P.width})--> e_f={len(e_f)}  (back to lvl {idx})")
-
-    #     # post-smoothing (ascent): backward GS on the way up (NGSolve MG pattern)
-    #     if rec is not None:
-    #         up = self._smooth_record(level, b, x, self.cfg.post_sweeps,
-    #                                  norm, verbose=verbose, backward=True)
-    #         rec[idx] = {"down": down, "up": up}
-    #     else:
-    #         level.smooth(b, x, kind=self.cfg.smoother,
-    #                      nsweeps=self.cfg.post_sweeps, omega=self.cfg.omega,
-    #                      verbose=verbose, backward=True)
-
-    # -- drivers ------------------------------------------------------------
-    # def solve(self, *, max_cycles: int = 20, tol: float = 1e-10,
-    #           verbose: bool = False, record_levels: bool = False,
-    #           norm: "NormKind | object" = "l2", debug: bool = False
-    #           ):
-    #     """Repeated V-cycles on the finest-level system until tolerance or cap.
-
-    #     Parameters
-    #     ----------
-    #     max_cycles
-    #         Maximum V-cycles.
-    #     tol
-    #         Relative stop test: ``||r|| <= tol * ||r0||`` on the finest level.
-    #         Use ``0`` to run exactly ``max_cycles`` cycles.
-    #     verbose
-    #         Print initial and per-cycle finest-level residuals.
-    #     record_levels
-    #         If True, also return per-sweep norms on all levels.
-    #     norm
-    #         ``"l2"`` (recommended for stopping), ``"A"`` / ``"energy"``
-    #         (``sqrt(r^T A r)``), or a custom operator.
-    #     debug
-    #         Dimension trace for the first cycle only.
-    #     Returns
-    #     -------
-    #     hist
-    #         Finest-level residual after each cycle.
-    #     level_hist
-    #         ``level_hist[level_idx][cycle]`` snapshot per level per cycle.
-    #     sweep_hist
-    #         Only if ``record_levels=True``: per-sweep down/up norms per level.
-
-    #     Notes
-    #     -----
-    #     Uses finest ``f.vec`` and ``gfu.vec``. Enforces Dirichlet on ``x`` each
-    #     cycle. Set initial guess and BCs before calling.
-    #     """
-    #     fine = self.h.finest
-    #     x = fine.gfu.vec
-    #     b = fine.f.vec
-    #     fine.enforce_dirichlet(x)
-
-    #     nlabel = norm if isinstance(norm, str) else "B"
-    #     hist: list[float] = []
-    #     level_hist: list[list[float]] = [[] for _ in range(self.h.nlevels)]
-    #     sweep_hist: "list[list[dict]] | None" = (
-    #         [[] for _ in range(self.h.nlevels)] if record_levels else None
-    #     )
-    #     if norm == "energy" and fine.u_exact is not None:
-    #         r0 = fine.error_norm(fine.u_exact, x, norm=norm)
-    #     else:
-    #         r0 = fine.residual_norm(b, x, norm=norm)
-    #     if verbose:
-    #         print(f"cycle {0:3d}  ||r||_{nlabel} = {r0:.6e}")
-    #     for cyc in range(1, max_cycles + 1):
-    #         rec_cycle: dict[int, float] = {}
-    #         rec_sweeps = {} if record_levels else None
-    #         if debug and cyc == 1:
-    #             print(f"--- v_cycle dimension trace (cycle {cyc}) ---")
-    #         # only trace the first cycle to avoid flooding the console
-    #         self.v_cycle(self.h.finest_idx, b, x, rec_cycle=rec_cycle,
-    #                      rec=rec_sweeps, norm=norm, debug=debug and cyc == 1)
-    #         for idx in range(self.h.nlevels):
-    #             level_hist[idx].append(rec_cycle.get(idx, float("nan")))
-    #         if sweep_hist is not None:
-    #             for idx in range(self.h.nlevels):
-    #                 sweep_hist[idx].append(rec_sweeps.get(idx))
-    #         fine.enforce_dirichlet(x)
-    #         if norm == "energy" and fine.u_exact is not None:
-    #             rn = fine.error_norm(fine.u_exact, x, norm=norm)
-    #         else:
-    #             rn = fine.residual_norm(b, x, norm=norm)
-    #         hist.append(rn)
-    #         if verbose:
-    #             rate = rn / hist[-2] if len(hist) > 1 else rn / r0
-    #             print(f"cycle {cyc:3d}  ||r||_{nlabel} = {rn:.6e}  (rate {rate:.3f})")
-    #         if rn <= tol * r0:
-    #             break
-    #     if record_levels:
-    #         return hist, level_hist, sweep_hist
-    #     return hist, level_hist
-
-
     def solve(
         self,
         *,
@@ -1626,7 +1329,11 @@ class MultigridSolver:
             If True, also return detailed per-level/per-step diagnostics.
 
         norms
-            Norms/diagnostics to record after each full V-cycle.
+            Finest-level diagnostics appended after each V-cycle. Use ``"l2"``
+            (or aliases) for ``||r||_2``; ``"energy"``/``"A"`` for
+            ``||u_exact - x||_A`` (needs ``u_exact`` on the finest level);
+            ``"update_dual"`` for ``sqrt(r_before^T dx)`` over the full cycle
+            on each level (not for stopping).
 
             Examples
             --------
@@ -1635,7 +1342,8 @@ class MultigridSolver:
             norms=("l2", "update_dual")
 
         stop_norm
-            Which norm from ``norms`` to use for stopping. Usually "l2".
+            Which entry in ``norms`` controls ``tol``. Must be an L2 residual
+            key (e.g. ``"l2"``). Energy and dual keys cannot be used for stopping.
 
         debug
             Dimension trace for the first cycle only.
@@ -1643,41 +1351,67 @@ class MultigridSolver:
         Returns
         -------
         hist
-            Dictionary of finest-level histories:
-
-                hist[norm] = [values after each V-cycle]
+            ``hist[norm]`` lists one scalar per completed V-cycle (not the
+            initial value printed when ``verbose=True`` at cycle 0).
 
         level_hist
-            Per-level cycle diagnostics:
-
-                level_hist[level_idx][cycle] = {norm: value, ...}
+            ``level_hist[level_idx][cycle]`` is the same norm dict recorded in
+            ``v_cycle`` for that level. Energy keys on the finest level are
+            filled after the cycle (they are not computed on coarse levels).
 
         sweep_hist
-            Only returned if ``record_levels=True``. Contains detailed
-            down/up smoothing-block diagnostics.
+            Only if ``record_levels=True``: per-level lists of
+            ``{"down": ..., "up": ...}`` smoothing-block histories.
+
+        Notes
+        -----
+        Initial stopping scale ``delta_0`` uses a snapshot ``(b, x)`` before the
+        first cycle. Relative stop: ``delta <= tol * delta_0`` with ``delta``
+        the finest ``stop_norm`` after each cycle.
         """
         
         fine = self.h.finest
         x = fine.gfu.vec
+        fine.enforce_dirichlet(x)
         b = fine.f.vec
+        x_0 = self._copy_vec(fine.gfu.vec)
+        b_0 = self._copy_vec(fine.f.vec)
 
         norms = self._as_tuple(norms)
 
-        if stop_norm not in norms:
-            norms = (stop_norm,) + norms
 
-        if stop_norm in _DUAL_NORM_KEYS:
+        all_norms = self._as_tuple(norms)
+        if stop_norm not in all_norms:
+            all_norms = (stop_norm,) + all_norms
+
+        energy_norms = tuple(
+            n for n in all_norms
+            if n in _ENERGY_ERROR_NORM_KEYS
+        )
+
+        vcycle_norms = tuple(
+            n for n in all_norms
+            if n not in _ENERGY_ERROR_NORM_KEYS
+        )
+
+
+        if stop_norm not in _L2_NORM_KEYS:
             raise ValueError(
-                "Do not use an update-dual norm as the stopping norm. "
-                "Use a residual norm like 'l2' for stopping."
+                "Use an L2 residual norm for stopping, e.g. stop_norm='l2'. "
+                "Do not use energy or update_dual as the stopping norm."
             )
 
-        fine.enforce_dirichlet(x)
+        if energy_norms and fine._gfu_exact is None and fine.u_exact is None:
+            raise ValueError(
+                "norms 'energy'/'A' in solve/record_norms measure ||u_exact-x||_A "
+                "and require u_exact on the finest level (_gfu_exact)."
+            )
+
 
         # ------------------------------------------------------------
         # Histories
         # ------------------------------------------------------------
-        hist = {norm: [] for norm in norms}
+        hist = {norm: [] for norm in all_norms}
 
         level_hist: list[list[dict]] = [
             [] for _ in range(self.h.nlevels)
@@ -1690,13 +1424,12 @@ class MultigridSolver:
         # ------------------------------------------------------------
         # Initial residual vector and initial scalar stopping norm
         # ------------------------------------------------------------
-        r_0 = fine.residual(b, x)
+        r_0 = fine.residual(b_0, x_0)
         self._zero_fixed(fine, r_0)
-
         init_vals = self.record_norms(
             fine,
-            b,
-            x,
+            b_0,
+            x_0,
             (stop_norm,),
             r_after=r_0,
         )
@@ -1722,20 +1455,33 @@ class MultigridSolver:
                 x,
                 rec_cycle=rec_cycle,
                 rec=rec_sweeps,
-                norms=norms,
+                norms=vcycle_norms,
                 debug=(debug and cyc == 1),
             )
 
             fine.enforce_dirichlet(x)
 
             # Finest-level diagnostics after this full V-cycle.
-            vals = rec_cycle[self.h.finest_idx]
+            vals = dict(rec_cycle[self.h.finest_idx])
 
-            for norm in norms:
+            if energy_norms:
+                energy_vals = self.record_norms(
+                    fine,
+                    b,
+                    x,
+                    energy_norms,
+                )
+                vals.update(energy_vals)
+
+            for norm in all_norms:
                 hist[norm].append(vals[norm])
 
+        
             for idx in range(self.h.nlevels):
-                level_hist[idx].append(rec_cycle.get(idx, {}))
+                entry = dict(rec_cycle.get(idx, {}))
+                if idx == self.h.finest_idx:
+                    entry.update({n: vals[n] for n in energy_norms})
+                level_hist[idx].append(entry)
 
             if sweep_hist is not None:
                 for idx in range(self.h.nlevels):
@@ -1751,65 +1497,10 @@ class MultigridSolver:
                     f"(rate {rate:.3f})"
                 )
 
-            if delta <= tol * delta_0:
+            if tol > 0 and delta <= tol * delta_0:
                 break
 
         if record_levels:
             return hist, level_hist, sweep_hist
 
         return hist, level_hist
-
-    # def apply(self, rhs, *, x=None):
-    #     """Preconditioner action ``z = M^{-1} rhs`` (one V-cycle from zero).
-
-    #     Does not touch any level's load vector. Returns the correction ``z`` as
-    #     a fresh NGSolve vector on the finest level.
-    #     """
-    #     fine = self.h.finest
-    #     z = fine.f.vec.CreateVector() if x is None else x
-    #     z.FV().NumPy()[:] = 0.0
-    #     self.v_cycle(self.h.finest_idx, rhs, z)
-    #     return z
-
-    # def pcg(self, *, max_iter: int = 100, tol: float = 1e-10,
-    #         verbose: bool = False) -> list[float]:
-    #     """Preconditioned CG on the finest problem with this MG as preconditioner.
-
-    #     Assumes homogeneous Dirichlet data (correction-scheme friendly). Returns
-    #     the history of preconditioned-residual norms ``sqrt(r . z)``.
-    #     """
-    #     fine = self.h.finest
-    #     A = fine.a.mat
-    #     x = fine.gfu.vec
-    #     fine.enforce_dirichlet(x)
-
-    #     r = fine.residual(fine.f.vec, x)
-    #     r.FV().NumPy()[fine.fixed_ids] = 0.0
-    #     z = self.apply(r)
-    #     p = z.CreateVector()
-    #     p.data = z
-    #     rz = float(ng.InnerProduct(r, z))
-
-    #     hist: list[float] = []
-    #     for it in range(1, max_iter + 1):
-    #         Ap = p.CreateVector()
-    #         Ap.data = A * p
-    #         Ap.FV().NumPy()[fine.fixed_ids] = 0.0
-    #         alpha = rz / float(ng.InnerProduct(p, Ap))
-    #         x.data += alpha * p
-    #         r.data -= alpha * Ap
-    #         r.FV().NumPy()[fine.fixed_ids] = 0.0
-
-    #         rn = float(np.linalg.norm(r.FV().NumPy()[fine.free_ids]))
-    #         hist.append(rn)
-    #         if verbose:
-    #             print(f"pcg {it:3d}  ||r_free|| = {rn:.6e}")
-    #         if rn <= tol:
-    #             break
-
-    #         z = self.apply(r)
-    #         rz_new = float(ng.InnerProduct(r, z))
-    #         beta = rz_new / rz
-    #         p.data = z + beta * p
-    #         rz = rz_new
-    #     return hist
