@@ -29,6 +29,9 @@ from ngsolve import H1, InnerProduct, Mesh, grad, dx, x, y, sin, pi, BaseMatrix,
 from netgen.geom2d import unit_square
 from ngsolve.webgui import Draw
 import matplotlib.pyplot as plt
+from matplotlib.colors import Colormap
+import matplotlib as mpl
+from cycler import cycler
 import time
 import numpy as np
 import math
@@ -42,6 +45,13 @@ from multigrid_cycles import (
     VCycleConfig,
 )
 
+# ---------------------------------------------------------------------------
+# Get and set colors for plotting
+# ---------------------------------------------------------------------------
+cmap = plt.get_cmap("twilight_shifted")
+cmap_nums = [tuple(cmap(x)[:3]) for x in np.linspace(0, 1,)]
+plt.rcParams['image.cmap'] = "twilight_shifted"
+plt.rcParams['axes.prop_cycle'] = cycler(color=plt.cm.twilight_shifted.colors)
 # ---------------------------------------------------------------------------
 # Shared problem definition
 # ---------------------------------------------------------------------------
@@ -177,7 +187,7 @@ poisson_level = Level.from_forms(mesh, fes, a, f, dirichlet_value=0.0, dirichlet
 # Set zero initial guess (enforce_bc pins Dirichlet DOFs to 0).
 poisson_level.set_initial_guess(x0_cf, enforce_bc=True)
 
-Draw(u_exact, poisson_level.mesh, "exact solution")
+Draw(u_exact, poisson_level.mesh, "exact solution", colors=cmap_nums)
 
 print()
 _scene = Draw(
@@ -185,6 +195,7 @@ _scene = Draw(
     poisson_level.mesh,
     "Gauss-Seidel smoothing",
     deformation=True,
+    colors=cmap_nums,
     radius=1.2,
     settings={
         "camera": {
@@ -265,6 +276,7 @@ def _update_gs_plot(*, xlabels: list[str] | None = None, title: str | None = Non
 for sweep in range(1, n_sweeps + 1):
     poisson_level.smooth(poisson_level.f.vec, poisson_level.gfu.vec,
                          kind="native", nsweeps=1, omega=1.0)
+    time.sleep(1)
     _scene.Redraw()
     gs_energy_err.append(energy_error(u_exact, poisson_level))
     gs_l2_err.append(l2_error(u_exact, poisson_level))
