@@ -1,0 +1,80 @@
+\documentclass[12pt]{article}
+\usepackage{amsthm,amsmath,amssymb}
+\usepackage{kmath,kerkis}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.5cm]{geometry}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{\textbf{Remark}}
+\newtheorem{example}{\textbf{Example}}
+
+\begin{document}
+\section{From Olver}
+\subsection*{Chapter 8 Intro}
+{\Large Eigenvalues and Singular Values}\\
+So far, our physical applications of linear algebra have concentrated on statics: unchanging equilibrium configurations of mass-spring chains, circuits, and structures, all modeled by linear systems of algebraic equations. It is now time to set the universe in motion. In general, a (continuous) \emph{dynamical system} refers to the (differential) equations governing the time-varying motion of a physical system, be it mechanical, electrical, chemical, fluid, thermodynamical, biological, financial, ... . Our immediate goal is to solve the simples class of continuous dynamical models, which are first order autonomous linear systems of ordinary differential equations.
+
+We begin with a very quick review of the scalar case, whose solutions are simple exponential functions. This inspires us to try to solve a vector-valued linear system by substituting a similar exponential solution formula. We are immediately led to the sytem of algebraic equations that define the eigenvalues and eigenvectors of the coefficient matrix. Thus, before we can make any progress in our study of differential equations, we need to learn about eigenvalues and eigenvectors, and that is the purpose of the present chapter. Dynamical systems are used to motivate the subject, but serious applications will be deferred until Chapter 10. Additional applications of eigenvalues and eigenvectors to linear iterative systems, stochastic processes, and numerical solution algorithms for linear algebraic systems form the focus of Chapter 9.
+
+Each square matrix possesses a collection of one or more complex scalars, called eigenvalues, and associated vectors, called eigenvectors. From a geometrical viewpoint, the matrix defines a linear transformation on Euclidean space; the eigenvectors indicate the directions of pure stretch and the eigenvalues the extent of the stretching. We will introduce the non-standard term ``complete'' to describe matrices whose (complex) eigenvectors form a basis of the underlying vector space. A more common name for such matrices is ``diagonalizable'', because, when expressed in terms of its eigenvector basis, the matrix representing the corresponding linear transformation assumes a very simple diagonal form, facilitating the detailed analysis of its properties. A particluarly important class consists of the symmetric matrices, whose eigenvectors form an orthogonal basis of $\mathbb{R}^n$; in fact, this is how orthogonal bases most naturally appear. Most matrices are complete; incomplete matrices are trickier to deal with, and we discuss their non-diagonal Schur decomposition and Jordan canonical form in Section 8.6.
+
+A non-square matrix $A$ does not possess eigenvalues. In their place, one studies the eigenvalues of the associated square Gram matrix $K=A^TA$, whose square roots are known as the singular values of the original matrix. The corresponding singular value decomposition (SVD) supplies the final details for our understanding of the remarkable geometric structure governing matrix multiplication. The singular value decomposition is used to define the pseudoinverse of a matrix, which provides a mechanism for ``inverting'' non-square and singular matrices, and an altrernative construction of least squares solutions to general linear systems. Singular values underlie the powerful method of modern statistical data analysis known as principal component analysis (PCA), which will be developed in the final section of this chapter and appears in an increasingly broad range of contemporary applications, including image processing, semantics, language and speech recognition, and machine learning.
+
+\begin{remark}
+The numerical computation of eigenvalues and eigenvectors is a challenging issue, and must be deferred until Section 9.5. Unless you are prepared to consult that section in advance, solving the computer-based problems in this chapter will require access to computer software that can accurately compute eigenvalues and eigenvectors.
+\end{remark}
+
+\subsection{Linear Dynamical Systems}
+Our new goal is to solve and analyze the simplest class of dynamical systems, namely those modeled by first order linear systems of ordinary differential equations. We begin with a thorough review of the scalar case, including a complete investigation into the stability of their equilibria -- in preparation for the general situation to be treated in depth in Chapter 10. Readers who are not interested in such motivational material may skip ahead to Section 8.2 without incurring any penalty.
+
+\subsubsection*{Scalar Ordinary Differential Equations}
+Consider the elementary first order scalar ordinary differential equation
+\begin{equation}
+    \frac{du}{dt} = au.
+    \label{eq:8.1}
+\end{equation}
+Here $a\in\mathbb{R}$ is a real constant, while the unknown $u(t)$ is a scalar function. As you no doubt already learned, the general solution to (\ref{eq:8.1}) is an exponential function 
+\begin{equation}
+    u(t)=ce^{at}.
+    \label{eq:8.2}
+\end{equation}
+The integration constant $c$ is uniquely determined by a single \emph{initial condition}
+\begin{equation}
+    u(t_0)=b
+    \label{eq:8.3}
+\end{equation}
+imposed at an initial time $t_0$. Substituting $t=t_0$ into the solution formula (\ref{eq:8.2}), 
+\begin{equation}
+    u(t_0)=ce^{at_0}=b,\qquad \text{ and so }\qquad c=be^{-at_0}.
+\end{equation}
+We conclude that
+\begin{equation}
+    u(t)=be^{a(t-t_0)}
+    \label{eq:8.4}
+\end{equation}
+is the unique solution to the scalar intitial value problem (\ref{eq:8.1},\ref{eq:8.3}).
+
+
+\begin{example}
+    The radioactive decay of an isotope, say uranium-238, is governed by the differential equation
+    \begin{equation}
+        \frac{du}{dt}=-\gamma u.
+        \label{eq:8.5}
+    \end{equation}
+    Here $u(t)$ denotes the amount of the isotope remaining at time $t$; the coefficient $\gamma > 0$ governs the decay rate. The solution is an exponentially decaying function $u(t)=ce^{-\gamma t}$, where $c=u(0)$ is the amount of radioactive material at the initial time $t_0=0$.
+
+    The isotope's \emph{half-life} $t_*$ is the time it takes for half of a sample to decay, that is, when $u(t_*)=\frac{1}{2}u(0)$. To determine $t_*$, we solve the algebraic equation
+    \begin{equation}
+        e^{-\gamma t_*}=\frac{1}{2},\qquad \text{so that}\qquad t_*=\frac{\log 2}{\gamma}.
+        \label{eq:8.6}
+    \end{equation}
+    Thus, after an elapsed time of $t_*$, half of the original material has decayed. After a further $t_*$, half of the remaining half has decayed, leaving a quarter of the original radioactive material. An so on, so that at each integer multiple $nt_*$, $n\in\mathbb{N}$, of the half-life, the remaining amount of the isotope is $u(nt_*)=2^{-n}u(0)$.
+\end{example}
+
+Returning to the general situation, let us make some elementary, but pertinent, observations about this simplest linear dynamical system. First of all, since the equation is homogeneoug, the zero function $u(t)\equiv 0$ -- corresponding to $c=0$ in the solution formula (\ref{eq:8.2}) -- is a constant solution, known as an \emph{equilibrium solution}, or \emph{fixed point}, since it does not depend on $t$. If the coefficient $a>0$ is positive, then the solutions (\ref{eq:8.2}) are exponentially growing (in absolute value) as $t\to +\infty$. This implies that the zero equilibrium solution is \emph{unstable}. The initial condition $u(t_0)=\varepsilon e^{a(t-t_0)}$ will eventually be far away from equilibrium. More generally, any two solutions with very close, but not equal, initial data will eventually become arbitrarily far apart: $\lvert u_1(t)-u_2(t)\rvert \to \infty$ as $t\to\infty$. One consequence is an inherent difficulty in accurately computing the long-time behavior of the solution, since small numerical errors may eventually have very large effects.
+
+On the other hand, if $a<0$, the solutions are exponentially decaying in time. In this case, the zero equilibrium solution is \emph{stable}, since a small change in the initial data will have a negligible effect on the solution. In fact, the zero solution is \emph{globally asymptotically stable}. The phrase ``asymptotically stable'' indicates that solutions that start out near the equilibrium point approach it in the large time limit; more specifically if $u(t_0)=\varepsilon$ is small, then $u(t)\to 0$ as $t\to\infty$. ``Globally'' implies that \emph{all} solutions, no matter how large the initial data, eventually approach equilibrium. In fact, for a linear system, the stability of an equilibrium solution is inevitably a global phenomenon.
+
+The borderline case is $a=0$. Then all the solutions to (\ref{eq:8.1}) are constant. In this case, the zero solution is \emph{stable} -- indeed, \emph{globally stable} -- but not asymptotically stable. The solution to the initial value problem $u(t_0)=\varepsilon$ is $u(t)\equiv \varepsilon$. Therefore, a solution that starts out near equilibrium will remain nearby, but will not asymptotically approach it. The three qualitatively different possibilities are illustrated in Figure 8.1.
+\section*{From Wang}
+\end{document}
