@@ -1,12 +1,29 @@
 \documentclass[12pt]{article}
 \usepackage{amsthm,amsmath,amssymb}
-\usepackage{kmath,kerkis}
+\usepackage{kerkis}
 \usepackage[T1]{fontenc}
 \usepackage[margin=1.5cm]{geometry}
+\usepackage[svgnames]{xcolor}
+\usepackage[most]{tcolorbox}
 
+% find tikz tcolorbox's that will break across pages
+
+
+\definecolor{defblue}{rgb}{.61, .73, .78}
+\definecolor{thmpurp}{rgb}{.3, .22, .43}
+\newtcbtheorem[auto counter, number within=section]{dfn}
+{Definition}{fonttitle=\bfseries\upshape,coltitle=black, fontupper=\upshape, 
+arc=0mm, colback=defblue!25!white, colframe=defblue!25!white}{definition}
+\newtcbtheorem[auto counter, number within=section]{thm}
+{Theorem}{fonttitle=\bfseries\upshape,coltitle=black, fontupper=\upshape,
+arc=0mm, colback=thmpurp!25!white, colframe=thmpurp!25!white}{theorem}
+\newtcbtheorem[use counter from=thm, number within=section]{cor}{Corollary}{fonttitle=\bfseries\upshape,coltitle=black, fontupper=\upshape,
+arc=0mm, colback=thmpurp!15!white, colframe=thmpurp!15!white}{theorem}
+\newtcbtheorem[auto counter, number within=section]{example}{Example}{fonttitle=\bfseries\upshape,coltitle=black,fontupper=\upshape, arc=0mm, colbacktitle=thmpurp!25!white, colframe=white}{example}
 \theoremstyle{remark}
 \newtheorem*{remark}{\textbf{Remark}}
-\newtheorem{example}{\textbf{Example}}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \begin{document}
 \section{From Olver}
@@ -44,9 +61,9 @@ The integration constant $c$ is uniquely determined by a single \emph{initial co
     \label{eq:8.3}
 \end{equation}
 imposed at an initial time $t_0$. Substituting $t=t_0$ into the solution formula (\ref{eq:8.2}), 
-\begin{equation}
+\begin{equation*}
     u(t_0)=ce^{at_0}=b,\qquad \text{ and so }\qquad c=be^{-at_0}.
-\end{equation}
+\end{equation*}
 We conclude that
 \begin{equation}
     u(t)=be^{a(t-t_0)}
@@ -55,7 +72,7 @@ We conclude that
 is the unique solution to the scalar intitial value problem (\ref{eq:8.1},\ref{eq:8.3}).
 
 
-\begin{example}
+\begin{example}{}{ex1.1}
     The radioactive decay of an isotope, say uranium-238, is governed by the differential equation
     \begin{equation}
         \frac{du}{dt}=-\gamma u.
@@ -75,6 +92,143 @@ Returning to the general situation, let us make some elementary, but pertinent, 
 
 On the other hand, if $a<0$, the solutions are exponentially decaying in time. In this case, the zero equilibrium solution is \emph{stable}, since a small change in the initial data will have a negligible effect on the solution. In fact, the zero solution is \emph{globally asymptotically stable}. The phrase ``asymptotically stable'' indicates that solutions that start out near the equilibrium point approach it in the large time limit; more specifically if $u(t_0)=\varepsilon$ is small, then $u(t)\to 0$ as $t\to\infty$. ``Globally'' implies that \emph{all} solutions, no matter how large the initial data, eventually approach equilibrium. In fact, for a linear system, the stability of an equilibrium solution is inevitably a global phenomenon.
 
-The borderline case is $a=0$. Then all the solutions to (\ref{eq:8.1}) are constant. In this case, the zero solution is \emph{stable} -- indeed, \emph{globally stable} -- but not asymptotically stable. The solution to the initial value problem $u(t_0)=\varepsilon$ is $u(t)\equiv \varepsilon$. Therefore, a solution that starts out near equilibrium will remain nearby, but will not asymptotically approach it. The three qualitatively different possibilities are illustrated in Figure 8.1.
+The borderline case is $a=0$. Then all the solutions to (\ref{eq:8.1}) are constant. In this case, the zero solution is \emph{stable} -- indeed, \emph{globally stable} -- but not asymptotically stable. The solution to the initial value problem $u(t_0)=\varepsilon$ is $u(t)\equiv \varepsilon$. Therefore, a solution that starts out near equilibrium will remain nearby, but will not asymptotically approach it. The three qualitatively different possibilities are illustrated in Figure 8.1.\textcolor{red}{Debating whether to recreate figure} A formal definition of the various notions of stability for dynamical systems can be found in Definition 10.14. \textcolor{red}{Debating if need to include said definition}
+
+\subsubsection*{First Order Dynamical Systems}
+The simplest class of \emph{dynamical system} is a coupled system of $n$ first order ordinary differential equations
+\begin{equation*}
+    \frac{du_1}{dt} = f_1(t,u_1,\ldots,u_n),\qquad \ldots\qquad \frac{du_n}{dt}=f_n(t,u_1,\ldots,u_n).
+\end{equation*}
+The unknowns are the $n$ scalar functions $u_1(t),\ldots,u_n(t)$ depending on the scalar variable $t\in\mathbb{R}$, which we usually view as time, whence the term ``dynamical''. We will often write the system in the equivalent vector form
+\begin{equation}
+    \frac{d\mathbf{u}}{dt} = \mathbf{f}(t,\mathbf{u}),
+    \label{eq:8.7}
+\end{equation}
+in which $\mathbf{u}(t)=\left(u_1(t),\ldots,u_n(t)\right)^T$ is the vector-valued solution, which serves to parameterize a curve in $\mathbb{R}^n$, and $\mathbf{f}(t,\mathbf{u})$ is a vector-valued function with components $f_i(t,u_1,\ldots,u_n)$ for $i=1,\ldots,n$. A dynamical system is called \emph{autonomous} if the time variable $t$ does not appear explicitly on the right-hand side, and so has the form
+\begin{equation}
+    \frac{d\mathbf{u}}{dt} = \mathbf{f}(\mathbf{u}).
+    \label{eq:8.8}
+\end{equation}
+Dynamical systems of ordinary differential equations appear in an astonishing variety of applications, including physics, astronomy, chemistry, biology, weather and climate, economics and finance, and have been intensely studied since the very first days following the invention of calculus.
+
+In this text, we shall concentrate most of our attention on the very simplest case: a homogeneous, linear, autonomous dynamical system, in which the right-hand side $f(\mathbf{u})$ is a linear function of $\mathbf{u}$ that is independent of the time $t$, and hence given by multiplication by a constant matrix. Thus, the system takes the form
+\begin{equation}
+    \frac{d\mathbf{u}}{dt} = A\mathbf{u},
+    \label{eq:8.9}
+\end{equation}
+in which $A$ is a constant $n\times n$ matrix. Writing out the system (\ref{eq:8.9}) in full detail produces
+\begin{align}
+    \begin{split}
+    \frac{du_1}{dt} &= a_{11}u_1 + a_{12}u_2 + \cdots + a_{1n}u_n,\\
+    \frac{du_2}{dt} &= a_{21}u_1 + a_{22}u_2 + \cdots + a_{2n}u_n,\\
+                    &\vdots \qquad \qquad \qquad \quad \qquad \vdots \\
+    \frac{du_n}{dt} &= a_{n1}u_1 + a_{n2}u_2 + \cdots + a_{nn}u_n,
+    \label{eq:8.10}
+    \end{split}
+\end{align}
+and we seek the solution $\mathbf{u}(t)=\left(u_1(t),\ldots,u_n(t)\right)^T$. In the autonomous case, which is the only type to be treated in depth here, the coefficients $a_{ij}$ are assumed to be (real) constants. We are interested not only in the formulas for the solutions, but also in understanding their qualitative and quantitative behavior.
+
+Drawing our inspiration from the exponential solution formula (\ref{eq:8.2}) for the scalar version, let us investigate whether the vector system admits any solutions of a similar exponential form
+\begin{equation}
+    \mathbf{u}(t)=e^{\lambda t}\mathbf{v}.
+    \label{eq:8.11}
+\end{equation}
+We assume that $\lambda$ is a constant scalar, so $e^{\lambda t}$ is the usual scalar exponential function, while $\mathbf{v}\in\mathbb{R}^n$ is a constant vector. In other words, the components $u_i(t)=e^{\lambda t}v_i$ of our desired solution are assumed to be constant multiples of the \emph{same} exponential function. Since $\mathbf{v}$ is constant, the derivative of $\mathbf{u}(t)$ is easily found:
+\begin{equation*}
+    \frac{d\mathbf{u}}{dt} = \frac{d}{dt}\left(e^{\lambda t}\mathbf{v}\right) = \lambda e^{\lambda t}\mathbf{v}.
+\end{equation*}
+On the other hand, since $e^{\lambda t}$ is a scalar, it commutes with matrix multiplication, and so
+\begin{equation*}
+    A\mathbf{u} = Ae^{\lambda t}\mathbf{v}=e^{\lambda t}A\mathbf{v}.
+\end{equation*}
+Therefore, $\mathbf{u}(t)$ will solve the system (\ref{eq:8.9}) if and only if
+\begin{equation*}
+    \lambda e^{\lambda t}\mathbf{v} = e^{\lambda t}A\mathbf{v},
+\end{equation*}
+or, canceling the common scalar factor $e^{\lambda t}$,
+\begin{equation*}
+    \lambda \mathbf{v} = A\mathbf{v}.
+\end{equation*}
+The result is a system of $n$ algebraic equations relating the vector $\mathbf{v}$ and the scalar $\lambda$. Analysis of this system and its ramifications will be the topic of the remainder of this chapter. A broad range of significant applications will appear in the subsequent two chapters.
+
+\subsection{Eigenvalues and Eigenvectors}
+In view of the preceding motivational section, we hereby inaugurate our discussion of eigenvalues and eigenvectors by stating the basic definition.
+\begin{dfn}{Eigenvalues, Eigenvectors}{eigs}
+    Let $A$ be an $n\times n$ matrix. A scalar $\lambda$ is called an \emph{eigenvalue} of $A$ if there is a \emph{non-zero} vector $\mathbf{v}\neq \mathbf{0}$, called an \emph{eigenvector}, such that
+    \begin{equation}
+        A\mathbf{v} = \lambda \mathbf{v}.
+        \label{eq:8.12}
+    \end{equation}
+\end{dfn}
+In geometric terms, the matrix $A$ has the effect of stretching the eigenvector $\mathbf{v}$ by an amount specified by the eigenvalue $\lambda$.
+\begin{remark}
+    The odd-looking terms ``eigenvalue'' and ``eigenvector'' are hybrid German-English words. In the original German, they are \emph{Eigenwert} and \emph{Eigenvektor}, which can be fully translated as ``proper value'' and ``proper vector''. For some reason, the half-translated terms have acquired a certain charm, and are now standard. The alternative English terms \emph{characteristic value} and \emph{characteristic vector} can be found in some (mostly older) texts. Oddly, the terms \emph{characteristic polynomial} and \emph{characteristic equation}, to be defined below, are still used rather than ``eigenpolynomial'' and ``eigenequation''.
+\end{remark}
+
+The requirement that the eigenvector $\mathbf{v}$ be nonzero is important, since $\mathbf{v}=\mathbf{0}$ is a trivial solution to the eigenvalue equation (\ref{eq:8.12}) for \emph{every} scalar $\lambda$. Moreover, as far as solving linear ordinary differential equations goes, the zero vector $\mathbf{v}=\mathbf{0}$ gives $\mathbf{u}(t)\equiv \mathbf{0}$, which is certainly a solution, but one that we already knew.
+
+The eigenvalue equation (\ref{eq:8.12}) is a system of linear equations for the entries of the eigenvector $\mathbf{v}$ -- provided that the eigenvalue $\lambda$ is specified in advance -- but is ``mildly'' nonlinear as a combined system for $\lambda$ and $\mathbf{v}$. Gaussian Elimination per se will not solve the problem, and we are in need of a new idea. Let us begin by rewriting the equation in the form
+\begin{equation}
+    \left(A-\lambda I\right)\mathbf{v}=\mathbf{0},
+    \label{eq:8.13}
+\end{equation}
+where $I$ is the identity matrix of the correct size, whereby $\lambda I\mathbf{v}=\lambda\mathbf{v}$. \textbf{Note:} It is not legal to write (\ref{eq:8.13}) in the form $\left(A-\lambda\right)\mathbf{v}=\mathbf{0}$ since we do not know how to subtract a scalar $\lambda$ from a matrix $A$. Worse, if you type $A-\lambda$ into \textsc{Matlab} or \textsc{Mathematica}, the result will be to subtract $\lambda$ from \emph{all} the entries of $A$, which is \emph{not} what we are after!
+
+Now, for given $\lambda$, equation (\ref{eq:8.13}) is a homogeneous linear system for $\mathbf{v}$, and always has the trivial zero solution $\mathbf{v}=\mathbf{0}$. But we are specifically seeking a nonzero solution! According to Theorem 1.47 \textcolor{red}{Debating including this theorem}, a homogeneous linear system has a nonzero solution $\mathbf{v}\neq \mathbf{0}$ if and only if its coefficient matrix, which in this case is $A-\lambda I$, is singular. This observation is the key to resolving the eigenvector equation.
+\begin{thm}{}{thm8.3}
+    A scalar $\lambda$ is an eigenvalue of the $n\times n$ matrix $A$ if and only if the matrix $A-\lambda I$ is singular, i.e., of rank $<n$. The corresponding eigenvectors are the nonzero solutions to the eigenvalue equation $(A-\lambda I)\mathbf{v}=\mathbf{0}$.
+\end{thm}
+We know a number of ways to characterize singular matrices, including the vanishing determinant criterion given in (1.84) \textcolor{red}{What is that?}. Therefore, the following result is immediate:
+\begin{cor}{}{chareq}
+    A scalar $\lambda$ is an eigenvalue of the matrix $A$ if and only if $\lambda$ is a solution to the \emph{characteristic equation}
+    \begin{equation}
+        \det (A-\lambda I) = 0
+        \label{eq:8.14}
+    \end{equation}
+\end{cor}
+
+In practice, when computing eigenvalues and eigenvectors by hand using exact arithmetic, one first solves the characteristic equation (\ref{eq:8.14}) to obtain the set of eigenvalues. Then, for each eigenvalue $\lambda$ one uses standard linear algebra methods, e.g., Gaussian Elimination, to solve the corresponding linear system (\ref{eq:8.13}) for the associated eigenvector $\mathbf{v}$.
+
+\begin{example}{}{ex8.5}
+    Consider the $2\times 2$ matrix
+    \begin{align*}
+        A = \begin{pmatrix}3 & 1\\
+                           1 & 3
+            \end{pmatrix}.
+    \end{align*}
+    We compare the determinant in the characteristic equation using formula (1.38) \textcolor{red}{find it}:
+    \begin{align*}
+        \det (A-\lambda I) = \det \begin{pmatrix}3-\lambda & 1\\ 1 & 3-\lambda \end{pmatrix} = (3-\lambda)^2 - 1 = \lambda^2 -6\lambda + 8.
+    \end{align*}
+    Thus, the characteristic equation is a quadratic polynomial equation, and can be solved by factorization:
+    \begin{equation*}
+        \lambda^2 - 6\lambda + 8 = (\lambda - 4)(\lambda - 2)=0.
+    \end{equation*}
+    We conclude that $A$ has two eigenvalues: $\lambda_1 = 4$ and $\lambda_2 = 2$.
+
+    For each eigenvalue, the corresponding eigenvectors are found by solving the associated homogeneous linear system (\ref{eq:8.13}). For the first eigenvalue, the eigenvector equation is
+    \begin{align*}
+        (A-4I)\mathbf{v} = \begin{pmatrix}-1 & 1\\ 1 & -1\end{pmatrix} \begin{pmatrix}x\\ y\end{pmatrix} = \begin{pmatrix} 0\\ 0\end{pmatrix}, \qquad \text{or}\qquad \begin{split} -x + y &= 0,\\ x-y &=0.\end{split}
+    \end{align*}
+    The general solution is
+    \begin{align*}
+        x = y = a, \qquad \text{so}\qquad \mathbf{v}= \begin{pmatrix}a\\a\end{pmatrix} = a\begin{pmatrix}1\\1\end{pmatrix},
+    \end{align*}
+    where $a$ is an arbitrary scalar. Only the nonzero solutions\footnotemark[2]  count as eigenvectors, and so the eigenvectors for the eigenvalue $\lambda_1 = 4$ must have $a\neq 0$, i.e., they are all nonzero scalar multiples of the basic eigenvector $\mathbf{v}_1 = (1,1)^T$.
+
+\begin{remark}
+    In general, if $\mathbf{v}$ is an eigenvector of $A$ for the eigenvalue $\lambda$, then so is every nonzero scalar multiple of $\mathbf{v}$. In practice, we distinguish only linearly independent eigenvectors. Thus, in this example, we shall say ``$\mathbf{v}_1=(1,1)^T$ is \emph{the} eigenvector corresponding to the eigenvalue $\lambda_1=4$'', when we really mean that the set of eigenvectors for $\lambda_1 = 4$ consists of all nonzero scalar multiples of $\mathbf{v}_1$.
+\end{remark}
+
+Similarly, for the second eigenvalue $\lambda_2 = 2$, the eigenvector equation is
+\begin{equation*}
+    (A-2I)\mathbf{v}=\begin{pmatrix}1 & 1 \\ 1 & 1\end{pmatrix} \begin{pmatrix}x\\y\end{pmatrix} = \begin{pmatrix}0\\0\end{pmatrix}.
+\end{equation*}
+The solution $(-a,a)^T=a(-1,1)^T$ is the set of scalar multiples of the eigenvector $\mathbf{v}_2 = (-1,1)^T$. Therefore, the complete list of eigenvalues and eigenvectors (up to scalar multiple) for this particular matrix is
+\begin{equation*}
+    \lambda_1=4,\qquad \mathbf{v}_1 = \begin{pmatrix}1\\1\end{pmatrix}, \qquad \lambda_2 = 2, \qquad \mathbf{v}_2 = \begin{pmatrix}-1\\1\end{pmatrix}.
+\end{equation*}
+\end{example}
+\footnotetext{If, at this stage, you end up with a linear system with only the trivial zero solution, you've done something wrong! Either you don't have a correct eigenvalue -- or you've made an error solving the homogeneous eigenvector system. On the other hand, if you are working with a numerical approximation to the eigenvalue, then the resulting numerical homogeneous linear system will almost certainly non have a nonzero solution, and therefore a completely different approach must be taken to finding the corresponding eigenvector; see Sections 9.5 and 9.6.}
 \section*{From Wang}
 \end{document}
