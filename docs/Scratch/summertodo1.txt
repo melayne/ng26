@@ -1,0 +1,6 @@
+1. clean up files and remove unneeded branches
+1.5 find mlmfem.tex
+2. figure out markdown enough to use it
+3. write up all meeting notes in markdown to have back travel and going forward
+4. tackle KLexpansion
+5. start local ngsolve documentation for things we are using
