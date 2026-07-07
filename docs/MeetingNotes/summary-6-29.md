@@ -4,14 +4,14 @@
 The meeting focused on understanding the KL expansion and its application to random fields. Neal and Panayot discussed the spectral decomposition of the covariance matrix, the eigenvalue problem, and the rotation invariance of distributions. They explored the use of the exponential covariance kernel and its properties, including the need for the exponent of the eigenvectors. The team also discussed the implementation of the KL expansion in Python, the use of NGsolve for discretizing PDEs, and the importance of maintaining the same distribution during multi-level Monte Carlo simulations. They plan to write up their findings and test the KL expansion with computable examples.
 
 ## Action Items
-• [] Write up a clear, self-contained description of the KL expansion and covariance sampling in Overleaf, suitable for readers unfamiliar with the topic, and share it with the team.
-• [] Meet with Diya on Wednesday to review the breakdown of work, discuss the first steps in generating random fields, and coordinate next steps for her coding tasks.
-• [] Update the calendar reservation for the next meeting to Wednesday at 1:30 PM and ensure the invite is sent to the relevant participants.
-• [] Write a concise summary of the KL expansion and covariance sampling in Overleaf, using the agreed notation, so it can be reused in the project document.
-• [] Implement KL expansion sampling for the chosen covariance kernel, generate random coefficient fields, solve the PDE using NGSolve, and run a single-level Monte Carlo simulation to compute the expected outflow flux, aiming to have this working within the next week or two.
-• [] Read the Giles et al. paper on CG start and KL expansion to understand the derivation and behavior of the Matérn kernels and KL modes, and prepare notes on this material.
-• [] Implement stochastic PDE sampling (e.g., via SPDE-based methods) following the same pattern as the KL expansion work, so that both sampling approaches can be compared.
-• [] Implement a multi-level Monte Carlo method for the PDE problem, building on the single-level implementation, with the goal of having it ready in about one to three weeks.
+- [] Write up a clear, self-contained description of the KL expansion and covariance sampling in Overleaf, suitable for readers unfamiliar with the topic, and share it with the team.
+- [] Meet with Diya on Wednesday to review the breakdown of work, discuss the first steps in generating random fields, and coordinate next steps for her coding tasks.
+- [] Update the calendar reservation for the next meeting to Wednesday at 1:30 PM and ensure the invite is sent to the relevant participants.
+- [] Write a concise summary of the KL expansion and covariance sampling in Overleaf, using the agreed notation, so it can be reused in the project document.
+- [] Implement KL expansion sampling for the chosen covariance kernel, generate random coefficient fields, solve the PDE using NGSolve, and run a single-level Monte Carlo simulation to compute the expected outflow flux, aiming to have this working within the next week or two.
+- [] Read the Giles et al. paper on CG start and KL expansion to understand the derivation and behavior of the Matérn kernels and KL modes, and prepare notes on this material.
+- [] Implement stochastic PDE sampling (e.g., via SPDE-based methods) following the same pattern as the KL expansion work, so that both sampling approaches can be compared.
+- [] Implement a multi-level Monte Carlo method for the PDE problem, building on the single-level implementation, with the goal of having it ready in about one to three weeks.
 
 ## Outline
 Understanding KF Variance and Covariance Matrix
