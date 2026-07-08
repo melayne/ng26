@@ -23,8 +23,6 @@ L2 residual ``||r||_2``, energy error ``||u_exact - x||_A``, and update-dual
 
 from __future__ import annotations
 
-import os
-import sys
 import warnings
 from dataclasses import dataclass, field
 from typing import Callable, Literal, Optional
@@ -33,21 +31,27 @@ import numpy as np
 import scipy.sparse as sp
 
 import ngsolve as ng
-from ngsolve import BilinearForm, GridFunction, H1, InnerProduct, LinearForm, grad, dx
+from ngsolve import BilinearForm, GridFunction, H1, InnerProduct, LinearForm
 
-# Make the project's ``src`` helpers importable regardless of CWD.
-_SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src")
-if _SRC not in sys.path:
-    sys.path.insert(0, _SRC)
+try:
+    from .NGSolve_utils import (
+        apply_dirichlet,
+        bilinear_form_to_csr,
+        boundary_dof_ids,
+        get_free_fixed_ids,
+        vector_norm as _vector_norm,
+    )
+    from .preconditioners import gauss_seidel_sweeps
+except ImportError:
+    from NGSolve_utils import (
+        apply_dirichlet,
+        bilinear_form_to_csr,
+        boundary_dof_ids,
+        get_free_fixed_ids,
+        vector_norm as _vector_norm,
+    )
+    from preconditioners import gauss_seidel_sweeps
 
-from NGSolve_utils import (
-    apply_dirichlet,
-    bilinear_form_to_csr,
-    boundary_dof_ids,
-    get_free_fixed_ids,
-    vector_norm as _vector_norm,
-)
-from preconditioners import gauss_seidel_sweeps  
 
 FormSetupFn = Callable[[object], "tuple[BilinearForm, LinearForm]"]
 SmootherKind = Literal["gs", "native"]
@@ -550,8 +554,7 @@ class Level:
                 r = b - self.a.mat * x
                 x.data += omega * (sm * r)
             if verbose:
-                r = b - self.a.mat * x
-                rn = float(np.linalg.norm(r.FV().NumPy()[self.free_ids]))
+                rn = self.residual_norm(b, x)
                 tag = "back" if backward else "fwd"
                 print(f"    [native {tag}] sweep {sweep:3d}  ||r_free|| = {rn:.6e}")
 

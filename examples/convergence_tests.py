@@ -36,8 +36,8 @@ import time
 import numpy as np
 import math
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from multigrid_cycles import (
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from src.multigrid_cycles import (
     build_form_setup,
     build_hierarchy,
     Level,
@@ -48,10 +48,14 @@ from multigrid_cycles import (
 # ---------------------------------------------------------------------------
 # Get and set colors for plotting
 # ---------------------------------------------------------------------------
-cmap = plt.get_cmap("twilight_shifted")
-cmap_nums = [tuple(cmap(x)[:3]) for x in np.linspace(0, 1,)]
-plt.rcParams['image.cmap'] = "twilight_shifted"
-plt.rcParams['axes.prop_cycle'] = cycler(color=plt.cm.twilight_shifted.colors)
+cmap = plt.get_cmap("jet")
+cmap_nums = [tuple(cmap(x)[:3]) for x in np.linspace(0, 1)]
+plt.rcParams["image.cmap"] = "jet"
+# .colors is the full LUT (hundreds of nearly identical dark entries) — sample
+# evenly for distinct line/marker colors in multi-series plots.
+plt.rcParams["axes.prop_cycle"] = cycler(
+    color=[cmap(x) for x in np.linspace(0, 1, 10, endpoint=False)]
+)
 # ---------------------------------------------------------------------------
 # Shared problem definition
 # ---------------------------------------------------------------------------
@@ -607,7 +611,13 @@ gfu = fine.gfu
 gfu.vec[:] = 0.0
 fine.set_initial_guess(x0_study, enforce_bc=True)  # or leave 0
 
-inv = solvers.CGSolver(mat=a.mat, pre=pre, maxiter=200, tol=1e-8, printrates=True)
+inv = solvers.CGSolver(
+    mat=a.mat,
+    pre=pre,  # pre XOR freedofs — not both
+    maxiter=200,
+    tol=1e-8,
+    printrates=True,
+)
 gfu.vec.data = inv * f.vec
 
 n_cg = inv.iterations
@@ -637,6 +647,7 @@ gfu.vec.data = inv * f.vec
 
 n_cg = inv.iterations
 print("PCG (NGSolve CG + your V-cycle):", n_cg, "iterations")
+
 
 
 # %%
