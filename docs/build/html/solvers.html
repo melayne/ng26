@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solvers &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Preconditioners" href="preconditioners.html" />
+    <link rel="prev" title="Functions" href="functions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.Application"><code class="docutils literal notranslate"><span class="pre">Application</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.solve_implementation.Application.Solve"><code class="docutils literal notranslate"><span class="pre">Application.Solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.Dirichlet"><code class="docutils literal notranslate"><span class="pre">Dirichlet</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.Equation"><code class="docutils literal notranslate"><span class="pre">Equation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.solve_implementation.Equation.Solve"><code class="docutils literal notranslate"><span class="pre">Equation.Solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.LinearApplication"><code class="docutils literal notranslate"><span class="pre">LinearApplication</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.solve_implementation.LinearApplication.Assemble"><code class="docutils literal notranslate"><span class="pre">LinearApplication.Assemble()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.solve_implementation.LinearApplication.Solve"><code class="docutils literal notranslate"><span class="pre">LinearApplication.Solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.NonLinearApplication"><code class="docutils literal notranslate"><span class="pre">NonLinearApplication</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.solve_implementation.NonLinearApplication.Solve"><code class="docutils literal notranslate"><span class="pre">NonLinearApplication.Solve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.solve_implementation.Solve"><code class="docutils literal notranslate"><span class="pre">Solve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.nonlinearsolvers.Newton"><code class="docutils literal notranslate"><span class="pre">Newton()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.nonlinearsolvers.NewtonMinimization"><code class="docutils literal notranslate"><span class="pre">NewtonMinimization()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.nonlinearsolvers.NewtonSolver"><code class="docutils literal notranslate"><span class="pre">NewtonSolver</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.nonlinearsolvers.NewtonSolver.SetDirichlet"><code class="docutils literal notranslate"><span class="pre">NewtonSolver.SetDirichlet()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.nonlinearsolvers.NewtonSolver.Solve"><code class="docutils literal notranslate"><span class="pre">NewtonSolver.Solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Solvers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/solvers.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="solvers">
+<h1>Solvers<a class="headerlink" href="#solvers" title="Link to this heading"></a></h1>
+<p>NGSolve has several types of solvers and there are Python wrappers for some of them in krylovspace.py and nonlinearsolvers.py and solve_implementation.py</p>
+<!-- Using the autodoc tool -->
+<dl class="py class" id="module-ngsolve.solve_implementation">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Application">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">Application</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bilinearforms.html#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">GridFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Application" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Application.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichlet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printrates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Application.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Dirichlet">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">Dirichlet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Dirichlet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Equation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">Equation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Equation" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Equation.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichlet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printrates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Equation.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.LinearApplication">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">LinearApplication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bilinearforms.html#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">GridFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.LinearApplication" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.LinearApplication.Assemble">
+<span class="sig-name descname"><span class="pre">Assemble</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.LinearApplication.Assemble" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.LinearApplication.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichlet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lin_solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lin_solver_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printrates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.LinearApplication.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.NonLinearApplication">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">NonLinearApplication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="bilinearforms.html#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">GridFunction</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.NonLinearApplication" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.NonLinearApplication.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichlet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.NonLinearApplication.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.solve_implementation.Solve">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.solve_implementation.</span></span><span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichlet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printrates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.solve_implementation.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function" id="module-ngsolve.nonlinearsolvers">
+<dt class="sig sig-object py" id="ngsolve.nonlinearsolvers.Newton">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.nonlinearsolvers.</span></span><span class="sig-name descname"><span class="pre">Newton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freedofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxerr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirichletvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dampfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.nonlinearsolvers.Newton" title="Link to this definition"></a></dt>
+<dd><p>Newton’s method for solving non-linear problems of the form A(u)=0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<a class="reference internal" href="bilinearforms.html#ngsolve.BilinearForm" title="ngsolve.BilinearForm"><em>BilinearForm</em></a>) – The BilinearForm of the non-linear variational problem. It does not have to be assembled.</p></li>
+<li><p><strong>u</strong> (<a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.GridFunction"><em>GridFunction</em></a>) – The GridFunction where the solution is saved. The values are used as initial guess for Newton’s method.</p></li>
+<li><p><strong>freedofs</strong> (<em>BitArray</em>) – The FreeDofs on which the assembled matrix is inverted. If argument is ‘None’ then the FreeDofs of the underlying FESpace is used.</p></li>
+<li><p><strong>maxit</strong> (<em>int</em>) – Number of maximal iteration for Newton. If the maximal number is reached before the maximal error Newton might no converge and a warning is displayed.</p></li>
+<li><p><strong>maxerr</strong> (<em>float</em>) – The maximal error which Newton should reach before it stops. The error is computed by the square root of the inner product of the residuum and the correction.</p></li>
+<li><p><strong>inverse</strong> (<em>string</em>) – A string of the sparse direct solver which should be solved for inverting the assembled Newton matrix.</p></li>
+<li><p><strong>dampfactor</strong> (<em>float</em>) – Set the damping factor for Newton’s method. If dampfactor is 1 then no damping is done. If value is &lt; 1 then the damping is done by the formula ‘min(1,dampfactor*numit)’ for the correction, where ‘numit’ denotes the Newton iteration.</p></li>
+<li><p><strong>printing</strong> (<em>bool</em>) – Set if Newton’s method should print informations about the actual iteration like the error.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of two integers. The first one is 0 if Newton’s method did converge, -1 otherwise. The second one gives the number of Newton iterations needed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.nonlinearsolvers.NewtonMinimization">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.nonlinearsolvers.</span></span><span class="sig-name descname"><span class="pre">NewtonMinimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freedofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxerr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-11</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dampfactor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linesearch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">printing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.nonlinearsolvers.NewtonMinimization" title="Link to this definition"></a></dt>
+<dd><p>Newton’s method for solving non-linear problems of the form A(u)=0 involving energy integrators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>a</strong> (<a class="reference internal" href="bilinearforms.html#ngsolve.BilinearForm" title="ngsolve.BilinearForm"><em>BilinearForm</em></a>) – The BilinearForm of the non-linear variational problem. It does not have to be assembled.</p></li>
+<li><p><strong>u</strong> (<a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.GridFunction"><em>GridFunction</em></a>) – The GridFunction where the solution is saved. The values are used as initial guess for Newton’s method.</p></li>
+<li><p><strong>freedofs</strong> (<em>BitArray</em>) – The FreeDofs on which the assembled matrix is inverted. If argument is ‘None’ then the FreeDofs of the underlying FESpace is used.</p></li>
+<li><p><strong>maxit</strong> (<em>int</em>) – Number of maximal iteration for Newton. If the maximal number is reached before the maximal error Newton might no converge and a warning is displayed.</p></li>
+<li><p><strong>maxerr</strong> (<em>float</em>) – The maximal error which Newton should reach before it stops. The error is computed by the square root of the inner product of the residuum and the correction.</p></li>
+<li><p><strong>inverse</strong> (<em>string</em>) – A string of the sparse direct solver which should be solved for inverting the assembled Newton matrix.</p></li>
+<li><p><strong>dampfactor</strong> (<em>float</em>) – Set the damping factor for Newton’s method. If dampfactor is 1 then no damping is done. If value is &lt; 1 then the damping is done by the formula ‘min(1,dampfactor*numit)’ for the correction, where ‘numit’ denotes the Newton iteration.</p></li>
+<li><p><strong>linesearch</strong> (<em>bool</em>) – If True then linesearch is used to guarantee that the energy decreases in every Newton iteration.</p></li>
+<li><p><strong>printing</strong> (<em>bool</em>) – Set if Newton’s method should print informations about the actual iteration like the error.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of two integers. The first one is 0 if Newton’s method did converge, -1 otherwise. The second one gives the number of Newton iterations needed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(int, int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.nonlinearsolvers.NewtonSolver">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.nonlinearsolvers.</span></span><span class="sig-name descname"><span class="pre">NewtonSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freedofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lin_solver_cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lin_solver_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.nonlinearsolvers.NewtonSolver" title="Link to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.nonlinearsolvers.NewtonSolver.SetDirichlet">
+<span class="sig-name descname"><span class="pre">SetDirichlet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirichletvalues</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.nonlinearsolvers.NewtonSolver.SetDirichlet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.nonlinearsolvers.NewtonSolver.Solve">
+<span class="sig-name descname"><span class="pre">Solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.nonlinearsolvers.NewtonSolver.Solve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="functions.html" class="btn btn-neutral float-left" title="Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="preconditioners.html" class="btn btn-neutral float-right" title="Preconditioners" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

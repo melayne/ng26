@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GUI &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Geometry" href="geometry.html" />
+    <link rel="prev" title="Time Stepping" href="timestepping.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GUI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.webgui.AddFieldLines"><code class="docutils literal notranslate"><span class="pre">AddFieldLines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.webgui.Draw"><code class="docutils literal notranslate"><span class="pre">Draw()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.webgui.FieldLines"><code class="docutils literal notranslate"><span class="pre">FieldLines()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GUI</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/gui.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gui">
+<h1>GUI<a class="headerlink" href="#gui" title="Link to this heading"></a></h1>
+<p>There are implementations that NGSolve uses for the display of its elements.</p>
+<!-- Using the autodoc tool -->
+<dl class="py function" id="module-ngsolve.webgui">
+<dt class="sig sig-object py" id="ngsolve.webgui.AddFieldLines">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.webgui.</span></span><span class="sig-name descname"><span class="pre">AddFieldLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.webgui.AddFieldLines" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.webgui.Draw">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.webgui.</span></span><span class="sig-name descname"><span class="pre">Draw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.webgui.Draw" title="Link to this definition"></a></dt>
+<dd><p>Visualise a mesh or field in the webgui (Jupyter or standalone).</p>
+<p>The object type determines how it is rendered.  Netgen meshes
+(<code class="docutils literal notranslate"><span class="pre">netgen.meshing.Mesh</span></code>) are supported out of the box.  When
+<em>ngsolve</em> is imported, <code class="docutils literal notranslate"><span class="pre">ngsolve.Mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">CoefficientFunction</span></code>
+and <code class="docutils literal notranslate"><span class="pre">GridFunction</span></code> are registered as well via
+<code class="xref py py-func docutils literal notranslate"><span class="pre">register_draw_type()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<a class="reference internal" href="fes.html#ngsolve.FESpace.mesh" title="ngsolve.FESpace.mesh"><em>mesh</em></a><em>, </em><em>function</em><em>, or </em><em>any registered draw type</em>) – The object to visualise.  For an <code class="docutils literal notranslate"><span class="pre">ngsolve.CoefficientFunction</span></code>
+pass the mesh or region as the first positional argument.</p></li>
+<li><p><strong>show</strong> (<em>bool</em>) – Display the widget immediately in Jupyter (default <code class="docutils literal notranslate"><span class="pre">True</span></code>).</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – Polynomial order used for visualisation (default 2).</p></li>
+<li><p><strong>draw_vol</strong> (<em>bool</em>) – Draw volume elements (default <code class="docutils literal notranslate"><span class="pre">True</span></code>).</p></li>
+<li><p><strong>draw_surf</strong> (<em>bool</em>) – Draw surface elements (default <code class="docutils literal notranslate"><span class="pre">True</span></code>).</p></li>
+<li><p><strong>deformation</strong> (<em>bool</em><em> or </em><a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.GridFunction"><em>GridFunction</em></a>) – Apply deformation to the mesh (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>scale</strong> (<em>float</em>) – Scaling factor for the deformation (default 1.0).</p></li>
+<li><p><strong>autoscale</strong> (<em>bool</em>) – Automatically determine color range (default <code class="docutils literal notranslate"><span class="pre">True</span></code>).</p></li>
+<li><p><strong>min</strong> (<em>float</em>) – Explicit color-range bounds (override <em>autoscale</em>).</p></li>
+<li><p><strong>max</strong> (<em>float</em>) – Explicit color-range bounds (override <em>autoscale</em>).</p></li>
+<li><p><strong>clipping</strong> (<em>dict</em>) – Clipping-plane specification, e.g.
+<code class="docutils literal notranslate"><span class="pre">{&quot;x&quot;:</span> <span class="pre">1,</span> <span class="pre">&quot;y&quot;:</span> <span class="pre">0,</span> <span class="pre">&quot;z&quot;:</span> <span class="pre">0,</span> <span class="pre">&quot;dist&quot;:</span> <span class="pre">0}</span></code> or with
+<code class="docutils literal notranslate"><span class="pre">&quot;vec&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;pnt&quot;</span></code> keys.</p></li>
+<li><p><strong>vectors</strong> (<em>bool</em><em> or </em><em>dict</em>) – Show vector arrows.  Pass a dict with <code class="docutils literal notranslate"><span class="pre">&quot;grid_size&quot;</span></code> and/or
+<code class="docutils literal notranslate"><span class="pre">&quot;offset&quot;</span></code> for fine control.</p></li>
+<li><p><strong>eval_function</strong> (<em>str</em>) – Custom JavaScript evaluation expression for the color map.</p></li>
+<li><p><strong>objects</strong> (<em>list</em>) – Additional overlay objects to render.</p></li>
+<li><p><strong>settings</strong> (<em>dict</em>) – <p>GUI settings forwarded to the viewer.  Supported keys:</p>
+<ul>
+<li><p><strong>Colormap</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">autoscale</span></code> (bool), <code class="docutils literal notranslate"><span class="pre">ncolors</span></code> (int),
+<code class="docutils literal notranslate"><span class="pre">min</span></code> / <code class="docutils literal notranslate"><span class="pre">max</span></code> (float).</p></li>
+<li><p><strong>Clipping</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">enable</span></code> (bool), <code class="docutils literal notranslate"><span class="pre">function</span></code> (bool),
+<code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">z</span></code>, <code class="docutils literal notranslate"><span class="pre">dist</span></code> (float).</p></li>
+<li><p><strong>Light</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">ambient</span></code>, <code class="docutils literal notranslate"><span class="pre">diffuse</span></code> (float, 0–1),
+<code class="docutils literal notranslate"><span class="pre">shininess</span></code> (float, 0–100), <code class="docutils literal notranslate"><span class="pre">specularity</span></code> (float, 0–1).</p></li>
+<li><p><strong>Vectors</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">show</span></code> (bool), <code class="docutils literal notranslate"><span class="pre">grid_size</span></code> (int),
+<code class="docutils literal notranslate"><span class="pre">offset</span></code> (float).</p></li>
+<li><p><strong>Misc</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">subdivision</span></code> (int, 1–20),
+<code class="docutils literal notranslate"><span class="pre">line_thickness</span></code> (int, 1–20), <code class="docutils literal notranslate"><span class="pre">fast_draw</span></code> (bool).</p></li>
+<li><p><strong>Complex</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">phase</span></code> (float), <code class="docutils literal notranslate"><span class="pre">speed</span></code> (float),
+<code class="docutils literal notranslate"><span class="pre">animate</span></code> (bool).</p></li>
+<li><p><strong>Multidim</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">t</span></code> (float), <code class="docutils literal notranslate"><span class="pre">speed</span></code> (float),
+<code class="docutils literal notranslate"><span class="pre">animate</span></code> (bool).</p></li>
+<li><p><strong>Objects</strong> (<em>dict</em>) — visibility toggles by name, e.g.
+<code class="docutils literal notranslate"><span class="pre">{&quot;Edges&quot;:</span> <span class="pre">True,</span> <span class="pre">&quot;Wireframe&quot;:</span> <span class="pre">False,</span> <span class="pre">&quot;Surface&quot;:</span> <span class="pre">True}</span></code>.</p></li>
+<li><p><strong>camera</strong> (<em>dict</em>) — <code class="docutils literal notranslate"><span class="pre">euler_angles</span></code> ([x, y, z] in degrees),
+<code class="docutils literal notranslate"><span class="pre">transformations</span></code> (list of rotation/move dicts).</p></li>
+<li><p><strong>axes_labels</strong> (<em>list</em>) — axis labels, default
+<code class="docutils literal notranslate"><span class="pre">[&quot;X&quot;,</span> <span class="pre">&quot;Y&quot;,</span> <span class="pre">&quot;Z&quot;]</span></code>.</p></li>
+</ul>
+<p>Flat shortcuts are also accepted: <code class="docutils literal notranslate"><span class="pre">autoscale</span></code>,
+<code class="docutils literal notranslate"><span class="pre">colormap_min</span></code>, <code class="docutils literal notranslate"><span class="pre">colormap_max</span></code>, <code class="docutils literal notranslate"><span class="pre">colormap_ncolors</span></code>,
+<code class="docutils literal notranslate"><span class="pre">subdivision</span></code>, <code class="docutils literal notranslate"><span class="pre">line_thickness</span></code>, <code class="docutils literal notranslate"><span class="pre">edges</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>,
+<code class="docutils literal notranslate"><span class="pre">elements</span></code>.</p>
+</p></li>
+<li><p><strong>euler_angles</strong> (<em>tuple</em>) – Initial camera orientation as <code class="docutils literal notranslate"><span class="pre">[x,</span> <span class="pre">y,</span> <span class="pre">z]</span></code> in degrees.</p></li>
+<li><p><strong>center</strong> (<em>list</em>) – Override the centre of the scene.</p></li>
+<li><p><strong>radius</strong> (<em>float</em>) – Override the bounding-sphere radius.</p></li>
+<li><p><strong>interpolate_multidim</strong> (<em>bool</em>) – Interpolate between multi-dim components (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>animate</strong> (<em>bool</em>) – Animate multi-dim data (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>animate_complex</strong> (<em>bool</em>) – Animate the complex phase (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>colors</strong> (<em>list</em>) – Custom color table.</p></li>
+<li><p><strong>fullscreen</strong> (<em>bool</em>) – Open in fullscreen mode (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>width</strong> (<em>str</em>) – Widget size, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;100%&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;50vh&quot;</span></code>.</p></li>
+<li><p><strong>height</strong> (<em>str</em>) – Widget size, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;100%&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;50vh&quot;</span></code>.</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – If given, export the scene to an HTML file.</p></li>
+<li><p><strong>nodal_p1</strong> (<em>bool</em>) – Use nodal P1 interpolation (default <code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>js_code</strong> (<em>str</em>) – JavaScript snippet executed after scene initialisation.</p></li>
+<li><p><strong>id</strong> (<em>str</em>) – Register the scene under this name in
+<code class="docutils literal notranslate"><span class="pre">window._webgui_scenes</span></code> for JS access.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The scene object.  Call <code class="docutils literal notranslate"><span class="pre">scene.Redraw()</span></code> to update after
+changes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>WebGLScene</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_draw_type</span></code></dt><dd><p>Register a handler for additional types.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.webgui.FieldLines">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.webgui.</span></span><span class="sig-name descname"><span class="pre">FieldLines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Region</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="meshes.html#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">Mesh</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_lines</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'fieldlines'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_points_per_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0015</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0005</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.webgui.FieldLines" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="timestepping.html" class="btn btn-neutral float-left" title="Time Stepping" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="geometry.html" class="btn btn-neutral float-right" title="Geometry" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

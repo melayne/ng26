@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bilinear Forms &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Linear Forms" href="linearforms.html" />
+    <link rel="prev" title="Finite Element Spaces" href="fes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Bilinear Forms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.BilinearForm"><code class="docutils literal notranslate"><span class="pre">BilinearForm</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.Add"><code class="docutils literal notranslate"><span class="pre">BilinearForm.Add()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.Apply"><code class="docutils literal notranslate"><span class="pre">BilinearForm.Apply()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.Assemble"><code class="docutils literal notranslate"><span class="pre">BilinearForm.Assemble()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.AssembleLinearization"><code class="docutils literal notranslate"><span class="pre">BilinearForm.AssembleLinearization()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.ComputeInternal"><code class="docutils literal notranslate"><span class="pre">BilinearForm.ComputeInternal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.DeleteMatrix"><code class="docutils literal notranslate"><span class="pre">BilinearForm.DeleteMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.DeleteSpecialElements"><code class="docutils literal notranslate"><span class="pre">BilinearForm.DeleteSpecialElements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.Energy"><code class="docutils literal notranslate"><span class="pre">BilinearForm.Energy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.Flux"><code class="docutils literal notranslate"><span class="pre">BilinearForm.Flux()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.GetMatrixLevel"><code class="docutils literal notranslate"><span class="pre">BilinearForm.GetMatrixLevel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.SetPreconditioner"><code class="docutils literal notranslate"><span class="pre">BilinearForm.SetPreconditioner()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.UnsetPreconditioner"><code class="docutils literal notranslate"><span class="pre">BilinearForm.UnsetPreconditioner()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.components"><code class="docutils literal notranslate"><span class="pre">BilinearForm.components</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.condense"><code class="docutils literal notranslate"><span class="pre">BilinearForm.condense</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.harmonic_extension"><code class="docutils literal notranslate"><span class="pre">BilinearForm.harmonic_extension</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.harmonic_extension_trans"><code class="docutils literal notranslate"><span class="pre">BilinearForm.harmonic_extension_trans</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.inner_matrix"><code class="docutils literal notranslate"><span class="pre">BilinearForm.inner_matrix</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.inner_solve"><code class="docutils literal notranslate"><span class="pre">BilinearForm.inner_solve</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.integrators"><code class="docutils literal notranslate"><span class="pre">BilinearForm.integrators</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.loform"><code class="docutils literal notranslate"><span class="pre">BilinearForm.loform</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.mat"><code class="docutils literal notranslate"><span class="pre">BilinearForm.mat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.BilinearForm.space"><code class="docutils literal notranslate"><span class="pre">BilinearForm.space</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Bilinear Forms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/bilinearforms.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bilinear-forms">
+<h1>Bilinear Forms<a class="headerlink" href="#bilinear-forms" title="Link to this heading"></a></h1>
+<p>Documentation on NGSolve’s bilinear forms</p>
+<!-- Using the autodoc tool -->
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.</span></span><span class="sig-name descname"><span class="pre">BilinearForm</span></span><a class="headerlink" href="#ngsolve.BilinearForm" title="Link to this definition"></a></dt>
+<dd><p>Used to store the left hand side of a PDE. integrators (ngsolve.BFI)
+to it to implement your PDE. If the left hand side is linear
+you can use BilinearForm.Assemble to assemble it after adding
+your integrators. For nonlinear usage use BilinearForm.Apply or
+BilinearForm.AssembleLinearization instead of Bilinearform.Assemble.</p>
+<p>Parameters:</p>
+<dl>
+<dt>space<span class="classifier">ngsolve.FESpace</span></dt><dd><blockquote>
+<div><p>The finite element space the bilinearform is defined on. This
+can be a compound FESpace for a mixed formulation.</p>
+</div></blockquote>
+<p>Keyword arguments can be:</p>
+</dd>
+<dt>condense: bool = False</dt><dd><p>(formerly known as ‘eliminate_internal’)
+Set up BilinearForm for static condensation of internal
+bubbles. Static condensation has to be done by user,
+this enables only the use of the members harmonic_extension,
+harmonic_extension_trans and inner_solve. Have a look at the
+documentation for further information.</p>
+</dd>
+<dt>eliminate_internal: bool = False</dt><dd><p>deprecated for static condensation, replaced by ‘condense’</p>
+</dd>
+<dt>keep_internal: bool = True</dt><dd><p>store harmonic extension and inner inverse matrix from static condensation
+set to False to save memory, and recompute local matrices on demand</p>
+</dd>
+<dt>store_inner: bool = False</dt><dd><p>store inner element matrix (of static condensation)</p>
+</dd>
+<dt>eliminate_hidden: bool = False</dt><dd><p>Set up BilinearForm for static condensation of hidden
+dofs. May be overruled by eliminate_internal.</p>
+</dd>
+<dt>print: bool = False</dt><dd><p>Write additional information to testout file.
+This file must be set by ngsolve.SetTestoutFile. Use
+ngsolve.SetNumThreads(1) for serial output</p>
+</dd>
+<dt>printelmat: bool = False</dt><dd><p>Write element matrices to testout file</p>
+</dd>
+<dt>symmetric: bool = False</dt><dd><p>BilinearForm is symmetric.
+does not imply symmetric_storage, as used to be earlier</p>
+</dd>
+<dt>symmetric_storage: bool = False</dt><dd><p>Store only lower triangular part of sparse matrix.</p>
+</dd>
+<dt>nonassemble: bool = False</dt><dd><p>BilinearForm will not allocate memory for assembling.
+optimization feature for (nonlinear) problems where the
+form is only applied but never assembled.</p>
+</dd>
+<dt>project: bool = False</dt><dd><p>When calling bf.Assemble, all saved coarse matrices from
+mesh refinements are updated as well using a Galerkin projection
+of the matrix on the finest grid. This is needed to use the multigrid
+preconditioner with a changing bilinearform.</p>
+</dd>
+<dt>nonsym_storage: bool = False</dt><dd><p>(deprecated) The full matrix is stored, even if the symmetric flag is set.</p>
+</dd>
+<dt>diagonal: bool = False</dt><dd><p>Stores only the diagonal of the matrix.</p>
+</dd>
+<dt>hermitian: bool = False</dt><dd><p>matrix is hermitian.</p>
+</dd>
+<dt>geom_free: bool = False</dt><dd><p>when element matrices are independent of geometry, we store them
+only for the reference elements</p>
+</dd>
+<dt>matrix_free_bdb: bool = False</dt><dd><p>store BDB factors seperately</p>
+</dd>
+<dt>nonlinear_matrix_free_bdb: bool = False</dt><dd><p>store BDB factors seperately for nonlinear operators</p>
+</dd>
+<dt>check_unused: bool = True</dt><dd><p>If set prints warnings if not UNUSED_DOFS are not used.</p>
+</dd>
+<dt>delete_zero_elements: double = unset</dt><dd><p>remove all matrix entries smaller than this value from sparse matrix</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.Add">
+<span class="sig-name descname"><span class="pre">Add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.BilinearForm.Add" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic">
+<li><p>Add(self: ngsolve.comp.BilinearForm, integrator: ngsolve.fem.BFI) -&gt; ngsolve.comp.BilinearForm</p>
+<blockquote>
+<div><p>Add integrator to bilinear form.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>integrator<span class="classifier">ngsolve.fem.BFI</span></dt><dd><p>input bilinear form integrator</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>Add(self: object, arg0: ngsolve.comp.SumOfIntegrals) -&gt; object</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.Apply">
+<span class="sig-name descname"><span class="pre">Apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.BilinearForm.Apply" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>Apply(self: ngsolve.comp.BilinearForm, x: ngsolve.la.BaseVector, y: ngsolve.la.BaseVector) -&gt; None</p></li>
+</ol>
+<p>Applies a (non-)linear variational formulation to x and stores the result in y.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>x<span class="classifier">ngsolve.BaseVector</span></dt><dd><p>input vector</p>
+</dd>
+<dt>y<span class="classifier">ngsolve.BaseVector</span></dt><dd><p>output vector</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>Apply(self: ngsolve.comp.BilinearForm, u: ngsolve.la.BaseVector) -&gt; ngsolve.la.DynamicVectorExpression</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.Assemble">
+<span class="sig-name descname"><span class="pre">Assemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">reallocate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></span><a class="headerlink" href="#ngsolve.BilinearForm.Assemble" title="Link to this definition"></a></dt>
+<dd><p>Assemble the bilinear form.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>reallocate<span class="classifier">bool</span></dt><dd><p>input reallocate</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.AssembleLinearization">
+<span class="sig-name descname"><span class="pre">AssembleLinearization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ulin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reallocate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.AssembleLinearization" title="Link to this definition"></a></dt>
+<dd><p>Computes linearization of the bilinear form at given vecor.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>ulin<span class="classifier">ngsolve.la.BaseVector</span></dt><dd><p>input vector</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.ComputeInternal">
+<span class="sig-name descname"><span class="pre">ComputeInternal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.ComputeInternal" title="Link to this definition"></a></dt>
+<dd><p>Parameters:</p>
+<dl class="simple">
+<dt>u<span class="classifier">ngsolve.la.BaseVector</span></dt><dd><p>input vector</p>
+</dd>
+<dt>f<span class="classifier">ngsolve.la.BaseVector</span></dt><dd><p>input right hand side</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.DeleteMatrix">
+<span class="sig-name descname"><span class="pre">DeleteMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.DeleteMatrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.DeleteSpecialElements">
+<span class="sig-name descname"><span class="pre">DeleteSpecialElements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.DeleteSpecialElements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.Energy">
+<span class="sig-name descname"><span class="pre">Energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.Energy" title="Link to this definition"></a></dt>
+<dd><p>Computes the energy of EnergyIntegrators like SymbolicEnergy for given input vector.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>x<span class="classifier">ngsolve.la.BaseVector</span></dt><dd><p>input vector</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.Flux">
+<span class="sig-name descname"><span class="pre">Flux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="gridfunctions.html#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.BilinearForm.Flux" title="Link to this definition"></a></dt>
+<dd><p>Parameters:</p>
+<dl class="simple">
+<dt>gf<span class="classifier">ngsolve.comp.GridFunction</span></dt><dd><p>input GridFunction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.GetMatrixLevel">
+<span class="sig-name descname"><span class="pre">GetMatrixLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseMatrix</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.GetMatrixLevel" title="Link to this definition"></a></dt>
+<dd><p>returns matrix from multigrid level, default is finest level</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.SetPreconditioner">
+<span class="sig-name descname"><span class="pre">SetPreconditioner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngcomp::Preconditioner</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.SetPreconditioner" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.UnsetPreconditioner">
+<span class="sig-name descname"><span class="pre">UnsetPreconditioner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.BilinearForm" title="ngsolve.comp.BilinearForm"><span class="pre">ngsolve.comp.BilinearForm</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngcomp::Preconditioner</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.BilinearForm.UnsetPreconditioner" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.components">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">components</span></span><a class="headerlink" href="#ngsolve.BilinearForm.components" title="Link to this definition"></a></dt>
+<dd><p>list of components for bilinearforms on compound-space</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.condense">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">condense</span></span><a class="headerlink" href="#ngsolve.BilinearForm.condense" title="Link to this definition"></a></dt>
+<dd><p>use static condensation ?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.harmonic_extension">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">harmonic_extension</span></span><a class="headerlink" href="#ngsolve.BilinearForm.harmonic_extension" title="Link to this definition"></a></dt>
+<dd><p>harmonic_extension used for static condensaition</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.harmonic_extension_trans">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">harmonic_extension_trans</span></span><a class="headerlink" href="#ngsolve.BilinearForm.harmonic_extension_trans" title="Link to this definition"></a></dt>
+<dd><p>harmonic_extension_trans used for static condensation</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.inner_matrix">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inner_matrix</span></span><a class="headerlink" href="#ngsolve.BilinearForm.inner_matrix" title="Link to this definition"></a></dt>
+<dd><p>inner_matrix of the bilinear form</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.inner_solve">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">inner_solve</span></span><a class="headerlink" href="#ngsolve.BilinearForm.inner_solve" title="Link to this definition"></a></dt>
+<dd><p>inner_solve used for static condensation</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.integrators">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">integrators</span></span><a class="headerlink" href="#ngsolve.BilinearForm.integrators" title="Link to this definition"></a></dt>
+<dd><p>integrators of the bilinear form</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.loform">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">loform</span></span><a class="headerlink" href="#ngsolve.BilinearForm.loform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.mat">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mat</span></span><a class="headerlink" href="#ngsolve.BilinearForm.mat" title="Link to this definition"></a></dt>
+<dd><p>matrix of the assembled bilinear form</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.BilinearForm.space">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">space</span></span><a class="headerlink" href="#ngsolve.BilinearForm.space" title="Link to this definition"></a></dt>
+<dd><p>fespace on which the bilinear form is defined on</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fes.html" class="btn btn-neutral float-left" title="Finite Element Spaces" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="linearforms.html" class="btn btn-neutral float-right" title="Linear Forms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

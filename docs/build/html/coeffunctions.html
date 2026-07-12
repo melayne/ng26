@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coefficient Functions &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Functions" href="functions.html" />
+    <link rel="prev" title="Grid Functions" href="gridfunctions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Coefficient Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.CoefficientFunction"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Compile"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Compile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Derive"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Derive()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Diff"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Diff()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.DiffShape"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.DiffShape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Eig"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Eig()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.ExtendDimension"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.ExtendDimension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Freeze"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Freeze()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.InnerProduct"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.InnerProduct()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.MakeVariable"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.MakeVariable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Norm"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Norm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Operator"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Operator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Other"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Other()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Replace"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Replace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.Reshape"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.Reshape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.TensorTranspose"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.TensorTranspose()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.data"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.dim"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.dim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.dims"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.imag"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.imag</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.is_complex"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.is_complex</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.real"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.real</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.realimag"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.realimag</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.shape"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.shape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.spacedim"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.spacedim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.CoefficientFunction.trans"><code class="docutils literal notranslate"><span class="pre">CoefficientFunction.trans</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Coefficient Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/coeffunctions.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="coefficient-functions">
+<h1>Coefficient Functions<a class="headerlink" href="#coefficient-functions" title="Link to this heading"></a></h1>
+<p>Coefficient functions serve a vital role in NGSolve and we need to understand their implementation.</p>
+<!-- Using the autodoc tool -->
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.</span></span><span class="sig-name descname"><span class="pre">CoefficientFunction</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction" title="Link to this definition"></a></dt>
+<dd><p>A CoefficientFunction (CF) is some function defined on a mesh.
+Examples are coordinates x, y, z, domain-wise constants, solution-fields, …
+CFs can be combined by mathematical operations (+,-,sin(), …) to form new CFs
+Parameters:</p>
+<p>val : can be one of the following:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>scalar (float or complex):</dt><dd><p>Creates a constant CoefficientFunction with value val</p>
+</dd>
+<dt>tuple of scalars or CoefficientFunctions:</dt><dd><p>Creates a vector or matrix valued CoefficientFunction, use dims=(h,w)
+for matrix valued CF</p>
+</dd>
+<dt>list of scalars or CoefficientFunctions:</dt><dd><p>Creates a domain-wise CF, use with generator expressions and mesh.GetMaterials()
+and mesh.GetBoundaries()</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Compile">
+<span class="sig-name descname"><span class="pre">Compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">realcompile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxderiv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_files</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Compile" title="Link to this definition"></a></dt>
+<dd><p>Compile list of individual steps, experimental improvement for deep trees</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>realcompile<span class="classifier">bool</span></dt><dd><p>True -&gt; Compile to C++ code</p>
+</dd>
+<dt>maxderiv<span class="classifier">int</span></dt><dd><p>input maximal derivative</p>
+</dd>
+<dt>wait<span class="classifier">bool</span></dt><dd><p>True -&gt; Waits until the previous Compile call is finished before start compiling</p>
+</dd>
+<dt>keep_files<span class="classifier">bool</span></dt><dd><p>True -&gt; Keep temporary files</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Derive">
+<span class="sig-name descname"><span class="pre">Derive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Derive" title="Link to this definition"></a></dt>
+<dd><p>depricated: use ‘Diff’ instead</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Diff">
+<span class="sig-name descname"><span class="pre">Diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Diff" title="Link to this definition"></a></dt>
+<dd><p>Compute directional derivative with respect to variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.DiffShape">
+<span class="sig-name descname"><span class="pre">DiffShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Eulerian</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.DiffShape" title="Link to this definition"></a></dt>
+<dd><p>Compute shape derivative in direction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Eig">
+<span class="sig-name descname"><span class="pre">Eig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Eig" title="Link to this definition"></a></dt>
+<dd><p>Returns eigenvectors and eigenvalues of matrix-valued CF</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.ExtendDimension">
+<span class="sig-name descname"><span class="pre">ExtendDimension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.ExtendDimension" title="Link to this definition"></a></dt>
+<dd><p>Extend shape by 0-padding</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Freeze">
+<span class="sig-name descname"><span class="pre">Freeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Freeze" title="Link to this definition"></a></dt>
+<dd><p>don’t differentiate this expression</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.InnerProduct">
+<span class="sig-name descname"><span class="pre">InnerProduct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.InnerProduct" title="Link to this definition"></a></dt>
+<dd><p>Returns InnerProduct with another CoefficientFunction.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>cf<span class="classifier">ngsolve.CoefficientFunction</span></dt><dd><p>input CoefficientFunction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.MakeVariable">
+<span class="sig-name descname"><span class="pre">MakeVariable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.MakeVariable" title="Link to this definition"></a></dt>
+<dd><p>make node a variable, by which we can differentiate</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Norm">
+<span class="sig-name descname"><span class="pre">Norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Norm" title="Link to this definition"></a></dt>
+<dd><p>Returns Norm of the CF</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Operator">
+<span class="sig-name descname"><span class="pre">Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Operator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Other">
+<span class="sig-name descname"><span class="pre">Other</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Other" title="Link to this definition"></a></dt>
+<dd><p>Evaluate on other element, as needed for DG jumps</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Replace">
+<span class="sig-name descname"><span class="pre">Replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Mapping</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Replace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.Reshape">
+<span class="sig-name descname"><span class="pre">Reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.Reshape" title="Link to this definition"></a></dt>
+<dd><p>reshape CF:  (dim) for vector, (h,w) for matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.TensorTranspose">
+<span class="sig-name descname"><span class="pre">TensorTranspose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.TensorTranspose" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.data">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.dim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.dim" title="Link to this definition"></a></dt>
+<dd><p>number of components of CF</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.dims">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dims</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.dims" title="Link to this definition"></a></dt>
+<dd><p>(dim) for vector, (h,w) for matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ngsolve.CoefficientFunction.shape" title="ngsolve.CoefficientFunction.shape">shape</a> of CF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.imag">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">imag</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.imag" title="Link to this definition"></a></dt>
+<dd><p>imaginary part of CF</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.is_complex">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_complex</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.is_complex" title="Link to this definition"></a></dt>
+<dd><p>is CoefficientFunction complex-valued ?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.real">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">real</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.real" title="Link to this definition"></a></dt>
+<dd><p>real part of CF</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.realimag">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">realimag</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.realimag" title="Link to this definition"></a></dt>
+<dd><p>real+imag part of CF as vector</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.shape">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.shape" title="Link to this definition"></a></dt>
+<dd><p>shape of CF</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.spacedim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">spacedim</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.spacedim" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.CoefficientFunction.trans">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">trans</span></span><a class="headerlink" href="#ngsolve.CoefficientFunction.trans" title="Link to this definition"></a></dt>
+<dd><p>transpose of matrix-valued CF</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gridfunctions.html" class="btn btn-neutral float-left" title="Grid Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="functions.html" class="btn btn-neutral float-right" title="Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

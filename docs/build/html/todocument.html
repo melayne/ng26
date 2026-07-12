@@ -1,0 +1,574 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGSolve parts to document &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">NGSolve parts to document</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/todocument.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ngsolve-parts-to-document">
+<h1>NGSolve parts to document<a class="headerlink" href="#ngsolve-parts-to-document" title="Link to this heading"></a></h1>
+<section id="python-level">
+<h2>Python Level<a class="headerlink" href="#python-level" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Mesh</p>
+<ul>
+<li><p>Curve</p></li>
+<li><p>order</p></li>
+<li><p>dirichlet</p></li>
+<li><p>MaterialCF</p></li>
+<li><p>Refine</p></li>
+<li><p>SetPML</p>
+<ul>
+<li><p>pml.Radial</p></li>
+</ul>
+</li>
+<li><p>meshes.py</p>
+<ul>
+<li><p>Make1DMesh</p></li>
+<li><p>MakeStructured2DMesh</p></li>
+<li><p>MakeQuadMesh</p></li>
+<li><p>MakeStructured3DMesh</p>
+<ul>
+<li><p>AddSurfEls</p></li>
+</ul>
+</li>
+<li><p>MakeHexMesh</p></li>
+<li><p>MakePrismMesh</p></li>
+<li><p>MakeStructuredSurfaceMesh</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>fes</p>
+<ul>
+<li><p>types</p>
+<ul>
+<li><p>H1</p></li>
+<li><p>HDiv</p></li>
+<li><p>VectorH1</p></li>
+<li><p>HCurl</p></li>
+<li><p>HDivDiv</p></li>
+<li><p>L2</p></li>
+<li><p>FacetFESpace</p></li>
+<li><p>FESpace</p>
+<ul>
+<li><p>h1ho</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>TrialFunction</p></li>
+<li><p>TestFunction</p></li>
+<li><p>TnT</p></li>
+<li><p>ndof</p></li>
+<li><p>FreeDofs</p></li>
+<li><p>fes1*fes2</p></li>
+<li><p>nograds</p></li>
+<li><p>order</p></li>
+</ul>
+</li>
+<li><p>LinearForm</p>
+<ul>
+<li><p>assemble</p></li>
+</ul>
+</li>
+<li><p>BilinearForm</p>
+<ul>
+<li><p>assemble</p></li>
+<li><p>AssembleLinearization</p></li>
+<li><p>mat</p>
+<ul>
+<li><p>Inverse</p></li>
+<li><p>data</p></li>
+<li><p>mat*vec</p></li>
+</ul>
+</li>
+<li><p>Energy</p></li>
+<li><p>symmetric</p></li>
+<li><p>Apply</p></li>
+<li><p>condense</p></li>
+<li><p>elementboundary</p></li>
+<li><p>harmonic_extension</p></li>
+<li><p>harmonic_extension_trans</p></li>
+<li><p>inner_solve</p></li>
+</ul>
+</li>
+<li><p>GridFunction</p>
+<ul>
+<li><p>vec</p>
+<ul>
+<li><p>data</p></li>
+<li><p>CreateVector</p></li>
+</ul>
+</li>
+<li><p>autoupdate</p></li>
+<li><p>Set</p></li>
+<li><p>definedon</p></li>
+<li><p>components</p></li>
+<li><p>Deriv</p></li>
+<li><p>Compile</p></li>
+<li><p>Other</p>
+<ul>
+<li><p>bnd</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>CoefficientFunction</p>
+<ul>
+<li><p>specialcf.normal</p></li>
+<li><p>specialcf.mesh_size</p></li>
+</ul>
+</li>
+<li><p>Grad / grad</p></li>
+<li><p>div</p></li>
+<li><p>curl</p></li>
+<li><p>Id</p></li>
+<li><p>trans</p></li>
+<li><p>Trace</p></li>
+<li><p>Parameter</p></li>
+<li><p>*dx or *ds</p>
+<ul>
+<li><p>element_boundary</p></li>
+<li><p>skeleton</p></li>
+</ul>
+</li>
+<li><p>Variation</p></li>
+<li><p>InnerProduct</p>
+<ul>
+<li><p>Compile</p></li>
+</ul>
+</li>
+<li><p>Integrate</p></li>
+<li><p>Norm</p></li>
+<li><p>tang</p></li>
+<li><p>Solvers</p></li>
+<li><p>SolveBVP</p></li>
+<li><p>BVP</p></li>
+<li><p>CGSolver</p></li>
+<li><p>SolveM</p></li>
+<li><p>SuperLU</p></li>
+<li><p>krylovspace.py</p>
+<ul>
+<li><p>LinearSolver</p>
+<ul>
+<li><p>Solve</p></li>
+<li><p>Height</p></li>
+<li><p>Width</p></li>
+<li><p>CreateVector</p></li>
+<li><p>IsComplex</p></li>
+<li><p>Mult</p></li>
+<li><p>Update</p></li>
+<li><p>CheckResidual</p></li>
+</ul>
+</li>
+<li><p>CG calls CGSolver</p>
+<ul>
+<li><p>errors</p></li>
+<li><p>_SolveImpl</p></li>
+</ul>
+</li>
+<li><p>QMR calls QMRSolver</p>
+<ul>
+<li><p>_SolveImpl</p></li>
+</ul>
+</li>
+<li><p>TFQMR calls TFQMRSolver</p>
+<ul>
+<li><p>_SolveImpl</p></li>
+</ul>
+</li>
+<li><p>MinRes calls MinResSolver</p>
+<ul>
+<li><p>_SolveImpl</p></li>
+</ul>
+</li>
+<li><p>RichardsonSolver</p>
+<ul>
+<li><p>_SolveImpl</p></li>
+</ul>
+</li>
+<li><p>PreconditionedRichardson</p>
+<ul>
+<li><p>never calls the solver?</p></li>
+</ul>
+</li>
+<li><p>GMRes calls GMResSolver</p>
+<ul>
+<li><p>_SolveImpl</p></li>
+<li><p>arnoldi</p></li>
+<li><p>givens_rotation</p></li>
+<li><p>apply_givens_rotation</p></li>
+<li><p>calcSolution</p></li>
+</ul>
+</li>
+<li><p>BramblePasciakCG</p>
+<ul>
+<li><p>update_plot</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>nonlinearsolvers.py</p>
+<ul>
+<li><p>Newton calls NewtonSolver</p>
+<ul>
+<li><p>Solve</p></li>
+<li><p>SetDirichlet</p></li>
+<li><p>_UpdateInverse</p></li>
+</ul>
+</li>
+<li><p>NewtonMinimization</p></li>
+</ul>
+</li>
+<li><p>solve_implementation.py</p>
+<ul>
+<li><p>uses .nonlinearsolvers and .krylovspace</p></li>
+<li><p>Dirichlet</p></li>
+<li><p>Application</p>
+<ul>
+<li><p>Solve</p></li>
+</ul>
+</li>
+<li><p>NonLinearApplication</p>
+<ul>
+<li><p>Solve</p></li>
+</ul>
+</li>
+<li><p>LinearApplication</p>
+<ul>
+<li><p>Assemble</p></li>
+<li><p>Solve</p></li>
+</ul>
+</li>
+<li><p>Equation</p>
+<ul>
+<li><p>Solve</p></li>
+</ul>
+</li>
+<li><p>_create_lin_appl</p></li>
+<li><p>Solve wrapper</p></li>
+</ul>
+</li>
+<li><p>Preconditioner</p>
+<ul>
+<li><p>type</p></li>
+<li><p>flags</p></li>
+<li><p>bf</p></li>
+<li><p>inverse</p></li>
+<li><p>preconditioners.py</p>
+<ul>
+<li><p>ngsolve.comp</p></li>
+<li><p>MultiGridPreconditioner</p></li>
+<li><p>LocalPreconditioner</p></li>
+<li><p>HCurlAMG</p></li>
+<li><p>H1AMG</p></li>
+<li><p>BDDCPreconditioner</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>TaskManager</p></li>
+<li><p>IfPos</p></li>
+<li><p>Eigenvalues.py</p>
+<ul>
+<li><p>Orthogonalize</p></li>
+<li><p>PINVIT1</p></li>
+<li><p>PINVIT</p></li>
+<li><p>LOBPCG</p></li>
+<li><p>Arnoldi</p></li>
+<li><p>SOAR</p></li>
+<li><p>TOAR</p></li>
+</ul>
+</li>
+<li><p>TensorProductTools.py</p>
+<ul>
+<li><p>AddEdgeEls</p></li>
+<li><p>SegMesh</p></li>
+<li><p>MakeHexagonalMesh2D</p></li>
+<li><p>MakeTensorProductMesh</p></li>
+<li><p>AddSurfElements</p></li>
+<li><p>MakeMesh2D</p></li>
+<li><p>MakeMesh3D</p></li>
+<li><p>AddSurfElements1D</p></li>
+<li><p>AddSurfElements2D</p></li>
+</ul>
+</li>
+<li><p>timestepping.py</p>
+<ul>
+<li><p>ImplicitEuler</p>
+<ul>
+<li><p>Integrate</p></li>
+<li><p>Step</p></li>
+</ul>
+</li>
+<li><p>Newmark</p>
+<ul>
+<li><p>Integrate</p></li>
+<li><p>Step</p></li>
+</ul>
+</li>
+<li><p>CrankNicolson</p>
+<ul>
+<li><p>Integrate</p></li>
+<li><p>Step</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>utils.py</p>
+<ul>
+<li><p>Laplace</p></li>
+<li><p>Mass</p></li>
+<li><p>Source</p></li>
+<li><p>Neumann</p></li>
+<li><p>VectorFacet</p></li>
+<li><p>grad</p></li>
+<li><p>Grad</p></li>
+<li><p>curl</p></li>
+<li><p>div</p></li>
+<li><p>ConstantCF</p></li>
+<li><p>DomainConstantCF</p></li>
+<li><p>Deviator</p></li>
+<li><p>PyId</p></li>
+<li><p>PyTrace</p></li>
+<li><p>PyDet</p></li>
+<li><p>PyCross</p></li>
+<li><p>PyCof</p></li>
+<li><p>PyInv</p></li>
+<li><p>PySym</p></li>
+<li><p>PySkew</p></li>
+<li><p>OuterProduct</p></li>
+<li><p>Normalize</p></li>
+<li><p>printonce</p></li>
+<li><p>dt</p></li>
+</ul>
+</li>
+<li><p>GUI</p>
+<ul>
+<li><p>Draw</p>
+<ul>
+<li><p>mesh</p></li>
+<li><p>name</p></li>
+<li><p>autoscale</p></li>
+<li><p>sd</p></li>
+</ul>
+</li>
+<li><p>Redraw</p></li>
+<li><p>SetVisualization</p>
+<ul>
+<li><p>min</p></li>
+<li><p>max</p></li>
+<li><p>deformation</p></li>
+</ul>
+</li>
+<li><p>deformation</p></li>
+<li><p>blocking</p></li>
+<li><p>input</p></li>
+<li><p>internal.py</p>
+<ul>
+<li><p>TclVariables</p></li>
+<li><p>VideoStart</p></li>
+<li><p>VideoAddFrame</p></li>
+<li><p>VideoFinalize</p></li>
+<li><p>SnapShot</p></li>
+<li><p>Move</p></li>
+<li><p>Rotate</p></li>
+<li><p>Zoom</p></li>
+<li><p>Center</p></li>
+</ul>
+</li>
+<li><p>webgui.py</p>
+<ul>
+<li><p>updatePMinMax</p></li>
+<li><p>getMinMax</p></li>
+<li><p>_make_trig</p></li>
+<li><p>_make_quad</p></li>
+<li><p>get_intrules</p></li>
+<li><p>GetData</p></li>
+<li><p>GetNodalP1Data</p></li>
+<li><p>BuildRenderData</p></li>
+<li><p>AddFieldLines</p></li>
+<li><p>FieldLines</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Netgen</p>
+<ul>
+<li><p>unit_square</p>
+<ul>
+<li><p>GenerateMesh</p></li>
+</ul>
+</li>
+<li><p>geom2d</p>
+<ul>
+<li><p>unit_square</p></li>
+<li><p>SplineGeometry</p></li>
+<li><p>AddPoint</p></li>
+<li><p>Append</p></li>
+<li><p>AppendPoint</p></li>
+<li><p>GenerateMesh</p></li>
+<li><p>AddRectangle</p></li>
+<li><p>AddCircle</p></li>
+<li><p>bcs</p></li>
+<li><p>r</p></li>
+<li><p>maxh</p></li>
+<li><p>SetMaterial</p></li>
+</ul>
+</li>
+<li><p>OCC</p>
+<ul>
+<li><p>MakeGeometry</p></li>
+<li><p>shape - shape</p></li>
+<li><p>Box</p>
+<ul>
+<li><p>faces</p></li>
+<li><p>points (corners?)</p></li>
+<li><p>solids</p></li>
+</ul>
+</li>
+<li><p>Cylinder</p>
+<ul>
+<li><p>points</p></li>
+<li><p>solids</p></li>
+</ul>
+</li>
+<li><p>Glue</p></li>
+<li><p>GenerateMesh</p></li>
+<li><p>csg</p>
+<ul>
+<li><p>unit_cube</p>
+<ul>
+<li><p>GenerateMesh</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>ngsglobals.msg_level</p></li>
+<li><p>pickle</p>
+<ul>
+<li><p>Pickler</p></li>
+<li><p>dump</p></li>
+<li><p>Unpickler</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="c-level">
+<h2>C++ Level<a class="headerlink" href="#c-level" title="Link to this heading"></a></h2>
+<p>looking at netgen/include</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

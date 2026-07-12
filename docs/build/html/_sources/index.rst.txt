@@ -15,5 +15,19 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-   finite_elements
-   bvp
+   meshes
+   fes
+   bilinearforms
+   linearforms
+   gridfunctions
+   coeffunctions
+   functions
+   solvers
+   preconditioners
+   taskmanager
+   linearalgebra
+   tensors
+   timestepping
+   gui
+   geometry
+   

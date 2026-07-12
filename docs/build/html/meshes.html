@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meshes &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Finite Element Spaces" href="fes.html" />
+    <link rel="prev" title="MLMCMC using NGSolve documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Meshes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.BBBoundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.BBBoundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.BBoundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.BBoundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Boundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.Boundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.BoundaryCF"><code class="docutils literal notranslate"><span class="pre">Mesh.BoundaryCF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.BuildRefinementTree"><code class="docutils literal notranslate"><span class="pre">Mesh.BuildRefinementTree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Contains"><code class="docutils literal notranslate"><span class="pre">Mesh.Contains()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Curve"><code class="docutils literal notranslate"><span class="pre">Mesh.Curve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Elements"><code class="docutils literal notranslate"><span class="pre">Mesh.Elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GeoParamCF"><code class="docutils literal notranslate"><span class="pre">Mesh.GeoParamCF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetBBBoundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.GetBBBoundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetBBoundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.GetBBoundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetBoundaries"><code class="docutils literal notranslate"><span class="pre">Mesh.GetBoundaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetCurveOrder"><code class="docutils literal notranslate"><span class="pre">Mesh.GetCurveOrder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetHPElementLevel"><code class="docutils literal notranslate"><span class="pre">Mesh.GetHPElementLevel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetMaterials"><code class="docutils literal notranslate"><span class="pre">Mesh.GetMaterials()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetNE"><code class="docutils literal notranslate"><span class="pre">Mesh.GetNE()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetPMLTrafo"><code class="docutils literal notranslate"><span class="pre">Mesh.GetPMLTrafo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetPMLTrafos"><code class="docutils literal notranslate"><span class="pre">Mesh.GetPMLTrafos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetParentElement"><code class="docutils literal notranslate"><span class="pre">Mesh.GetParentElement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetParentFaces"><code class="docutils literal notranslate"><span class="pre">Mesh.GetParentFaces()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetParentVertices"><code class="docutils literal notranslate"><span class="pre">Mesh.GetParentVertices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetPeriodicNodePairs"><code class="docutils literal notranslate"><span class="pre">Mesh.GetPeriodicNodePairs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.GetTrafo"><code class="docutils literal notranslate"><span class="pre">Mesh.GetTrafo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.LocalHCF"><code class="docutils literal notranslate"><span class="pre">Mesh.LocalHCF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.MapToAllElements"><code class="docutils literal notranslate"><span class="pre">Mesh.MapToAllElements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.MaterialCF"><code class="docutils literal notranslate"><span class="pre">Mesh.MaterialCF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Materials"><code class="docutils literal notranslate"><span class="pre">Mesh.Materials()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Refine"><code class="docutils literal notranslate"><span class="pre">Mesh.Refine()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.RefineFromTree"><code class="docutils literal notranslate"><span class="pre">Mesh.RefineFromTree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.RefineHP"><code class="docutils literal notranslate"><span class="pre">Mesh.RefineHP()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.RefineUniform"><code class="docutils literal notranslate"><span class="pre">Mesh.RefineUniform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.Region"><code class="docutils literal notranslate"><span class="pre">Mesh.Region()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.RegionCF"><code class="docutils literal notranslate"><span class="pre">Mesh.RegionCF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetDeformation"><code class="docutils literal notranslate"><span class="pre">Mesh.SetDeformation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetElementOrder"><code class="docutils literal notranslate"><span class="pre">Mesh.SetElementOrder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetElementOrders"><code class="docutils literal notranslate"><span class="pre">Mesh.SetElementOrders()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetPML"><code class="docutils literal notranslate"><span class="pre">Mesh.SetPML()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetRefinementFlag"><code class="docutils literal notranslate"><span class="pre">Mesh.SetRefinementFlag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SetRefinementFlags"><code class="docutils literal notranslate"><span class="pre">Mesh.SetRefinementFlags()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.SplitElements_Alfeld"><code class="docutils literal notranslate"><span class="pre">Mesh.SplitElements_Alfeld()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.UnSetPML"><code class="docutils literal notranslate"><span class="pre">Mesh.UnSetPML()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.UnsetDeformation"><code class="docutils literal notranslate"><span class="pre">Mesh.UnsetDeformation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.comm"><code class="docutils literal notranslate"><span class="pre">Mesh.comm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.deformation"><code class="docutils literal notranslate"><span class="pre">Mesh.deformation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.dim"><code class="docutils literal notranslate"><span class="pre">Mesh.dim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.edges"><code class="docutils literal notranslate"><span class="pre">Mesh.edges</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.faces"><code class="docutils literal notranslate"><span class="pre">Mesh.faces</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.facets"><code class="docutils literal notranslate"><span class="pre">Mesh.facets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.levels"><code class="docutils literal notranslate"><span class="pre">Mesh.levels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.ne"><code class="docutils literal notranslate"><span class="pre">Mesh.ne</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nedge"><code class="docutils literal notranslate"><span class="pre">Mesh.nedge</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nface"><code class="docutils literal notranslate"><span class="pre">Mesh.nface</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nfacet"><code class="docutils literal notranslate"><span class="pre">Mesh.nfacet</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.ngmesh"><code class="docutils literal notranslate"><span class="pre">Mesh.ngmesh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nnodes"><code class="docutils literal notranslate"><span class="pre">Mesh.nnodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nodes"><code class="docutils literal notranslate"><span class="pre">Mesh.nodes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.nv"><code class="docutils literal notranslate"><span class="pre">Mesh.nv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.Mesh.vertices"><code class="docutils literal notranslate"><span class="pre">Mesh.vertices</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Meshes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/meshes.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="meshes">
+<h1>Meshes<a class="headerlink" href="#meshes" title="Link to this heading"></a></h1>
+<p>NGSolve relies on meshing from netgen to implement its finite element software, here is some of the documentation.</p>
+<!-- Using the autodoc tool -->
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.Mesh">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><a class="headerlink" href="#ngsolve.Mesh" title="Link to this definition"></a></dt>
+<dd><p>NGSolve interface to the Netgen mesh. Provides access and functionality
+to use the mesh for finite element calculations.</p>
+<p>Parameters:</p>
+<p>mesh (netgen.Mesh): a mesh generated from Netgen</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.BBBoundaries">
+<span class="sig-name descname"><span class="pre">BBBoundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.Region</span></span></span><a class="headerlink" href="#ngsolve.Mesh.BBBoundaries" title="Link to this definition"></a></dt>
+<dd><p>Return co dim 3 boundary mesh-region matching the given regex pattern</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.BBoundaries">
+<span class="sig-name descname"><span class="pre">BBoundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.Region</span></span></span><a class="headerlink" href="#ngsolve.Mesh.BBoundaries" title="Link to this definition"></a></dt>
+<dd><p>Return co dim 2 boundary mesh-region matching the given regex pattern</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Boundaries">
+<span class="sig-name descname"><span class="pre">Boundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.Mesh.Boundaries" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>Boundaries(self: ngsolve.comp.Mesh, pattern: str) -&gt; ngsolve.comp.Region</p></li>
+</ol>
+<p>Return boundary mesh-region matching the given regex pattern</p>
+<ol class="arabic simple" start="2">
+<li><p>Boundaries(self: ngsolve.comp.Mesh, bnds: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -&gt; ngsolve.comp.Region</p></li>
+</ol>
+<p>Generate boundary mesh-region by boundary condition numbers</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.BoundaryCF">
+<span class="sig-name descname"><span class="pre">BoundaryCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.BoundaryCF" title="Link to this definition"></a></dt>
+<dd><p>Boundary wise CoefficientFunction.
+First argument is a dict from either boundary names or Region objects to
+CoefficientFunction (-values). Later given names/regions override earlier
+values. Optional last argument (default) is the value for not given boundaries.
+&gt;&gt;&gt; penalty = mesh.BoundaryCF({ “top” : 1e6 }, default=0)
+will create a CF being 1e6 on the top boundary and 0. elsewhere.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.BuildRefinementTree">
+<span class="sig-name descname"><span class="pre">BuildRefinementTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pyngcore.pyngcore.Array_y_S</span></span></span><a class="headerlink" href="#ngsolve.Mesh.BuildRefinementTree" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Contains">
+<span class="sig-name descname"><span class="pre">Contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#ngsolve.Mesh.Contains" title="Link to this definition"></a></dt>
+<dd><p>Check if the point (x,y,z) is in the meshed domain (is inside a volume element)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Curve">
+<span class="sig-name descname"><span class="pre">Curve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.Curve" title="Link to this definition"></a></dt>
+<dd><p>Curve the mesh elements for geometry approximation of given order</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Elements">
+<span class="sig-name descname"><span class="pre">Elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">VOL_or_BND</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;VorB.VOL:</span> <span class="pre">0&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngcomp::ElementRange</span></span></span><a class="headerlink" href="#ngsolve.Mesh.Elements" title="Link to this definition"></a></dt>
+<dd><p>Return an iterator over elements on VOL/BND</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GeoParamCF">
+<span class="sig-name descname"><span class="pre">GeoParamCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.GeoParamCF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetBBBoundaries">
+<span class="sig-name descname"><span class="pre">GetBBBoundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetBBBoundaries" title="Link to this definition"></a></dt>
+<dd><p>Return list of boundary conditions for co dimension 3</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetBBoundaries">
+<span class="sig-name descname"><span class="pre">GetBBoundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetBBoundaries" title="Link to this definition"></a></dt>
+<dd><p>Return list of boundary conditions for co dimension 2</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetBoundaries">
+<span class="sig-name descname"><span class="pre">GetBoundaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetBoundaries" title="Link to this definition"></a></dt>
+<dd><p>Return list of boundary condition names</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetCurveOrder">
+<span class="sig-name descname"><span class="pre">GetCurveOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetCurveOrder" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetHPElementLevel">
+<span class="sig-name descname"><span class="pre">GetHPElementLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetHPElementLevel" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>THIS FUNCTION IS WIP!</dt><dd><p>Return HP-refinement level of element</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetMaterials">
+<span class="sig-name descname"><span class="pre">GetMaterials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetMaterials" title="Link to this definition"></a></dt>
+<dd><p>Return list of material names</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetNE">
+<span class="sig-name descname"><span class="pre">GetNE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetNE" title="Link to this definition"></a></dt>
+<dd><p>Return number of elements of codimension VorB.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetPMLTrafo">
+<span class="sig-name descname"><span class="pre">GetPMLTrafo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.pml.PML</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetPMLTrafo" title="Link to this definition"></a></dt>
+<dd><p>Return pml transformation on domain dom</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetPMLTrafos">
+<span class="sig-name descname"><span class="pre">GetPMLTrafos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetPMLTrafos" title="Link to this definition"></a></dt>
+<dd><p>Return list of pml transformations</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetParentElement">
+<span class="sig-name descname"><span class="pre">GetParentElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.ElementId</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetParentElement" title="Link to this definition"></a></dt>
+<dd><p>Return parent element id on refined mesh</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetParentFaces">
+<span class="sig-name descname"><span class="pre">GetParentFaces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">fnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetParentFaces" title="Link to this definition"></a></dt>
+<dd><p>Return parent faces</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetParentVertices">
+<span class="sig-name descname"><span class="pre">GetParentVertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vnum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetParentVertices" title="Link to this definition"></a></dt>
+<dd><p>Return parent vertex numbers on refined mesh</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetPeriodicNodePairs">
+<span class="sig-name descname"><span class="pre">GetPeriodicNodePairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.fem.NODE_TYPE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetPeriodicNodePairs" title="Link to this definition"></a></dt>
+<dd><p>returns list of periodic nodes with their identification number as [((master_nr, minion_nr),idnr),…]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.GetTrafo">
+<span class="sig-name descname"><span class="pre">GetTrafo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">eid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.fem.ElementTransformation</span></span></span><a class="headerlink" href="#ngsolve.Mesh.GetTrafo" title="Link to this definition"></a></dt>
+<dd><p>returns element transformation of given element id</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.LocalHCF">
+<span class="sig-name descname"><span class="pre">LocalHCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.LocalHCF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.MapToAllElements">
+<span class="sig-name descname"><span class="pre">MapToAllElements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.Mesh.MapToAllElements" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>MapToAllElements(self: ngsolve.comp.Mesh, arg0: ngsolve.fem.IntegrationRule, arg1: ngsolve.comp.VorB | ngsolve.comp.Region) -&gt; numpy.typing.NDArray[ngsolve.fem.MeshPoint]</p></li>
+<li><p>MapToAllElements(self: ngsolve.comp.Mesh, rules: collections.abc.Mapping[ngsolve.fem.ET, ngsolve.fem.IntegrationRule], vb_or_reg: ngsolve.comp.VorB | ngsolve.comp.Region, element_boundary: ngsolve.comp.VorB = &lt;VorB.VOL: 0&gt;) -&gt; numpy.typing.NDArray[ngsolve.fem.MeshPoint]</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.MaterialCF">
+<span class="sig-name descname"><span class="pre">MaterialCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.MaterialCF" title="Link to this definition"></a></dt>
+<dd><p>Domain wise CoefficientFunction.
+First argument is a dict from either material names or Region objects to
+CoefficientFunction (-values). Later given names/regions override earlier
+values. Optional last argument (default) is the value for not given materials.
+&gt;&gt;&gt; sigma = mesh.MaterialCF({ “<a href="#id1"><span class="problematic" id="id2">steel_</span></a>.*” : 2e6 }, default=0)
+will create a CF being 2e6 on all domains starting with ‘<a href="#id3"><span class="problematic" id="id4">steel_</span></a>’ and 0 elsewhere.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Materials">
+<span class="sig-name descname"><span class="pre">Materials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.Mesh.Materials" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>Materials(self: ngsolve.comp.Mesh, pattern: str) -&gt; ngsolve.comp.Region</p></li>
+</ol>
+<p>Return mesh-region matching the given regex pattern</p>
+<ol class="arabic simple" start="2">
+<li><p>Materials(self: ngsolve.comp.Mesh, domains: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -&gt; ngsolve.comp.Region</p></li>
+</ol>
+<p>Generate mesh-region by domain numbers</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Refine">
+<span class="sig-name descname"><span class="pre">Refine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mark_surface_elements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onlyonce</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.Refine" title="Link to this definition"></a></dt>
+<dd><p>Local mesh refinement based on marked elements, uses element-bisection algorithm</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.RefineFromTree">
+<span class="sig-name descname"><span class="pre">RefineFromTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pyngcore.pyngcore.Array_y_S</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.RefineFromTree" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.RefineHP">
+<span class="sig-name descname"><span class="pre">RefineHP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">levels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsFloat</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.125</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.RefineHP" title="Link to this definition"></a></dt>
+<dd><p>Geometric mesh refinement towards marked vertices and edges, uses factor for placement of new points</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.RefineUniform">
+<span class="sig-name descname"><span class="pre">RefineUniform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.RefineUniform" title="Link to this definition"></a></dt>
+<dd><p>Uniform mesh-refinement (splitting trigs into 4, and tets into 8)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.Region">
+<span class="sig-name descname"><span class="pre">Region</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.*'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.Region</span></span></span><a class="headerlink" href="#ngsolve.Mesh.Region" title="Link to this definition"></a></dt>
+<dd><p>Return boundary mesh-region matching the given regex pattern</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.RegionCF">
+<span class="sig-name descname"><span class="pre">RegionCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">VorB</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.Mesh.RegionCF" title="Link to this definition"></a></dt>
+<dd><p>Region wise CoefficientFunction.
+First argument is VorB, defining the co-dimension,
+second argument is a dict from either region names or Region objects to
+CoefficientFunction (-values). Later given names/regions override earlier
+values. Optional last argument (default) is the value for not given regions.
+&gt;&gt;&gt; sigma = mesh.RegionCF(VOL, { “<a href="#id5"><span class="problematic" id="id6">steel_</span></a>.*” : 2e6 }, default=0)
+will create a CF being 2e6 on all domains starting with ‘<a href="#id7"><span class="problematic" id="id8">steel_</span></a>’ and 0 elsewhere.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetDeformation">
+<span class="sig-name descname"><span class="pre">SetDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngcomp::GridFunction</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetDeformation" title="Link to this definition"></a></dt>
+<dd><p>Deform the mesh with the given GridFunction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetElementOrder">
+<span class="sig-name descname"><span class="pre">SetElementOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">eid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetElementOrder" title="Link to this definition"></a></dt>
+<dd><p>For backward compatibility, not recommended to use</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetElementOrders">
+<span class="sig-name descname"><span class="pre">SetElementOrders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">eid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetElementOrders" title="Link to this definition"></a></dt>
+<dd><p>Set anisotropic element order (expert only)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetPML">
+<span class="sig-name descname"><span class="pre">SetPML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmltrafo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.pml.PML</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetPML" title="Link to this definition"></a></dt>
+<dd><p>Set PML transformation on domain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetRefinementFlag">
+<span class="sig-name descname"><span class="pre">SetRefinementFlag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetRefinementFlag" title="Link to this definition"></a></dt>
+<dd><p>Set refinementflag for mesh-refinement</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SetRefinementFlags">
+<span class="sig-name descname"><span class="pre">SetRefinementFlags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">refine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">collections.abc.Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SetRefinementFlags" title="Link to this definition"></a></dt>
+<dd><p>Set refinementflags for mesh-refinement</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.SplitElements_Alfeld">
+<span class="sig-name descname"><span class="pre">SplitElements_Alfeld</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.SplitElements_Alfeld" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.UnSetPML">
+<span class="sig-name descname"><span class="pre">UnSetPML</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.UnSetPML" title="Link to this definition"></a></dt>
+<dd><p>Unset PML transformation on domain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.UnsetDeformation">
+<span class="sig-name descname"><span class="pre">UnsetDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.Mesh.UnsetDeformation" title="Link to this definition"></a></dt>
+<dd><p>Unset the deformation</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.comm">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">comm</span></span><a class="headerlink" href="#ngsolve.Mesh.comm" title="Link to this definition"></a></dt>
+<dd><p>MPI-communicator the Mesh lives in</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.deformation">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">deformation</span></span><a class="headerlink" href="#ngsolve.Mesh.deformation" title="Link to this definition"></a></dt>
+<dd><p>mesh deformation</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.dim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#ngsolve.Mesh.dim" title="Link to this definition"></a></dt>
+<dd><p>mesh dimension</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.edges">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">edges</span></span><a class="headerlink" href="#ngsolve.Mesh.edges" title="Link to this definition"></a></dt>
+<dd><p>iterable of mesh edges</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.faces">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">faces</span></span><a class="headerlink" href="#ngsolve.Mesh.faces" title="Link to this definition"></a></dt>
+<dd><p>iterable of mesh faces</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.facets">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">facets</span></span><a class="headerlink" href="#ngsolve.Mesh.facets" title="Link to this definition"></a></dt>
+<dd><p>iterable of mesh facets</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.levels">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">levels</span></span><a class="headerlink" href="#ngsolve.Mesh.levels" title="Link to this definition"></a></dt>
+<dd><p>multigrid levels</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.ne">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ne</span></span><a class="headerlink" href="#ngsolve.Mesh.ne" title="Link to this definition"></a></dt>
+<dd><p>number of volume elements</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nedge">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nedge</span></span><a class="headerlink" href="#ngsolve.Mesh.nedge" title="Link to this definition"></a></dt>
+<dd><p>number of edges</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nface">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nface</span></span><a class="headerlink" href="#ngsolve.Mesh.nface" title="Link to this definition"></a></dt>
+<dd><p>number of faces</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nfacet">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nfacet</span></span><a class="headerlink" href="#ngsolve.Mesh.nfacet" title="Link to this definition"></a></dt>
+<dd><p>number of facets</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.ngmesh">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ngmesh</span></span><a class="headerlink" href="#ngsolve.Mesh.ngmesh" title="Link to this definition"></a></dt>
+<dd><p>the Netgen mesh</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nnodes">
+<span class="sig-name descname"><span class="pre">nnodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.fem.NODE_TYPE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.Mesh.nnodes" title="Link to this definition"></a></dt>
+<dd><p>number of nodes given type</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nodes">
+<span class="sig-name descname"><span class="pre">nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.Mesh" title="ngsolve.comp.Mesh"><span class="pre">ngsolve.comp.Mesh</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.fem.NODE_TYPE</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.MeshNodeRange</span></span></span><a class="headerlink" href="#ngsolve.Mesh.nodes" title="Link to this definition"></a></dt>
+<dd><p>iterable of mesh nodes of type node_type</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.nv">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nv</span></span><a class="headerlink" href="#ngsolve.Mesh.nv" title="Link to this definition"></a></dt>
+<dd><p>number of vertices</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.Mesh.vertices">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">vertices</span></span><a class="headerlink" href="#ngsolve.Mesh.vertices" title="Link to this definition"></a></dt>
+<dd><p>iterable of mesh vertices</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="MLMCMC using NGSolve documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fes.html" class="btn btn-neutral float-right" title="Finite Element Spaces" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
