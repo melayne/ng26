@@ -5,10 +5,7 @@
 
 MLMCMC using NGSolve documentation
 ==================================
-
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+NGSolve is not our creation, for information and attributions please go to ngsolve.org. We are using it for a project. We only claim these notes on how it works that we have created.  
 
 
 .. toctree::

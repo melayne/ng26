@@ -86,14 +86,20 @@
              
   <section id="mlmcmc-using-ngsolve-documentation">
 <h1>MLMCMC using NGSolve documentation<a class="headerlink" href="#mlmcmc-using-ngsolve-documentation" title="Link to this heading"></a></h1>
-<p>Add your content using <code class="docutils literal notranslate"><span class="pre">reStructuredText</span></code> syntax. See the
-<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html">reStructuredText</a>
-documentation for details.</p>
+<p>NGSolve is not our creation, for information and attributions please go to ngsolve.org. We are using it for a project. We only claim these notes on how it works that we have created.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.Mesh"><code class="docutils literal notranslate"><span class="pre">Mesh</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.Make1DMesh"><code class="docutils literal notranslate"><span class="pre">Make1DMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakeHexMesh"><code class="docutils literal notranslate"><span class="pre">MakeHexMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakePrismMesh"><code class="docutils literal notranslate"><span class="pre">MakePrismMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakeQuadMesh"><code class="docutils literal notranslate"><span class="pre">MakeQuadMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakeStructured2DMesh"><code class="docutils literal notranslate"><span class="pre">MakeStructured2DMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakeStructured3DMesh"><code class="docutils literal notranslate"><span class="pre">MakeStructured3DMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#ngsolve.meshes.MakeStructuredSurfaceMesh"><code class="docutils literal notranslate"><span class="pre">MakeStructuredSurfaceMesh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="meshes.html#_CPPv415_MeshsizeObject"><code class="docutils literal notranslate"><span class="pre">_MeshsizeObject</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a><ul>
@@ -150,6 +156,21 @@ documentation for details.</p>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.solve_implementation.LinearApplication"><code class="docutils literal notranslate"><span class="pre">LinearApplication</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.solve_implementation.NonLinearApplication"><code class="docutils literal notranslate"><span class="pre">NonLinearApplication</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.solve_implementation.Solve"><code class="docutils literal notranslate"><span class="pre">Solve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.BramblePasciakCG"><code class="docutils literal notranslate"><span class="pre">BramblePasciakCG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.CG"><code class="docutils literal notranslate"><span class="pre">CG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.CGSolver"><code class="docutils literal notranslate"><span class="pre">CGSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.GMRes"><code class="docutils literal notranslate"><span class="pre">GMRes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.GMResSolver"><code class="docutils literal notranslate"><span class="pre">GMResSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.LinearSolver"><code class="docutils literal notranslate"><span class="pre">LinearSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.MinRes"><code class="docutils literal notranslate"><span class="pre">MinRes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.MinResSolver"><code class="docutils literal notranslate"><span class="pre">MinResSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.PreconditionedRichardson"><code class="docutils literal notranslate"><span class="pre">PreconditionedRichardson()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.QMR"><code class="docutils literal notranslate"><span class="pre">QMR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.QMRSolver"><code class="docutils literal notranslate"><span class="pre">QMRSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.RichardsonSolver"><code class="docutils literal notranslate"><span class="pre">RichardsonSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.TFQMR"><code class="docutils literal notranslate"><span class="pre">TFQMR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.TFQMRSolver"><code class="docutils literal notranslate"><span class="pre">TFQMRSolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.krylovspace.update_plot"><code class="docutils literal notranslate"><span class="pre">update_plot()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.nonlinearsolvers.Newton"><code class="docutils literal notranslate"><span class="pre">Newton()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.nonlinearsolvers.NewtonMinimization"><code class="docutils literal notranslate"><span class="pre">NewtonMinimization()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="solvers.html#ngsolve.nonlinearsolvers.NewtonSolver"><code class="docutils literal notranslate"><span class="pre">NewtonSolver</span></code></a></li>

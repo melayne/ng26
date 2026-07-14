@@ -11,7 +11,7 @@ NGSolve has several types of solvers and there are Python wrappers for some of t
 ```
 
 ```{eval-rst}
-.. automodule:: ngsolve.krylovsolvers
+.. automodule:: ngsolve.krylovspace
   :members:
   :undoc-members:
 ```
