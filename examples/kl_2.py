@@ -171,10 +171,10 @@ if __name__ == "__main__":
     h = 1.0 / (nx - 1)
     # Covariance parameters
     sigma = 1.0
-    ell = 0.005
+    ell = 0.1
 
     # Number of KL modes to keep
-    num_modes = 2000
+    num_modes = 200
 
     # Random seed for reproducibility
     rng = np.random.default_rng(123)
