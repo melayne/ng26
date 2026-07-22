@@ -1,6 +1,6 @@
 # Meshes
 
-NGSolve relies on meshing from netgen to implement its finite element software, here is some of the documentation.
+NGSolve relies on meshing from Netgen to implement its finite element software, here is some of the documentation.
 
 <!-- Using the autodoc tool -->
 
