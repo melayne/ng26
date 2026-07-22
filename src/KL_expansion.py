@@ -1,261 +1,185 @@
-#%%
+"""Discrete Karhunen--Loève fields on a Cartesian grid.
+
+This module treats the field values at the grid points as a finite Gaussian
+random vector.  Thus the eigenproblem is ``C q = lambda q``; it is not the
+finite-element generalized eigenproblem that contains a mass matrix.
+
+The final helper turns a sampled 2D array into an NGSolve
+``VoxelCoefficient``.  That coefficient is defined in physical coordinates,
+so the same realization can be evaluated on every multigrid level.
+"""
+
+from __future__ import annotations
+
+from typing import TypeAlias
+
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.linalg import eigh
 
 
-# ============================================================
-# 1. Build a 2D grid on [0, 1] x [0, 1]
-# ============================================================
+Array: TypeAlias = np.ndarray
+Bounds2D: TypeAlias = tuple[tuple[float, float], tuple[float, float]]
 
-def make_2d_grid(nx, ny):
+
+def cartesian_grid_2d(
+    nx: int,
+    ny: int,
+    *,
+    bounds: Bounds2D = ((0.0, 1.0), (0.0, 1.0)),
+) -> tuple[Array, Array, Array]:
+    """Return a regular 2D grid and its flattened point coordinates.
+
+    ``X`` and ``Y`` have shape ``(ny, nx)``.  The rows of ``points`` follow
+    the same C-order flattening, so the x-coordinate varies fastest.
     """
-    Creates a 2D grid on [0,1]^2.
+    if nx < 2 or ny < 2:
+        raise ValueError("nx and ny must both be at least 2.")
 
-    Returns
-    -------
-    X, Y : 2D arrays of shape (ny, nx)
-        Meshgrid coordinates for plotting.
+    (xmin, xmax), (ymin, ymax) = bounds
+    if not xmin < xmax or not ymin < ymax:
+        raise ValueError("Each bounds pair must be strictly increasing.")
 
-    points : array of shape (nx*ny, 2)
-        Flattened list of spatial coordinates.
-    """
-    x = np.linspace(0.0, 1.0, nx)
-    y = np.linspace(0.0, 1.0, ny)
-
-    X, Y = np.meshgrid(x, y, indexing="xy")
-
-    points = np.column_stack([X.ravel(), Y.ravel()])
-
+    x_grid = np.linspace(xmin, xmax, nx)
+    y_grid = np.linspace(ymin, ymax, ny)
+    X, Y = np.meshgrid(x_grid, y_grid, indexing="xy")
+    points = np.column_stack((X.ravel(), Y.ravel()))
     return X, Y, points
 
 
-# ============================================================
-# 2. Exponential covariance kernel in 2D
-# ============================================================
+def exponential_covariance(
+    points: Array,
+    *,
+    sigma: float = 1.0,
+    correlation_length: float = 0.3,
+) -> Array:
+    """Build ``C_ij = sigma**2 exp(-|x_i-x_j|/correlation_length)``."""
+    points = np.asarray(points, dtype=float)
+    if points.ndim != 2:
+        raise ValueError("points must have shape (number_of_points, dimension).")
+    if sigma < 0:
+        raise ValueError("sigma must be nonnegative.")
+    if correlation_length <= 0:
+        raise ValueError("correlation_length must be positive.")
 
-def exponential_covariance_2d(points, sigma=1.0, ell=0.2):
+    differences = points[:, None, :] - points[None, :, :]
+    distances = np.linalg.norm(differences, axis=2)
+    return sigma**2 * np.exp(-distances / correlation_length)
+
+
+def leading_eigenpairs(covariance: Array, num_modes: int) -> tuple[Array, Array]:
+    """Return the largest eigenvalues and eigenvectors of a covariance matrix.
+
+    The eigenvalues are returned in descending order.  Only the requested
+    part of the symmetric spectrum is computed.
     """
-    Builds the covariance matrix
+    covariance = np.asarray(covariance, dtype=float)
+    if covariance.ndim != 2 or covariance.shape[0] != covariance.shape[1]:
+        raise ValueError("covariance must be a square matrix.")
+    if not np.allclose(covariance, covariance.T, rtol=1e-12, atol=1e-14):
+        raise ValueError("covariance must be symmetric.")
 
-        C_ij = sigma^2 exp(-||x_i - x_j|| / ell)
+    npoints = covariance.shape[0]
+    if not 1 <= num_modes <= npoints:
+        raise ValueError(f"num_modes must lie between 1 and {npoints}.")
 
-    Parameters
-    ----------
-    points : array of shape (N, 2)
-        Grid points.
+    first = npoints - num_modes
+    eigenvalues, eigenvectors = eigh(
+        covariance,
+        subset_by_index=(first, npoints - 1),
+        check_finite=True,
+    )
 
-    sigma : float
-        Standard deviation of the random field.
-
-    ell : float
-        Correlation length.
-
-    Returns
-    -------
-    C : array of shape (N, N)
-        Covariance matrix.
-    """
-    diff = points[:, None, :] - points[None, :, :]
-    distances = np.linalg.norm(diff, axis=2)
-
-    # distances = np.sum(np.abs(diff), axis=2)
-    C = sigma**2 * np.exp(-distances / ell)
-
-    return C
-
-
-# ============================================================
-# 3. Compute KL eigenpairs
-# ============================================================
-
-def compute_kl_modes(C, num_modes):
-    """
-    Computes the leading KL eigenvalues and eigenvectors.
-
-    For the discrete covariance matrix,
-
-        C q_i = lambda_i q_i
-
-    Parameters
-    ----------
-    C : array of shape (N, N)
-        Covariance matrix.
-
-    num_modes : int
-        Number of KL modes to keep.
-
-    Returns
-    -------
-    eigenvalues : array of shape (num_modes,)
-        Leading eigenvalues.
-
-    eigenvectors : array of shape (N, num_modes)
-        Leading eigenvectors.
-    """
-    # eigh returns eigenvalues in ascending order
-    eigenvalues, eigenvectors = eigh(C)
-
-    # Reverse to descending order
-    eigenvalues = eigenvalues[::-1]
+    # eigh returns ascending eigenvalues.  Tiny negative roundoff values are
+    # harmless for a positive-semidefinite covariance matrix.
+    eigenvalues = np.maximum(eigenvalues[::-1], 0.0)
     eigenvectors = eigenvectors[:, ::-1]
-
-    # Keep only the leading modes
-    eigenvalues = eigenvalues[:num_modes]
-    eigenvectors = eigenvectors[:, :num_modes]
-
     return eigenvalues, eigenvectors
 
 
-# ============================================================
-# 4. Sample from the truncated KL expansion
-# ============================================================
+def sample_discrete_kl(
+    mean: float | Array,
+    eigenvalues: Array,
+    eigenvectors: Array,
+    *,
+    shape: tuple[int, int],
+    rng: np.random.Generator | int | None = None,
+) -> tuple[Array, Array]:
+    """Sample a truncated discrete KL expansion.
 
-def sample_kl_expansion(mean, eigenvalues, eigenvectors, nx, ny, rng=None):
+    Returns ``(gaussian_values, xi)`` where ``gaussian_values`` has the given
+    ``(ny, nx)`` shape and
+
+    ``gaussian = mean + eigenvectors @ (sqrt(eigenvalues) * xi)``.
+
+    ``rng`` may be a NumPy generator, an integer seed, or ``None``.
     """
-    Samples a Gaussian random field using the truncated KL expansion
+    eigenvalues = np.asarray(eigenvalues, dtype=float)
+    eigenvectors = np.asarray(eigenvectors, dtype=float)
+    ny, nx = shape
+    npoints = nx * ny
 
-        Z(x) ≈ mean(x) + sum_{i=1}^m sqrt(lambda_i) xi_i q_i(x)
-
-    where xi_i ~ N(0, 1).
-
-    Parameters
-    ----------
-    mean : array of shape (N,)
-        Mean function evaluated at grid points.
-
-    eigenvalues : array of shape (m,)
-        KL eigenvalues.
-
-    eigenvectors : array of shape (N, m)
-        KL eigenvectors.
-
-    nx, ny : int
-        Grid dimensions.
-
-    rng : numpy random generator
-        Optional random number generator.
-
-    Returns
-    -------
-    field : array of shape (ny, nx)
-        Sampled random field on the 2D grid.
-
-    xi : array of shape (m,)
-        Random standard normal KL coefficients.
-    """
-    if rng is None:
-        rng = np.random.default_rng()
-
-    num_modes = len(eigenvalues)
-
-    xi = rng.standard_normal(num_modes)
-
-    sample_flat = mean + eigenvectors @ (np.sqrt(eigenvalues) * xi)
-
-    field = sample_flat.reshape(ny, nx)
-    exp_field = np.exp(field)
-
-    return exp_field, xi
-
-
-# ============================================================
-# 5. Main example
-# ============================================================
-
-if __name__ == "__main__":
-
-    # Grid resolution
-    nx = 40
-    ny = 40
-    h = 1.0 / (nx - 1)
-    # Covariance parameters
-    sigma = 1.0
-    ell = 0.005
-
-    # Number of KL modes to keep
-    num_modes = 2000
-
-    # Random seed for reproducibility
-    rng = np.random.default_rng(123)
-
-    # Build grid
-    X, Y, points = make_2d_grid(nx, ny)
-    N = points.shape[0]
-
-    # Mean function
-    mean = np.zeros(N)
-
-    # Build covariance matrix
-    C = exponential_covariance_2d(points, sigma=sigma, ell=ell)
-
-    # Compute KL modes
-    eigenvalues, eigenvectors = compute_kl_modes(C, num_modes=num_modes)
-
-    # Sample random field
-    field, xi = sample_kl_expansion(
-        mean=mean,
-        eigenvalues=eigenvalues,
-        eigenvectors=eigenvectors,
-        nx=nx,
-        ny=ny,
-        rng=rng,
-    )
-
-    # ========================================================
-    # Plot eigenvalue decay
-    # ========================================================
-
-    plt.figure(figsize=(6, 4))
-    plt.scatter(range(len(eigenvalues)), eigenvalues, marker="o")
-    plt.xlabel("Mode index")
-    plt.ylabel("Eigenvalue")
-    plt.title("KL Eigenvalue Decay")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-    # ========================================================
-    # Plot one sampled field
-    # ========================================================
-
-    plt.figure(figsize=(6, 5))
-    plt.contourf(X, Y, field, levels=40, cmap="jet")
-    plt.colorbar(label="Random field value")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title(f"2D KL Sample: Exponential Covariance, {num_modes} Modes")
-    plt.axis("equal")
-    plt.tight_layout()
-    plt.show()
-
-    # ========================================================
-    # Plot several samples
-    # ========================================================
-
-    n_samples = 4
-
-    fig, axes = plt.subplots(1, n_samples, figsize=(14, 3.5))
-
-    for k in range(n_samples):
-        field_k, _ = sample_kl_expansion(
-            mean=mean,
-            eigenvalues=eigenvalues,
-            eigenvectors=eigenvectors,
-            nx=nx,
-            ny=ny,
-            rng=rng,
+    if eigenvalues.ndim != 1:
+        raise ValueError("eigenvalues must be one-dimensional.")
+    if np.any(eigenvalues < 0):
+        raise ValueError("eigenvalues must be nonnegative.")
+    if eigenvectors.shape != (npoints, len(eigenvalues)):
+        raise ValueError(
+            "eigenvectors must have shape "
+            f"({npoints}, {len(eigenvalues)}), got {eigenvectors.shape}."
         )
 
-        ax = axes[k]
-        im = ax.contourf(X, Y, field_k, levels=40, cmap="jet")
-        ax.set_title(f"Sample {k + 1}")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_aspect("equal")
+    mean_array = np.asarray(mean, dtype=float)
+    if mean_array.ndim == 0:
+        mean_flat = np.full(npoints, float(mean_array))
+    elif mean_array.size == npoints:
+        mean_flat = mean_array.reshape(-1)
+    else:
+        raise ValueError(f"mean must be scalar or contain {npoints} values.")
 
-    fig.colorbar(im, ax=axes, shrink=0.8)
-    plt.suptitle(f"2D KL Samples with {num_modes} Modes")
-    plt.tight_layout()
-    plt.show()
-# %%
+    generator = rng if isinstance(rng, np.random.Generator) else np.random.default_rng(rng)
+    xi = generator.standard_normal(len(eigenvalues))
+    gaussian_flat = mean_flat + eigenvectors @ (np.sqrt(eigenvalues) * xi)
+    return gaussian_flat.reshape(shape), xi
+
+
+def lognormal_transform(gaussian_values: Array) -> Array:
+    """Exponentiate a Gaussian field to obtain a positive coefficient."""
+    return np.exp(np.asarray(gaussian_values, dtype=float))
+
+
+def voxel_coefficient_2d(
+    values: Array,
+    *,
+    bounds: Bounds2D = ((0.0, 1.0), (0.0, 1.0)),
+    linear: bool = True,
+):
+    """Wrap ``(ny, nx)`` grid values as an NGSolve VoxelCoefficient."""
+    import ngsolve as ng
+
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 2:
+        raise ValueError("values must have shape (ny, nx).")
+    if not np.all(np.isfinite(values)):
+        raise ValueError("values must all be finite.")
+
+    (xmin, xmax), (ymin, ymax) = bounds
+    if not xmin < xmax or not ymin < ymax:
+        raise ValueError("Each bounds pair must be strictly increasing.")
+
+    return ng.VoxelCoefficient(
+        (xmin, ymin),
+        (xmax, ymax),
+        values,
+        linear=linear,
+    )
+
+
+__all__ = [
+    "Bounds2D",
+    "cartesian_grid_2d",
+    "exponential_covariance",
+    "leading_eigenpairs",
+    "lognormal_transform",
+    "sample_discrete_kl",
+    "voxel_coefficient_2d",
+]

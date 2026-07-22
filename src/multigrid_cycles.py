@@ -25,13 +25,13 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, field
-from typing import Callable, Literal, Optional
+from typing import Any, Callable, Literal, Optional, overload
 
 import numpy as np
 import scipy.sparse as sp
 
 import ngsolve as ng
-from ngsolve import BilinearForm, GridFunction, H1, InnerProduct, LinearForm
+from ngsolve import BaseMatrix, BilinearForm, FESpace, GridFunction, H1, InnerProduct, LinearForm
 
 try:
     from .NGSolve_utils import (
@@ -53,7 +53,8 @@ except ImportError:
     from preconditioners import gauss_seidel_sweeps
 
 
-FormSetupFn = Callable[[object], "tuple[BilinearForm, LinearForm]"]
+FormSetupFn = Callable[[FESpace], "tuple[BilinearForm, LinearForm]"]
+DirichletValue = float | np.ndarray | ng.CoefficientFunction | dict
 SmootherKind = Literal["gs", "native"]
 # Norm names fall into three families (do not mix them up):
 #
@@ -188,20 +189,20 @@ class Level:
     """
 
     mesh: ng.Mesh
-    fes: object
+    fes: FESpace
     a: BilinearForm
     f: LinearForm
     gfu: GridFunction
     free_ids: np.ndarray
     fixed_ids: np.ndarray
-    P: Optional[object] = None   # coarse -> fine, into this level
-    PT: Optional[object] = None  # fine -> coarse, out of this level
+    P: Optional[BaseMatrix] = None   # coarse -> fine, into this level
+    PT: Optional[BaseMatrix] = None  # fine -> coarse, out of this level
 
-    dirichlet_value: "float | np.ndarray | ng.CoefficientFunction | dict" = 0.0
+    dirichlet_value: DirichletValue = 0.0
     dirichlet: str = ""          # boundary pattern used to build the FE space
 
     _A_csr: Optional[sp.csr_matrix] = field(default=None, repr=False, compare=False)
-    _smoother: object = field(default=None, repr=False, compare=False)
+    _smoother: Any | None = field(default=None, repr=False, compare=False)
     _boundary_ids: dict = field(default_factory=dict, repr=False, compare=False)
 
     u_exact: "ng.CoefficientFunction | GridFunction | None" = None
@@ -226,7 +227,9 @@ class Level:
 
     @classmethod
     def from_forms(cls, mesh, fes, a, f, *, P=None, PT=None,
-                   gfu=None, dirichlet_value=0.0, dirichlet="",
+                   gfu=None,
+                   dirichlet_value: DirichletValue = 0.0,
+                   dirichlet="",
                    built_P: bool = True,
                    u_exact: "ng.CoefficientFunction | GridFunction | None" = None,
                 ) -> "Level":
@@ -304,7 +307,7 @@ class Level:
         return self._A_csr
 
     @property
-    def smoother(self):
+    def smoother(self) -> Any:
         """NGSolve symmetric Gauss-Seidel preconditioner on free DOFs (cached).
 
         Notes
@@ -313,9 +316,11 @@ class Level:
         ``SmoothBack`` when available; otherwise the same ``smoother * residual``
         update for forward and backward. Invalid after reassembly; call ``refresh()``.
         """
-        if self._smoother is None:
-            self._smoother = self.a.mat.CreateSmoother(self.fes.FreeDofs(), GS=True)
-        return self._smoother
+        sm = self._smoother
+        if sm is None:
+            sm = self.a.mat.CreateSmoother(self.fes.FreeDofs(), GS=True)
+            self._smoother = sm
+        return sm
 
     def refresh(self) -> None:
         """Clear cached CSR matrix and native smoother.
@@ -543,11 +548,14 @@ class Level:
     def _smooth_native(self, b, x, *, nsweeps, omega, verbose, backward) -> None:
         """NGSolve GS=True: ``SmoothBack`` if present, else ``sm * (b - A x)``."""
         sm = self.smoother
+        if sm is None:
+            raise RuntimeError("Native smoother is not available.")
         x0 = x.CreateVector()
         for sweep in range(1, nsweeps + 1):
-            if backward and hasattr(sm, "SmoothBack"):
+            smooth_back = getattr(sm, "SmoothBack", None)
+            if backward and smooth_back is not None:
                 x0.data = x
-                sm.SmoothBack(x, b)
+                smooth_back(x, b)
                 if omega != 1.0:
                     x.data = x0.data + omega * (x.data - x0.data)
             else:
@@ -633,7 +641,7 @@ def build_hierarchy(
     n_refines: int,
     order: int = 1,
     dirichlet: str = "left|right|top|bottom",
-    dirichlet_value: "float | np.ndarray | ng.CoefficientFunction | dict" = 0.0,
+    dirichlet_value: DirichletValue = 0.0,
     u_exact: "ng.CoefficientFunction | GridFunction | None" = None,
     verbose: bool = False,
 ) -> MultigridHierarchy:
@@ -1159,18 +1167,24 @@ class MultigridSolver:
         # ============================================================
         # Non-coarsest levels
         # ============================================================
+        P = level.P
+        PT = level.PT
+        if P is None or PT is None:
+            raise RuntimeError(f"Level {idx} is missing transfer operators P/PT.")
+
         if debug:
             print(
                 f"{pad}[lvl {idx}] down: "
                 f"x={len(x)}, b={len(b)}, "
                 f"A={level.a.mat.height}x{level.a.mat.width}, "
-                f"PT={level.PT.height}x{level.PT.width}, "
-                f"P={level.P.height}x{level.P.width}"
+                f"PT={PT.height}x{PT.width}, "
+                f"P={P.height}x{P.width}"
             )
 
         # ------------------------------------------------------------
         # 1. Pre-smoothing
         # ------------------------------------------------------------
+        down = None
         if rec is not None:
             down = self._smooth_record(
                 level,
@@ -1201,13 +1215,13 @@ class MultigridSolver:
         # ------------------------------------------------------------
         # 3. Restrict residual to coarse level
         # ------------------------------------------------------------
-        r_c = level.PT.CreateColVector()
-        r_c.data = level.PT * r
+        r_c = PT.CreateColVector()
+        r_c.data = PT * r
 
         if debug:
             print(
                 f"{pad}[lvl {idx}] restrict: "
-                f"r={len(r)} --PT({level.PT.height}x{level.PT.width})--> "
+                f"r={len(r)} --PT({PT.height}x{PT.width})--> "
                 f"r_c={len(r_c)}  (to lvl {idx - 1})"
             )
 
@@ -1231,8 +1245,8 @@ class MultigridSolver:
         # ------------------------------------------------------------
         # 5. Prolong correction and update x
         # ------------------------------------------------------------
-        e_f = level.P.CreateColVector()
-        e_f.data = level.P * e_c
+        e_f = P.CreateColVector()
+        e_f.data = P * e_c
 
         # This is a correction vector, so fixed/Dirichlet entries should be zero.
         self._zero_fixed(level, e_f)
@@ -1242,7 +1256,7 @@ class MultigridSolver:
         if debug:
             print(
                 f"{pad}[lvl {idx}] prolong: "
-                f"e_c={len(e_c)} --P({level.P.height}x{level.P.width})--> "
+                f"e_c={len(e_c)} --P({P.height}x{P.width})--> "
                 f"e_f={len(e_f)}  (back to lvl {idx})"
             )
 
@@ -1299,6 +1313,32 @@ class MultigridSolver:
 
             rec_cycle[idx] = vals
 
+    @overload
+    def solve(
+        self,
+        *,
+        max_cycles: int = ...,
+        tol: float = ...,
+        verbose: bool = ...,
+        record_levels: Literal[False] = ...,
+        norms=...,
+        stop_norm: str = ...,
+        debug: bool = ...,
+    ) -> tuple[dict[str, list], list[list[dict]]]: ...
+
+    @overload
+    def solve(
+        self,
+        *,
+        max_cycles: int = ...,
+        tol: float = ...,
+        verbose: bool = ...,
+        record_levels: Literal[True],
+        norms=...,
+        stop_norm: str = ...,
+        debug: bool = ...,
+    ) -> tuple[dict[str, list], list[list[dict]], list[list[dict]]]: ...
+
     def solve(
         self,
         *,
@@ -1309,6 +1349,9 @@ class MultigridSolver:
         norms=("l2",),
         stop_norm: str = "l2",
         debug: bool = False,
+    ) -> (
+        tuple[dict[str, list], list[list[dict]]]
+        | tuple[dict[str, list], list[list[dict]], list[list[dict]]]
     ):
         """Repeated V-cycles on the finest-level system until tolerance or cap.
 
@@ -1503,7 +1546,7 @@ class MultigridSolver:
             if tol > 0 and delta <= tol * delta_0:
                 break
 
-        if record_levels:
+        if sweep_hist is not None:
             return hist, level_hist, sweep_hist
 
         return hist, level_hist
