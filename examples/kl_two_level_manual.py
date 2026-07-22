@@ -151,6 +151,10 @@ def manual_two_level_cycle(
     # Step 6: correct the fine approximation.
     #
     #                    x_f <- x_f + e_f
+    #
+    # The coarse correction targets the smooth error component.  It need not
+    # decrease the Euclidean fine-grid residual at this intermediate stage;
+    # judge the method after the complete cycle, including post-smoothing.
     # ------------------------------------------------------------------
     x_fine.data += e_fine
     value = free_l2_norm(fine, residual(fine, b_fine, x_fine))
