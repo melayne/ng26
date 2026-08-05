@@ -1,6 +1,6 @@
 {
   "typeCheckingMode": "basic",
-  "extraPaths": ["src"],
+  "extraPaths": ["src", "examples/KLMC"],
   "pythonVersion": "3.13",
   "venvPath": ".",
   "venv": ".venv"

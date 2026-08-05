@@ -376,7 +376,7 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_PLOT_DIR,
         help="directory in which to save the PNG figure",
     )
-    return parser.parse_args()
+    return parser.parse_known_args()[0]
 
 
 if __name__ == "__main__":

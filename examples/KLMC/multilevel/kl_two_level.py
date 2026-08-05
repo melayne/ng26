@@ -21,18 +21,43 @@ import numpy as np
 from netgen.geom2d import unit_square
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# DEFAULT_PLOT_DIR = PROJECT_ROOT / "examples" / "plots"
+# sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+# from KL_expansion import (  # noqa: E402
+#     cartesian_grid_2d,
+#     exponential_covariance,
+#     leading_eigenpairs,
+#     lognormal_transform,
+#     sample_discrete_kl,
+#     voxel_coefficient_2d,
+# )
+# from multigrid_cycles import (  # noqa: E402
+#     MultigridSolver,
+#     VCycleConfig,
+#     build_form_setup,
+#     build_hierarchy,
+# )
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PLOT_DIR = PROJECT_ROOT / "examples" / "plots"
+
+sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from KL_expansion import (  # noqa: E402
     cartesian_grid_2d,
-    exponential_covariance,
-    leading_eigenpairs,
     lognormal_transform,
-    sample_discrete_kl,
     voxel_coefficient_2d,
 )
+
+from examples.KLMC.utils.analytical_eigenfunctions import (  # noqa: E402
+    get_1d_eigenpairs,
+    leading_2d_eigenpairs,
+    make_2d_kl_evaluator,
+)
+
 from multigrid_cycles import (  # noqa: E402
     MultigridSolver,
     VCycleConfig,
@@ -266,23 +291,80 @@ def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
     # ------------------------------------------------------------------
     # 1. Construct one discrete KL realization of log(kappa).
     # ------------------------------------------------------------------
-    nx = ny = 16
-    X, Y, points = cartesian_grid_2d(nx, ny)
+    # nx = ny = 16
+    # X, Y, points = cartesian_grid_2d(nx, ny)
 
-    covariance = exponential_covariance(
-        points,
-        sigma=1.,
-        correlation_length=0.30,
-    )
-    eigenvalues, eigenvectors = leading_eigenpairs(covariance, num_modes=100)
-    log_kappa_values, xi = sample_discrete_kl(
-        mean=0.0,
-        eigenvalues=eigenvalues,
-        eigenvectors=eigenvectors,
-        shape=(ny, nx),
-        rng=7,
+    # covariance = exponential_covariance(
+    #     points,
+    #     sigma=1.,
+    #     correlation_length=0.30,
+    # )
+    # eigenvalues, eigenvectors = leading_eigenpairs(covariance, num_modes=100)
+    # log_kappa_values, xi = sample_discrete_kl(
+    #     mean=0.0,
+    #     eigenvalues=eigenvalues,
+    #     eigenvectors=eigenvectors,
+    #     shape=(ny, nx),
+    #     rng=7,
+    # )
+    nx = ny = 100
+    X, Y, _ = cartesian_grid_2d(nx, ny)
+
+    correlation_length = 0.30
+    standard_deviation = 1.0
+    variance = standard_deviation**2
+
+    num_modes_2d = 1000
+
+    # Using num_modes_2d 1D modes is conservative but guarantees
+    # enough tensor-product candidates.
+    num_modes_1d = num_modes_2d
+
+    (
+        frequencies_1d,
+        normalizations_1d,
+        eigenvalues_1d,
+        _,
+    ) = get_1d_eigenpairs(
+        num_modes=num_modes_1d,
+        correlation_length=correlation_length,
     )
 
+    (
+        unit_eigenvalues_2d,
+        mode_indices,
+        evaluate_eigenfunctions_2d,
+    ) = leading_2d_eigenpairs(
+        eigenvalues_1d=eigenvalues_1d,
+        frequencies_1d=frequencies_1d,
+        normalizations_1d=normalizations_1d,
+        correlation_length=correlation_length,
+        num_modes_2d=num_modes_2d,
+        method="heap",
+    )
+
+    # These are the actual covariance eigenvalues after applying sigma².
+    eigenvalues = (
+        variance * unit_eigenvalues_2d
+    )
+
+    evaluate_log_conductivity = make_2d_kl_evaluator(
+        eigenvalues_2d=unit_eigenvalues_2d,
+        eigenfunction_evaluator=evaluate_eigenfunctions_2d,
+        mean_log_conductivity=0.0,
+        variance=variance,
+    )
+
+    rng = np.random.default_rng(seed=7)
+
+    # One Gaussian coefficient for every selected 2D eigenfunction.
+    xi = rng.standard_normal(num_modes_2d)
+
+    log_kappa_values = evaluate_log_conductivity(
+        X,
+        Y,
+        xi,
+    )
     # exp(log(kappa)) makes the diffusion coefficient strictly positive.
     kappa_values = lognormal_transform(log_kappa_values)
     kappa = voxel_coefficient_2d(kappa_values, linear=True)
@@ -300,17 +382,17 @@ def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
     form_setup = build_form_setup(bilinear=diffusion_form, linear=load_form)
 
     # n_refines=1 means exactly two levels: the initial mesh and one refinement.
-    coarse_mesh = ng.Mesh(unit_square.GenerateMesh(maxh=0.35))
+    coarse_mesh = ng.Mesh(unit_square.GenerateMesh(maxh=0.1))
     hierarchy = build_hierarchy(
         coarse_mesh,
         form_setup,
-        n_refines=1,
+        n_refines=3,
         order=1,
         dirichlet="left|right|top|bottom",
         dirichlet_value=0.0,
         verbose=True,
     )
-    assert hierarchy.nlevels == 2
+    # assert hierarchy.nlevels == 2
 
     # The same physical point has the same coefficient value on both meshes.
     probe = (0.37, 0.42)
@@ -364,7 +446,7 @@ def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
     )
     diagnostics_figure = make_diagnostics_figure(
         eigenvalues,
-        float(np.trace(covariance)),
+        variance,
         residuals,
         relative_tolerance,
         hierarchy.finest,
@@ -384,7 +466,7 @@ def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
     diagnostics_figure.savefig(diagnostics_path, dpi=180)
     initial_guess_figure.savefig(initial_guess_path, dpi=180)
 
-    retained_variance = eigenvalues.sum() / np.trace(covariance)
+    retained_variance = eigenvalues.sum() / variance
     print(f"KL coefficients xi: {np.array2string(xi, precision=3)}")
     print(f"retained discrete variance: {retained_variance:.1%}")
     print(f"kappa range on KL grid: [{kappa_values.min():.3f}, {kappa_values.max():.3f}]")
