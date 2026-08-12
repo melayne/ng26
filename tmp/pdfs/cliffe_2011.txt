@@ -1,0 +1,1056 @@
+                 Multilevel Monte Carlo Methods and Applications to Elliptic PDEs
+                                                 with Random Coeﬃcients
+                                               ∗              †              ‡                        ‡
+                                  K.A. Cliﬀe , M.B. Giles , R. Scheichl and A.L. Teckentrup
+                     ∗School of Mathematical Sciences, University of Nottingham, University Park, Nottingham NG7 2RD, UK,
+                                                     Andrew.Cliffe@nottingham.ac.uk
+                     †The Oxford-Man Institute, University of Oxford, Eagle House, Walton Well Road, Oxford OX2 6ED, UK,
+                                                        Mike.Giles@maths.ox.ac.uk
+                        ‡Department of Mathematical Sciences, University of Bath, Claverton Down, Bath BA2 7AY, UK,
+                                            R.Scheichl@bath.ac.uk, A.L.Teckentrup@bath.ac.uk
+                                                             May 09, 2011
+                                                                Abstract
+                          Weconsider the numerical solution of elliptic partial diﬀerential equations with random co-
+                       eﬃcients. Such problems arise, for example, in uncertainty quantiﬁcation for groundwater ﬂow.
+                       Wedescribe a novel variance reduction technique for the standard Monte Carlo method, called
+                       the multilevel Monte Carlo method, and demonstrate numerically its superiority. The asymp-
+                       totic cost of solving the stochastic problem with the multilevel method is always signiﬁcantly
+                       lower than that of the standard method and grows only proportionally to the cost of solving
+                       the deterministic problem in certain circumstances. Numerical calculations demonstrating the
+                       eﬀectiveness of the method for one- and two-dimensional model problems arising in groundwater
+                       ﬂow are presented.
+                 1    Introduction
+                 There are many situations in which modelling and computer simulation are indispensable tools and
+                 wherethemathematical models employed have been demonstrated to give adequate representations
+                 of reality. However, the parameters appearing in the models often have to be estimated from
+                 measurements and are, therefore, subject to uncertainty. This uncertainty propagates through the
+                 simulations and quantifying its impact on the results is frequently of great importance.
+                    Agood example is provided by the problem of assessing the safety of a potential deep geolog-
+                 ical repository for radioactive waste. Any radionuclides leaking from such a repository could be
+                 transported back to the human environment by groundwater ﬂowing through the rocks beneath the
+                 earth’s surface. The very long timescales involved mean that modelling and simulation are essential
+                 in evaluating repository performance. The study of groundwater ﬂow is well established and there
+                 is general scientiﬁc consensus that in many situations Darcy’s Law can be expected to lead to an
+                 accurate description of the ﬂow [7]. The main parameter appearing in Darcy’s Law is the hydraulic
+                 conductivity, which characterises how easily water can ﬂow through the rock under a given pressure
+                 gradient. In practice it is only possible to measure the hydraulic conductivity at a limited number
+                 of spatial locations, but it is required at all points of the computational domain for the simulation.
+                                                                    1
+       This fact is the primary source of uncertainty in groundwater ﬂow calculations. Understanding and
+       quantifying the impact of this uncertainty on predictions of radionuclide transport is essential for
+       reliable repository safety assessments.
+         A widely used approach for dealing with uncertainty in groundwater ﬂow is to represent the
+       hydraulic conductivity as a random ﬁeld [9, 8]. The law of the ﬁeld has to be estimated from the
+       available data, a signiﬁcant undertaking in its own right, but the major computational challenge is
+       solving the partial diﬀerential equations (PDEs) that govern the pressure ﬁeld. These are elliptic
+       PDEs with random coeﬃcients. Realistic random ﬁeld models often need a rather large number of
+       stochastic degrees of freedom (> 100s) for their accurate representation (cf. Section 3.2). Conse-
+       quently stochastic Galerkin and stochastic collocation approaches, based for example on polynomial
+       chaos expansion [19, 23], are impractical since their cost grows exponentially with the number of
+       stochastic degrees of freedom, and truncating to any feasible number leads to large systematic er-
+       rors (bias). To the best of our knowledge, there are currently no results with stochastic collocation
+       methods available in the literature that can accurately treat the random ﬁeld models considered in
+       this paper characterised by short correlation length, high variance and low regularity.
+         Hence, standard Monte Carlo (MC) simulation is still the method of choice in applications.
+       These MC calculations are, however, very expensive because the individual realisations of the
+       random ﬁeld have low spatial regularity and signiﬁcant spatial variation making the problem of
+       solving for the pressure very costly. Furthermore, the notoriously slow rate of convergence of the
+       standard MC method means that many such realisations are required to obtain accurate results.
+       The computational cost of solving elliptic PDEs with random coeﬃcients is therefore a major
+       challenge in uncertainty quantiﬁcation for groundwater ﬂow studies.
+         In this paper we address the problem of the large cost of solving elliptic PDEs with random
+       coeﬃcients. Our approach is based on the multilevel Monte Carlo method (MLMC) for inﬁnite-
+       dimensional integration introduced by Giles in connection with stochastic diﬀerential equations
+       arising in mathematical ﬁnance [13, 12]. Similar ideas have been introduced by Heinrich for ﬁnite-
+       dimensional parametric integration and to solve integral equations [16], and by Brandt and his
+       co-workers to accelerate statistical mechanics calculations [2, 3]. In parallel to our work, Barth et
+       al. have recently also provided a theoretical analysis of the multilevel Monte Carlo method in the
+       context of elliptic PDEs with random coeﬃcients [1]. However, they assume smoother coeﬃcient
+       ﬁelds than we consider in this paper (see Section 5). For an analysis of the case considered here
+       see the recent paper [5].
+         In many applications, the quantity of interest is the expected value of a functional of the PDE
+       solution. The MLMC method exploits the linearity of expectation, by expressing the quantity
+       of interest on the ﬁnest spatial grid in terms of the same quantity on a relatively coarse grid
+       and “correction” terms. The dramatic reduction in cost associated with the MLMC method over
+       standard MC is due to the fact that most of the uncertainty can be captured on the coarse grids
+       and so the number of realisations needed on the ﬁnest grid is greatly reduced. In this paper we
+       explain how these savings in computational cost arise and demonstrate the eﬀectiveness of the
+       MLMCmethodbyaset of numerical results for an elliptic PDE with random coeﬃcients.
+         Theoutline of the rest of this paper is as follows. In section 2 we describe the MLMC algorithm
+       in a general context and present a theorem that estimates the cost of the algorithm under certain,
+       problem-dependent, assumptions, which we carefully explain. In section 3 we set out the equations
+       for a model problem arising from groundwater ﬂow, describe our stochastic model, and present the
+       numerical method used for spatial discretisation. We present our numerical results for one and two
+                             2
+                dimensional problems in section 4. In section 5 we give our conclusions and make some suggestions
+                for future work.
+                   A ﬁnal comment is that the main novelty in this paper lies in the use of the highly eﬃcient
+                multilevel Monte Carlo method for a particularly important scientiﬁc application. However, this is
+                only one example of how it may be used in connection with stochastic PDEs; a future paper will
+                discuss its use for a stochastic parabolic PDE which arises in a computational ﬁnance setting.
+                2    Monte Carlo Simulations
+                Wewill start in this section with a review of the standard Monte Carlo (MC) method and then go
+                on to describe the Multilevel Monte Carlo (MLMC) method. Both methods are not restricted to
+                diﬀerential equations with random coeﬃcients, and so we describe them in more abstract terms.
+                   Tosimplify the notation we will write a . b for two positive quantities a and b, if a/b is uniformly
+                bounded independent of any parameters, in particular independent of the number of samples N
+                and the number of spatial degrees of freedom M below. Furthermore, we write a h b, if a . b and
+                b . a.
+                   Let XM be a random vector over an inﬁnite dimensional probability space (Ω,F,P) that takes
+                values in RM. Furthermore let QM = G(XM) be some linear or nonlinear functional of XM. This
+                maybeasingle component or a norm of XM, or it may be a more complicated nonlinear functional
+                (e.g. a higher order moment). We assume that as M → ∞ the expected value E[QM] → E[Q], for
+                some (inaccessible) random variable Q : Ω → R, and that (in mean) the order of convergence is α,
+                i.e.                                             
+                                                                        −α
+                                                      E[QM −Q] . M .
+                   We are interested in estimating E(Q). Thus, given M ∈ N suﬃciently large, we compute
+                                                b
+                approximations (or estimators) QM of E(QM) and quantify the accuracy of our approximations via
+                the root mean square error (RMSE)
+                                                                            
+                                                   b           b            2  1/2
+                                                e(QM):= E[(QM −E(Q)) ]            .
+                   In our PDE application, choosing M suﬃciently large corresponds to choosing a ﬁne enough
+                spatial approximation. The random variable Q will in this case typically be a functional of the
+                solution, and QM will be the same functional of the discretised solution.
+                                                 b
+                   The computational ε-cost Cε(QM) is then quantiﬁed by the number of ﬂoating point operations
+                                                          b
+                that are needed to achieve a RMSE of e(QM) < ε.
+                2.1   Standard Monte Carlo Simulation
+                The standard Monte Carlo estimator for E(QM) is
+                                                                    N
+                                                       bMC       1 X (i)
+                                                       QM,N := N       QM,                                    (2.1)
+                                                                    i=1
+                where Q(i) is the ith sample of Q   and N independent samples are computed in total. We assume
+                        M                        M
+                that the cost to compute one sample Q(i) of Q     is
+                                                       M       M
+                                               C(Q(i)) . Mγ,        for some γ > 0.
+                                                   M
+                                                                 3
+                  There are two sources of error in the estimator (2.1): the approximation of Q by QM, which
+               is related to the spatial discretisation in the case of our PDE application; and the sampling error
+               due to replacing the expected value by a ﬁnite sample average. The contribution of both of these
+               errors becomes clear when we expand the mean square error (MSE):
+                                 bMC 2         bMC        bMC         bMC          2
+                               e(QM,N)    = E QM,N−E[QM,N] + E[QM,N]−E[Q]
+                                               h                   i                  
+                                                  bMC       bMC 2         bMC           2
+                                          = E (QM,N −E[QM,N]) + E[QM,N]−E[Q]
+                                                bMC      bMC           2
+                                          = V[QM,N]+ E[QM,N]−E[Q] .                                  (2.2)
+                          bMC                    bMC         −1
+                  Since E[QM,N] = E[QM] and V[QM,N] = N        V[QM], we get
+                                                                             
+                                          bMC 2        −1                      2
+                                        e(QM,N) = N V[QM]+ E[QM −Q] ,                                (2.3)
+               and so the ﬁrst term in the MSE is the variance of the MC estimator, which represents the sampling
+               error and decays inversely with the number of samples. The second term is the square of the error
+               in mean between QM and Q.
+                  Hence, a suﬃcient condition to achieve a RMSE of ε with this estimator is that both of the
+                                 2
+               termsareless than ε /2. Under the assumption that V[QM] is approximately constant, independent
+                                                           −2           −1/α
+               of M, this can be achieved by choosing N & ε   and M & ε      , where the convergence rate α
+               is as deﬁned previously and problem dependent. In other words, we need to take a large enough
+                                                                              bMC
+               number of samples N, as well as a large enough value for M, so that QM,N is a suﬃciently accurate
+               approximation of our quantity of interest E[Q].
+                  Since the cost to compute one sample of Q  was assumed to satisfy C(Q(i)) . Mγ, we have
+                                                          M                           M
+                 bMC          γ
+               C(QM,N) . NM and so the total computational cost of achieving a RMSE of O(ε) is
+                                                      bMC      −2−γ/α
+                                                  Cε(QM,N) . ε       .
+               2.2   Multilevel Monte Carlo Simulation
+               The main idea of multilevel Monte Carlo (MLMC) simulation is very simple. We sample not just
+               from one approximation QM of Q, but from several. Let us recall the main ideas and the main
+               theorem from [13].
+                  Let {M : ℓ = 0,...,L} be an increasing sequence in N called levels, i.e. M < M < ... <
+                         ℓ                                                                0      1
+               M =:M,andassumefor simplicity that there exists an s ∈ N\{1} such that
+                 L
+                                           M =sM ,          for all ℓ = 1,...,L.                     (2.4)
+                                             ℓ      ℓ−1
+               Asformultigrid methods applied to discretised (deterministic) PDEs, the key is to avoid estimating
+               E[QMℓ] directly on level ℓ, but instead to estimate the correction with respect to the next lower
+               level, i.e. E[Yℓ] where Yℓ := QMℓ −QMℓ−1. Linearity of the expectation operator then implies that
+                                                       L                     L
+                                    E[QM]=E[QM0]+XE[QMℓ−QMℓ−1]=XE[Yℓ],                               (2.5)
+                                                      ℓ=1                   ℓ=0
+                                                            4
+                where for simplicity we have set Y0 := QM0.
+                    Hence, the expectation on the ﬁnest level is equal to the expectation on the coarsest level,
+                plus a sum of corrections adding the diﬀerence in expectation between simulations on consecutive
+                levels. The multilevel idea is now to independently estimate each of these expectations such that
+                the overall variance is minimised for a ﬁxed computational cost.
+                         b
+                    Let Yℓ be an unbiased estimator for E[Yℓ], e.g. the standard MC estimator
+                                                                 N
+                                                                   ℓ               
+                                                   bMC        1 X (i)          (i)
+                                                  Yℓ,N   :=           QM −QM                                      (2.6)
+                                                      ℓ      Nℓ           ℓ      ℓ−1
+                                                                 i=1
+                with Nℓ samples. Then the multilevel estimator is simply deﬁned as
+                                                                       L
+                                                            bML       Xb
+                                                           QM :=          Yℓ.                                     (2.7)
+                                                                      ℓ=0
+                If the individual terms are estimated using standard MC, i.e. (2.6) with Nℓ samples on level ℓ, this
+                                                                                           bMLMC
+                is the multilevel Monte Carlo (MLMC) estimator and we denote it by QM,{N }. It is important to
+                                                                                                 ℓ
+                note that the quantity Q(i) − Q(i)      in (2.6) comes from using the same random sample ω(i) ∈ Ω
+                                           Mℓ     Mℓ−1
+                on both levels M and M        .
+                                  ℓ        ℓ−1
+                    For the rest of this paper, for simplicity, we will always use standard MC to estimate the terms
+                on the diﬀerent levels. Note however, that this could be replaced by any other unbiased estimator,
+                e.g. randomised quasi-Monte Carlo (cf. [14, 15]).
+                    Since all the expectations E[Yℓ] are estimated independently, the variance of the MLMC esti-
+                                      P
+                             bML         L     −1
+                mator is V[QM ] =        ℓ=0N     V[Yℓ], and expanding as in (2.2-2.3) in the previous section leads
+                                              ℓ
+                again to the following form for the MSE:
+                                               h                i      L                            
+                                  bML 2          bML          2      X −1                             2
+                               e(QM ) := E QM −E[Q]               =      N V[Yℓ] + E[QM −Q] .                     (2.8)
+                                                                           ℓ
+                                                                      ℓ=0
+                As in the standard MC case before, we see that the MSE consists of two terms, the variance of the
+                estimator and the approximation error. Note that the second term is exactly the same as before in
+                                                                     −1/α
+                (2.2), and so it is suﬃcient to choose M = M & ε          again. To then achieve an overall RMSE of
+                                                               L
+                                                                2
+                ε, the ﬁrst term in (2.8) has to be less than ε /2 as well. We claim that this is cheaper to achieve
+                in MLMC for two reasons:
+                    • If QM converges to Q in mean square, then V[Yℓ] = V[QMℓ −QMℓ−1] → 0 as ℓ → ∞, and so
+                      fewer samples are required on ﬁner levels to estimate E[Yℓ];
+                    • The coarsest level ℓ = 0 can be kept ﬁxed for all ε, and so the cost per sample on level ℓ = 0
+                      does not grow as ε → 0.
+                    In practical applications, M must be chosen suﬃciently large to provide a minimal level of
+                                                  0
+                resolution of the problem. In our PDE application, this cut-oﬀ point is related to the spatial
+                regularity of the PDE solution, which in turn depends on the regularity of the covariance function
+                of the conductivity ﬁeld and on the correlation length. We will return to this point in Section 4.1.
+                                                                   5
+                     The computational cost of the multilevel Monte Carlo estimator is
+                                                                          L
+                                                              bML        X
+                                                           C(Q     ) =       N C .
+                                                                M              ℓ  ℓ
+                                                                         ℓ=0
+                 where C := C(Y(i)) represents the cost of a single sample of Y . Treating the N as continuous
+                          ℓ         ℓ                                                   ℓ                    ℓ
+                 variables, the variance of the MLMC estimator is minimised for a ﬁxed computational cost by
+                 choosing                                            p
+                                                             N h V[Y]/C ,                                                (2.9)
+                                                               ℓ            ℓ   ℓ
+                                                                                                     2
+                 with the constant of proportionality chosen so that the overall variance is ε /2. The total cost on
+                 level ℓ is proportional to pV[Yℓ]Cℓ and hence
+                                                                        L
+                                                            bML       Xp
+                                                         C(QM ) .            V[Yℓ]Cℓ.
+                                                                       ℓ=0
+                 If the variance V[Yℓ] decays faster with ℓ than Cℓ increases, the dominant term will be on level 0.
+                                 −2
+                 Since N0 h ε      , the cost savings compared to standard MC will in this case be approximately
+                                      γ      γ/α
+                 C /C    h (M /M ) h ε           , reﬂecting the ratio of the costs of samples on level 0 compared to
+                   0  L        0    L
+                 samples on level L.
+                     If the variance V[Yℓ] decays slower than the cost Cℓ increases, the dominant term will be on the
+                 ﬁnest level L, and the cost savings compared to standard MC will be approximately V[YL]/V[Y0]
+                 which will be small. Hence, in both cases we have a signiﬁcant gain.
+                     This outline analysis is made more precise in the following theorem:
+                                       b      bMC
+                 Theorem 2.1 Let Yℓ := Yℓ,N and suppose that there are positive constants α,β,γ > 0 such that
+                                                  ℓ
+                 α≥1 min(β,γ) and
+                      2
+                                            −α
+                                    
+                    i)  E[QMℓ −Q] . M
+                                              ℓ
+                    ii) V[Yℓ] . M−β
+                                     ℓ
+                   iii) C  . Mγ,
+                         ℓ       ℓ
+                                      −1                                                                                  L
+                 Then, for any ε<e       , there exist a value L (and corresponding M ≡ M )and a sequence {N }
+                                                                                                 L                      ℓ ℓ=0
+                 such that                                                           
+                                                                                  
+                                                    bML 2             bML            2      2
+                                                  e(QM ) := E         QM −E[Q]          <ε ,
+                 and                                           
+                                                                    −2
+                                                                ε ,              if β > γ,
+                                                               
+                                                    bML         −2          2
+                                                 C(QM ) .  ε (logε) ,            if β =γ,
+                                                               
+                                                                −2−(γ−β)/α
+                                                                  ε            ,  if β < γ.
+                 Proof The proof, which is given in Appendix A, is a slight generalisation of the proof in [13].    
+                                                                       6
+                                                     L
+                  The (optimal) values of L and {Nℓ}    can be computed “on the ﬂy” from the sample averages
+                                                     ℓ=0
+               and the (unbiased) sample variances of Yℓ. To do this we need to assume further that there exists
+               an M′ ∈ N such that the decay in |E[QM −Q]| is actually monotonic for M ≥ M′ and satisﬁes
+                                                                    −α
+                                                              
+                                                    E[QM −Q] h M .
+               This ensures (via the triangle inequality) that |E[YL]| h M−α (since s > 1 in (2.4)), and thus
+                b       −α
+               |YL| h M    for NL suﬃciently large, providing us with a computable error estimator to determine
+               whether M is suﬃciently large or whether the number of levels L needs to be increased. It can
+               in fact even be used to further improve the MLMC estimate by eliminating the leading order bias
+               term via Richardson extrapolation (see [13, §4.2] for details).
+                  Putting these ideas together, the MLMC algorithm can be implemented in practice as follows:
+                  1. Start with L=0.
+                  2. Estimate V[YL] by the sample variance of an initial number of samples.
+                  3. Calculate the optimal Nℓ, ℓ = 0,1,...,L using (2.9).
+                  4. Evaluate extra samples at each level as needed for the new Nℓ.
+                                                       b       −α
+                  5. If L ≥ 1, test for convergence using YL h M  .
+                  6. If not converged, set L = L + 1 and go back to 2.
+                  Note that in the above algorithm, step 3 aims to make the variance of the MLMC estimator
+                        1 2                                                                1
+               less than 2ε , while step 5 tries to ensure that the remaining bias is less than √2ε.
+               3    Application to PDEs – A model problem
+               In this section we will apply Multilevel Monte Carlo to elliptic PDEs with random coeﬃcients
+               arising in subsurface ﬂow.
+                  Probabilistic uncertainty quantiﬁcation in subsurface ﬂow is of interest in a number of situations,
+               as for example in risk analysis for radioactive waste disposal or in oil reservoir simulation. The
+               classical equations governing (steady state) single phase subsurface ﬂow consist of Darcy’s law
+               coupled with an incompressibility condition (see e.g. [7, 6]):
+                                   q+k∇p=g and ∇·q=0, in D⊂Rd, d=1,2,3,                                  (3.1)
+               subject to suitable boundaryconditions. In physical terms, p denotes the pressure(or more precisely
+               the pressure head) of the ﬂuid, k is the hydraulic conductivity tensor, q is the ﬁltration velocity
+               (or Darcy ﬂux) and g are the source terms.
+               3.1   Model problem
+               Atypical approach to quantify uncertainty in p and q is to model the hydraulic conductivity as a
+               random ﬁeld k = k(x,ω) on D × Ω with a certain mean and covariance structure that has to be
+                                                              7
+               inferred from the data. This means that (3.1) becomes a system of PDEs with random coeﬃcients,
+               which can be written in second order form as
+                                         −∇·(k(x,ω)∇p(x,ω)) = f(x),         in  D,                      (3.2)
+               with f := −∇·g. The solution p itself will also be a random ﬁeld on D × Ω. For simplicity we
+               assume that the boundary conditions and the sources g are known (and thus deterministic), and
+                                                    d
+               restrict ourselves to the case D = (0,1) .
+                  In this general form solving (3.2) is extremely challenging computationally and so in practice
+               it is common to use relatively simple models for k(x,ω) that are as faithful as possible to the
+               measured data. One model that has been studied extensively is a lognormal distribution for k(x,ω),
+               i.e. replacing the conductivity tensor by a scalar valued ﬁeld whose log is Gaussian. It guarantees
+               that k > 0 almost surely (a.s.) in Ω and it allows the conductivity to vary over many orders of
+               magnitude, which is typical in subsurface ﬂow.
+                  When modelling a whole aquifer, a whole oil reservoir, or a suﬃciently large region around a
+               potential radioactive waste repository, the correlation length scale for k is typically signiﬁcantly
+               smaller than the size of the computational region.  However, the correlation is typically large
+               enough to fall outside the domain of stochastic homogenisation techniques. In addition, typical
+               sedimentation processes lead to fairly irregular structures and pore networks, and faithful models
+               shouldthereforealsoonlyassumelimitedspatialregularity ofk. Acovariance functionthathasbeen
+               proposed in the application literature (cf. [17]) is the following exponential two-point covariance
+               function                                             
+                                                            kx−yk
+                                       C(x,y) := σ2exp −            p  ,    x,y ∈ D,                    (3.3)
+                                                                λ
+               where k · k denotes the ℓ -norm in Rd and typically p = 1 or 2; throughout this paper we use
+                         p              p
+               p = 1 for simplicity. The parameters σ2 and λ denote the variance and the correlation length,
+               respectively, and in subsurface ﬂow applications typically only σ2 ≥ 1 and λ ≤ diamD = 1 will be
+               of interest. This choice of covariance function implies that k is homogeneous and it follows from
+               Kolmogorov’s theorem [20] that k(·,ω) ∈ C0,η(D) a.s. with η < 1/2.
+                  In order to apply the proposed Multilevel Monte Carlo Method to this application, we need to
+               be able to do two things:
+                  • sample from the input random ﬁeld k(x,ω), and
+                  • for a given sample, i.e. for ﬁxed ω, perform a spatial discretisation of the PDE in (3.2) on
+                    two consecutive grids and solve it.
+               3.2   Sampling from the input random ﬁeld
+               Several techniques exist to produce samples of k, including circulant embedding as studied in [15]
+               or the Karhunen-Lo`eve (KL) expansion [11]. We only describe and apply the KL-expansion here.
+               Let Z(x,ω) := logk(x,ω). We can then expand Z in terms of a countable set of uncorrelated, zero
+               mean random variables {ξ }     such that
+                                        n n∈N
+                                                                ∞
+                                         Z(x,ω) = E[Z(x,·)]+Xpθnξn(ω)bn(x),                             (3.4)
+                                                               n=1
+                                                             8
+                where {θ }       are the eigenvalues and {b }       the normalised eigenfunctions of the covariance
+                          n n∈N                              n n∈N
+                operator with kernel function C(x,y) deﬁned in (3.3). For more details on the derivation and
+                for properties of the KL–expansion, see e.g. [11]. However, an important point to note is that for
+                Gaussian random ﬁelds Z the random variables {ξ }         are a set of independent standard Gaussian
+                variables.                                          n n∈N
+                    In the case of the 1-norm k · k , i.e. p = 1, in (3.3), analytic expressions for the eigenpairs of
+                                                    1
+                the covariance operator are available. Following e.g. [11], we get for d = 1, D = (0,1) and σ2 = 1
+                in (3.3):
+                                            θ1D =      2λ    ,     n∈N,
+                                             n       2 2
+                                                   λ w +1                                                         (3.5)
+                                                       n                         
+                                             1D
+                                        b (x)   =A sin(w x)+λw cos(w x) ,               n∈N,
+                                         n           n       n        n       n
+                where {w }       are the (real) solutions of the transcendental equation
+                          n n∈N
+                                                         tan(w) =     2λw ,
+                                                                     2  2
+                                                                   λ w −1
+                                                                                                      2
+                and the constant A is chosen so that kb k            =1. For d = 2, and D = (0,1) the eigenpairs
+                                     n                     n L (0,1)
+                                                               2
+                can then be expressed as
+                                2D     1D 1D           2D        1D      1D
+                               θ   =θ θ         and b (x)=b (x )b (x ), for some i ,j ∈N.
+                                n      i   j           n         i    1  j    2               n n
+                                        n   n                     n       n
+                    For σ2 diﬀerent to 1, the eigenfunctions are the same as above and the eigenvalues (both in 1D
+                and 2D) are simply multiplied by σ2. In the (practically more realistic) case p = 2 and for many
+                other covariance functions, eﬃcient ways to compute KL-expansions using multipole or matrix
+                compression techniques can be found in [21, 18, 10].
+                    In practice we have to truncate the expansion (3.4) after a ﬁnite number mKL of terms. Let
+                Z      denote the KL-expansion of Z truncated after m         terms. Since {ξ }       is a sequence of
+                  m                                                        KL                  n n∈N
+                   KL
+                i.i.d. standard Gaussian random variables and kbnk           =1, the accuracy of the truncated KL-
+                                                                       L (D)
+                                                                        2
+                expansion depends directly on the decay of the eigenvalues θn. With the kernel function C(x,y) in
+                (3.3) the covariance operator is self-adjoint, non-negative and compact, which implies that it has
+                a countable sequence of real, non-negative eigenvalues that tend to 0. Furthermore it is of trace
+                class, i.e. the sum of all eigenvalues is ﬁnite. In order to decide how many modes to include we
+                make the following observations. (They follow easily from (3.5) in the case p = 1 for our model
+                problem; more details on the general case can be found in [21].)
+                    • The eigenvalues θn decay quadratically with respect to n, e.g. θn . n−2.
+                    • If λ < diam(D), then there is a pre-asymptotic phase where the KL-eigenvalues do not decay
+                      signiﬁcantly. This is clearly visible in the left plot in Figure 1.
+                    • Moreover                              ∞
+                                                           Xθn=σ2meas(D).                                         (3.6)
+                                                           n=1
+                      where meas(D) := RDdx (see e.g. [10]).
+                                                                   9
+                             0                                                                         0                                                          
+                           10                                                                        10
+                                                                               λ=0.01                                                                    λ=0.01
+                                                                               λ=0.1                                                                     λ=0.1
+                             −2                                                λ=1                                                                       λ=1
+                           10
+                                                                                                       −1
+                         θn                                                                          10
+                             −4
+                           10
+                         eigenvalue                                                                    −2
+                                                                                                     10
+                             −6
+                           10
+                                                                                                    Relative error in quantity of interest
+                             −8                                                                        −3 
+                           10   0                 1                  2                  3            10          1                       2                        3
+                             10                 10                 10                10                        10                      10                      10
+                                                          n                                                                         n
+                       Figure 1: Left: Plot of the KL eigenvalues in decreasing order as a function of their index, for
+                       diﬀerent choices of the correlation length λ and for d = 1. Right: Corresponding relative error (or
+                                                                       
+                                                                       
+                       bias)      E[k (Z)] − E[k (Z                  )] /E[k      (Z)] in a typical quantity of interest (here the eﬀective
+                                       eﬀ                eﬀ     m              eﬀ
+                                                                  KL
+                       hydraulic conductivity k               deﬁned in Section 4) as a function of the number of KL modes included.
+                                                          eﬀ
+                            The identity (3.6) can be used in practice to ensure that a suﬃcient fraction of the variance is
+                       captured by the ﬁrst mKL terms. This is what we did in our numerical experiments later. In order
+                       to get an idea about the error resulting from truncating the KL–expansion, note ﬁrst that
+                                            h                          i        "       ∞                                  #           ∞
+                                                               2                       X p                         2                  X
+                                         E kZ−Z               k          =E                        θ ξ (ω)b                   =                θ
+                                                        m                                             n n         n                               n
+                                                          KL L (D)
+                                                                 2                                                    L (D)
+                                                                                    n=m +1                              2           n=m +1
+                                                                                          KL                                              KL
+                       Since θ = O(n−2), this implies that the RMSE of Z                                     in the L (D)–norm is O(m−1/2). It is
+                                 n                                                                    m                   2
+                                                                                                         KL                                           KL
+                       knownthat the error in the expected value of functionals of the solution resulting from a truncation
+                       of the KL-expansion usually decays more rapidly (see e.g. [4]). Indeed, our numerical computations
+                       show that the expected value of a typical quantity of interest, i.e. the eﬀective hydraulic conduc-
+                       tivity k      deﬁned in (4.1) in Section 4, decays like O(m−1) in 1D (cf. Figure 1, right, in which the
+                                 eﬀ                                                                     KL
+                       reference value E[k           (Z)] is evaluated using 5000 KL modes). However, in absolute terms, even in
+                                                  eﬀ
+                       1D and especially for short correlation lengths λ, a very large number of KL-modes needs to be
+                                                                                                              −2
+                       included to achieve even just a relative error (or bias) of 10                            .
+                       3.3      Spatial discretisation
+                       The particular choice of spatial discretisation scheme is not essential to the multilevel MC ap-
+                       proach. However, many quantities of interest in subsurface ﬂow depend on an accurate and mass-
+                       conservative representation of the ﬂux q, and so in this context ﬁnite volume (FV) or mixed ﬁnite
+                       elements (FEs) are usually preferred over standard Lagrange FEs. For a short and simple descrip-
+                       tion and a fast implementation of mixed FEs applied to our model problem see eg. [6] or [15]. In
+                       this paper we will describe and use a standard cell-centred FV method instead.
+                            Let us brieﬂy describe our discretisation for d = 2. The one-dimensional case is analogous. We
+                                                            2
+                       start by subdividing [0,1] uniformly into a mesh of m×m square cells and denote by D                                                 the cell
+                                                                                                                                                        i,j
+                       (i−1, i )×(j−1, j ) with i,j = 1,...m, and by x                            its centre. To discretise (3.2) we integrate (3.2)
+                         m m             m m                                                  i,j
+                                                                                             10
+                         over each cell to obtain a set of m2 algebraic equations
+                                                                Z      −∇·(k∇p)=Z                       f ,         for all 1 ≤ i,j ≤ m.                                           (3.7)
+                                                                  Di,j                           Di,j
+                         Then, using the Divergence Theorem, we transform the left hand side integral into a boundary
+                         integral R∂D −k∇p·n and approximate all the resulting integrals in (3.7) by quadrature.
+                                             i,j
+                               Let k         and f         be the values of k and f at x , respectively, and let p                                        denote our approxi-
+                                        i,j           i,j                                                  i,j                                       i,j
+                         mation to p at x . Then the right hand side in (3.7) can be approximated by the midpoint rule as
+                                                    i,j
+                         f /m2. Toapproximate the left hand side we treat each edge of ∂D                                                   separately. The contribution
+                           i,j                                                                                                          i,j
+                         from the edge between D                      and D              can be approximated again by the midpoint rule, and as it is
+                                                                  i,j            i+1,j
+                         customary in subsurface ﬂow applications, we use the harmonic average k                                                      1    of k       and k            to
+                                                                                                                                                  i+ ,j          i,j           i+1,j
+                                                                                                                                                      2
+                         approximate k on the edge. To approximate ∇p·n on the edge we use the central ﬁnite diﬀerence
+                         (p          −p )/|x                −x |. The contributions from the other edges are approximated similarly,
+                             i+1,j        i,j       i+1,j          i,j
+                         leading to the following ﬁnal form of the (i,j)th equation:
+                                            −k         1p         −k 1 p                  +Σ p −k 1 p                            −k         1p          =f /m2                     (3.8)
+                                                 i,j−2 i,j−1            i−2,j i−1,j             i,j  i,j       i+2,j i+1,j            i,j+2 i,j+1             i,j
+                         where Σi,j = ki,j−1 +ki−1,j +ki+1,j +ki,j+1.
+                                                       2           2              2               2
+                               ANeumannboundarycondition, i.e. a prescribed ﬂux −k∇p·n = g , on any part of the outer
+                                                                                                                                              N
+                                                       2
+                         boundary of (0,1) is straightforward to incorporate. We simply replace the respective ﬂux term
+                         on the left hand side of (3.8) by g (x                             1   )/m (again obtained via the midpoint rule). To enforce
+                                                                                N m+ ,j
+                                                                                            2
+                         a Dirichlet boundary condition, i.e. a prescribed pressure p = g , we simply replace the harmonic
+                                                                                                                                  D
+                         average on the respective edge by k                            and the central diﬀerence by a one-sided diﬀerence.
+                                                                                    i,j
+                               Theresulting linear system takes the standard ﬁve-point stencil form. It is sparse and highly ill-
+                         conditioned, but it can be solved eﬃciently and robustly either with algebraic multigrid methods
+                         [22] or a sparse direct solver. The solution is an M = m2 dimensional vector XM containing
+                         approximations p                 of the pressure p at the points x                      , i, j = 1,...m. Typical quantities of interest
+                                                      i,j                                                     i,j
+                         QM =G(XM)to derive from this solution vector will be discussed in the next section.
+                               For the MLMC method we need a sequence of such spatial approximations to construct our
+                                                                                                                          ℓ
+                         levels. We choose a coarsest mesh size m0 and set mℓ = 2 m0, for all ℓ ∈ N. Then the mesh size
+                         on level ℓ is h = m−1 and the length of the random vector XM is M = m2.
+                                                ℓ         ℓ                                                                       ℓ         ℓ         ℓ
+                         4        Numerical Results
+                         In this section we examine the performance of the MLMC method in computing the expected values
+                         of some quantities of interest for our model problem in 1D and 2D. In particular, we consider (3.2)
+                                               2
+                         on D = (0,1) with f ≡ 0 and subject to the boundary conditions
+                                                                                                           ∂p                           ∂p
+                                                      p|         =1,            p|         =0,                          =0,                          =0,
+                                                         x1=0                      x1=1                    ∂n                          ∂n
+                                                                                                                 x2=0                          x2=1
+                         and the corresponding ODE in 1D with p(0) = 1 and p(1) = 0. To discretise our model problems
+                         in space we use the ﬁnite volume method described in the previous section.
+                               The statistics of several functionals of the solution are commonly of interest, e.g. the variance
+                         of the pressure or of the ﬂow rate at a certain point in the domain, or the average travel time of a
+                                                                                                        11
+               particle convected in the ﬂuid. Here we will mainly focus on the expected value of the cumulative
+               outﬂow from the region D on the boundary x1 = 1. This is related to the eﬀective (horizontal)
+               conductivity of the region D (see e.g. [15]) which is deﬁned as
+                                                           Z 1  ∂p 
+                                                  k   := −    k         dx .                              (4.1)
+                                                   eﬀ           ∂x        2
+                                                            0     1 x1=1
+               In addition, we will also look at the horizontal ﬂux −k ∂p at the centre of the domain.
+                                                                     ∂x1
+                   To quantify the cost of the algorithms in the ﬁgures below, we assume that the number of
+               operations to compute one sample on level ℓ is C = C∗Mγ for some ﬁxed constant C∗ that may
+                                                               ℓ         ℓ
+               depend on λ and σ2 but is independent of ℓ. In the case of 1D we have γ = 1. In 2D, for an optimal
+               iterative linear solver such as algebraic multigrid we also have γ ≈ 1. A sparse direct solver on the
+               other hand, such as the one provided by Matlab through the backslash operation, will usually be
+               slightly suboptimal in 2D, but will have at worst γ = 1.5. In the results presented below, unless
+               otherwise stated, we always present the standardised costs, scaled by 1/C∗, and assume γ = 1.
+                   Therelative performance of the individual methods is very similar if actual CPU times are used
+               instead (see Figure 7). However, since our code is not optimised, we did not want to use these to
+               assess the performance directly.
+               4.1    Results in 1D
+               Let us start by solving the 1D version of (3.2) on D = (0,1) with boundary conditions p(0) = 1 and
+               p(1) = 0, and choose as the quantity of interest Q = −k∂p|    . We will ﬁrst numerically conﬁrm
+                                                                       ∂x x=1
+               the assumptions in Theorem 2.1, and estimate values of the parameters α and β . We also conﬁrm
+               the predicted bound on the cost of the MLMC estimator.
+                   Figure 2 shows results for the case λ = 0.3, σ2 = 1, mKL = 800 and m0 = 16. The top left plot
+               shows the behaviour of the variance of Qℓ and of Yℓ = Qℓ −Qℓ−1 for each level ℓ. The slope of the
+                                                                                   2      −2
+               line for V[Yℓ] is approximately equal to −2, indicating that V[Yℓ] . h h M   , or β ≈ 2. We also
+                                                                                   ℓ      ℓ
+               see that V[Qℓ] is approximately constant on all levels shown, numerically verifying the assumption
+               made in Section 2.1 for large enough values of M. The top right plot shows the expected value
+               of Qℓ and of Yℓ = Qℓ − Qℓ−1. The slope of the line for E[Qℓ − Qℓ−1] is roughly equal to −1.75,
+                                             1.75    −1.75
+               indicating that E[Q−Qℓ] . h      hM        , or α ≈ 1.75.
+                                             ℓ       ℓ
+                   The bottom two plots are related to the implementation of the MLMC algorithm and to its
+               cost. The left plot shows the number of samples Nℓ used on each level, and the right plot shows a
+               comparison of the cost of standard MC with the cost of MLMC. Note that the MLMC algorithm
+               does not only result in large savings in the computational cost, but that the cost of the MLMC
+               estimator also grows more slowly than the cost of the standard MC estimator as ε → 0.
+                   Before moving on to 2D, we brieﬂy return to the point made in Section 2.2 about the choice
+               of the mesh size h = m−1 on the coarsest level. As we see in the top left plot of Figure 2, for
+                                  0     0
+               large values of h , the variances of Q and Y are close. Increasing h even further, the two graphs
+                               ℓ                   ℓ      ℓ                       ℓ
+               will eventually cross, and V[Yℓ] will be larger than V[Qℓ]. In this situation, the contributions to
+               the cost of the MLMC method from level ℓ will actually be bigger than those using standard MC,
+               rendering any further coarsening useless. It turns out that the two graphs cross when h ≈ λ. It is
+                                                                                                     ℓ
+               in fact also at this same point h ≈ λ where V[Q ] ceases to be constant. Thus, the optimal choice
+                                              ℓ                ℓ
+               for the coarsest level is such that h is slightly smaller than λ.
+                                                  0
+                                                              12
+                                    0                                  0                           
+                                   −5                                 −5
+                                variance−10                        |mean|−10
+                                2                                  2
+                               log            Q                   log             Q
+                                  −15           l                   −15            l
+                                              Q− Q                                Q− Q
+                                                l  l−1                             l   l−1
+                                  −20                               −20 
+                                     0         2         4              0         2          4
+                                                level l                            level l
+                                                                                                   
+                                                    ε=0.00005                             Std MC
+                                                    ε=0.0001           2                  MLMC
+                                    10              ε=0.0005         10
+                                 10                 ε=0.001
+                               Nl
+                                                                  2 Cost
+                                                                   ε
+                                                                       0
+                                    5                                10
+                                 10
+                                                                               −4                  −3
+                                     0         2         4                   10                 10
+                                                level l                          accuracy ε
+                Figure 2: Performance plots for λ = 0.3, σ2 = 1, mKL = 800 and m0 = 16 in 1D. The quantity of
+                interest is the outﬂow −k∂p at x = 1.
+                                          ∂x
+                4.2   Results in 2D
+                As in 1D we choose λ = 0.3 and σ2 = 1, but we set m0 = 8 and include mKL = 1400 KL-modes.
+                The quantity of interest is the eﬀective hydraulic conductivity k   deﬁned in (4.1). We start again
+                                                                                 eﬀ
+                by numerically estimating the rates α and β for Theorem 2.1 and by comparing the costs of the
+                MLMC method to standard MC. Figure 3 is similar to Figure 2 for 1D. The top two plots give
+                                                                                                           2     −1
+                graphs of the variances and the expected values of Qℓ and Yℓ. They suggest that V[Yℓ] . h h M
+                                                               −0.875                                      ℓ     ℓ
+                                                     1.75
+                and thus β ≈ 1, and E[Q − Q ] . h         hM        , or α ≈ 0.875. Note that in terms of M the
+                                               ℓ     ℓ         ℓ                                               ℓ
+                rates are exactly 1/2 those in 1D. In terms of h they are the same. In the bottom right plot, the
+                                                                 ℓ
+                savings of the MLMC algorithm over standard MC are again considerable.
+                   We now take a step away from Theorem 2.1, and analyse the gains of introducing diﬀerent
+                numbers of levels in the MLMC algorithm in more detail. First in Figure 4, we ﬁx the standard
+                                                      bML
+                deviation of our multilevel estimator QM    (i.e. the sampling part of the error in (2.8)), and study
+                how the computational cost of the MLMC method grows with grid size M = m2 for various
+                                                                                                      L
+                numbers L of levels. It is very clearly visible that the multilevel methods outperform standard MC
+                dramatically. Note that the cost to estimate E[QL] to the required accuracy on a (ﬁnest) grid of
+                                                                 13
+                                       0                                     0                             
+                                      −5                                    −5
+                                   variance                               |mean|2
+                                   2 −10                                 log−10
+                                  log             Q                                     Q
+                                                   l                                      l
+                                                  Q− Q                                  Q− Q
+                                                   l   l−1                                l  l−1
+                                     −15                                   −15 
+                                        0      1      2      3      4         0      1      2      3      4
+                                                    level l                               level l
+                                                                                                           
+                                                           ε=0.005                                Std MC
+                                                           ε=0.001           2                    MLMC
+                                       10                                  10
+                                    10                     ε=0.0005
+                                  Nl                       ε=0.0003
+                                                                        2 Cost
+                                       5                                 ε
+                                    10
+                                                                             0
+                                                                           10
+                                                                                           −3
+                                        0      1      2      3      4                    10
+                                                    level l                             accuracy ε
+                 Figure 3: Performance plots for λ = 0.3, σ2 = 1, mKL = 1400 and m0 = 8 in 2D. The quantity of
+                 interest is the eﬀective hydraulic conductivity k       deﬁned in (4.1).
+                                                                      eﬀ
+                 size mL = 32 with standard MC is about the same as that of the 4–level method on a grid of size
+                 mL=128. Intheleft plot in Figure 4 we use γ = 1 (typical for an optimal iterative method such as
+                 AMG),whereas in the right plot we use γ = 1.5 (worst case for a sparse direct solver). We see that
+                 the gain is actually larger in the second case. For example, on the ﬁnest mesh with mL = 128, the
+                 ratio of the costs of standard MC and the MLMC method with 4 levels is 67 for γ = 1.5, whereas
+                 this ratio is only 20 for γ = 1.
+                     In Figure 5, we keep the spatial discretisation on the ﬁnest level mL ﬁxed and study how the
+                 computational cost grows as the tolerance on the required standard deviation of the estimator is
+                 decreased (using γ = 1). We can see in the left plot that for Q = k       thestandardMCestimatoronly
+                                                                                        eﬀ
+                                                             −4
+                 achieves a standard deviation of 3.7×10        for approximately the same cost as the MLMC estimator
+                                                                                 −5
+                 with 4 levels needs to reach a standard deviation of 7×10          which is below the discretisation error
+                 on that grid. More than 20 times more computational work is needed with standard MC to achieve
+                 a standard deviation that is smaller than the discretisation error. Again this gain is bigger if we
+                 assume γ = 1.5 in our cost model. In the right plot in Figure 5 we show that a similar behaviour
+                 is observed for other quantities of interest, such as the horizontal ﬂux −k ∂p at the centre of the
+                                                                                                    ∂x1
+                 domain. Note however that there seems to be not much gain in including a 4th level in this case.
+                 This is related to the fact discussed at the end of Section 4.1. In Figure 6 we see that indeed the
+                 graphs of V[Qℓ] and V[Yℓ] are very close for mℓ = 8 in this case. We also observe that the rate of
+                                                                      14
+                                                                                                                                           
+                          12       Standard MC                                          12       Standard MC
+                        10         2 level MC                                         10         2 level MC
+                                   3 level MC                                                    3 level MC
+                                   4 level MC                                                    4 level MC
+                          10                                                            10
+                        10                                                            10
+                       Standardised cost                                             Standardised cost
+                          8                                                             8
+                        10                                                            10
+                                     1                           2                                 1                           2
+                                   10                          10                                10                          10
+                                    m (number of nodes in one direction)                          m (number of nodes in one direction)
+                                      L                                                             L
+                                                                                        ∗                                                    −3
+                    Figure 4: Plots of the standardised cost (scaled by 1/C ) versus mL for a ﬁxed tolerance of δ = 10
+                    for the maximumstandarddeviation of the MLMCestimator forE[k ]forλ = 0.3, σ2 = 1, mKL =
+                                                                                                         eﬀ
+                    1400 assuming γ = 1 (left plot) and γ = 1.5 (right plot).
+                          −2                                                            −2                                                 
+                        10                                                            10
+                                                                Standard MC                                                   Standard MC
+                                                                2 level MC                                                    2 level MC
+                                                                3 level MC                                                    3 level MC
+                                                                4 level MC                                                    4 level MC
+                          −3                                                            −3
+                        10                                                            10
+                       Standard deviation of estimator−4                             Standard deviation of estimator−4
+                        10                                                            10
+                             7        8         9        10        11       12              7       8         9        10        11       12
+                          10        10        10       10        10       10            10        10        10       10        10       10
+                                            Standardised cost                                             Standardised cost
+                                                                                                                             bML
+                    Figure 5: Same test case as in Figure 4. Standard deviation of the MLMC estimator QL                           versus the
+                    standardised computational cost for ﬁxed mL = 128. The horizontal line represents the estimated
+                    spatial discretisation error on this grid. Quantities of interest: E[k                 ] (left plot) and Eh−k ∂p i at
+                                                                                                        eﬀ                             ∂x1
+                    the centre of the domain (right plot).
+                                                                                15
+                                                   bMC                bML               bMC                            bMC                bML                 (i)
+                                         d C(QM )                C(QM )             C(Q1 )                   d C(QM )                C(QM )             C(QM)
+                                                  −18/7               −2                 −2                           −10/3          −2           2        −4/3
+                                         1      ε                    ε                 ε                     1      ε              ε     (logε)          ε
+                                                  −22/7          −2           2          −2                           −14/3             −10/3              −8/3
+                                         2      ε              ε     (logε)            ε                     2      ε                  ε                 ε
+                                                  −26/7             −18/7                −2                             −6              −14/3               −4
+                                         3      ε                  ε                   ε                     3        ε                ε                   ε
+                        Table 1: Predicted asymptotic order of cost to achieve a RMSE of ε from Theorem 2.1 in the case
+                        of γ = 1, α = 1.75/d and β = 2/d (left table) and γ = 1, α = 0.75/d and β = 1/d (right table)
+                                                                 bMC                                  bML
+                        for the standard MC (C(QM )) and MLMC (C(QM )) estimators. In the left table we compare
+                                                  bMC
+                        with the cost C(Q1               ) to obtain a RMSE of ε with the standard MC estimator for a single random
+                        variable, i.e. M = 1. In the right table we compare with the cost C(Q(i)) to obtain one sample on
+                                                                                                                                       M
+                        the ﬁnest grid.
+                        decay for V[Yℓ] and E[Yℓ] is smaller for this quantity of interest, α ≈ 0.375 and β ≈ 0.5 here.
+                              Finally in Figure 7 we give some actual CPU times for a slightly harder test case, i.e. λ =
+                        0.1, σ2 = 1, mKL = 500 and Q = k . These were obtained with our Matlab implementation on
+                                                                                  eﬀ
+                        a 3GHz Intel Core 2 Duo E8400 processor with 3.2GByte of RAM using the sparse direct solver
+                        provided in Matlab through the standard backslash operation to solve the linear systems for each
+                        sample. The value for γ we observed numerically in this case was 1.2 in 2D. We see that even with
+                                                                                                                                            bML                            −3
+                        our non-optimised implementation it is possible to obtain a RMSE for QM of less than 10                                                                 in
+                        just over 100 seconds. In the right plot in Figure 7 we further see that the advantage of the MLMC
+                        method is not restricted to computing expected values, but is just as apparent when computing
+                        the second order moment of quantities of interest.
+                        5       Conclusions and Further Work
+                        With the numerically observed values for α and β in the previous section (cf. Figures 2, 3 and 6) it
+                        is possible also to compare the theoretically predicted costs given by Theorem 2.1 for each of the
+                        two quantities of interest we studied and we do this in Table 1. This allows us also to project the
+                        expected gains of the MLMC method over the standard MC method to 3D. The numerical results
+                        above suggest that α ≈ 1.75/d and β ≈ 2/d for Q = k , where d = 1,2,3 is the spatial dimension.
+                                                                                                             eﬀ
+                        For the ﬂux at the centre of the domain α ≈ 0.75/d and β ≈ 1/d.
+                              WeseefromTable1thatasymptotically the MLMC leads to a huge improvement over standard
+                        MCfor both quantities of interest. In cases where the variance of Yℓ decays relatively rapidly, as
+                        is the case for Q = k                , then a relatively large portion of the computational eﬀort is spent on the
+                                                         eﬀ
+                        coarse grids. Indeed, if we would have β > γ in d = 1,2,3, then the MLMC method would have
+                                                                                  −2
+                        a cost that is of asymptotic order ε                          .   Note that this is the same asymptotic cost as applying
+                        standard MC to a problem with only one random variable, i.e. M = 1. We see in the left table in
+                        Table 1 that the cost of MLMC estimator for Q = k                                      does indeed have an asymptotic order close
+                                                                                                           eﬀ
+                              −2
+                        to ε      , for d = 1,2,3.
+                              When the variance of Yℓ decays more slowly, on the other hand, as is the case for the ﬂux at
+                        the centre of the domain, then a relatively large portion of the computational eﬀort is spent on the
+                        ﬁnest grid. We would like to point out here that if we are in the situation that β < γ for d = 1,2,3
+                                                                                                                                                                  −γ/α
+                        and β = 2α, then the MLMC method has a cost that asymptotically is of the order ε                                                                .  Note
+                                                                                                    16
+                                              5                                             5                                    
+                                              0                                             0
+                                         variance−5                                    |mean|−5
+                                          2                                             2
+                                        log                                           log
+                                           −10                                           −10
+                                                            Q                                             Q
+                                                              l                                             l
+                                                            Q− Q                                          Q− Q
+                                                              l    l−1                                      l    l−1
+                                           −15                                           −15 
+                                                0                2                4           0                2               4
+                                                              level l                                       level l
+                     Figure 6: Plots of V[Qℓ] and V[Yℓ] (left plot), as well as E[Qℓ] and E[Yℓ] (right plot) in the case
+                     λ=0.3, σ2 = 1, m              =1400 in 2D, with m = 4 and Q = −k ∂p at the centre of the domain.
+                                              KL                                0                        ∂x1
+                            5
+                          10                                                                −2                                                    
+                                    2level MC                                             10                                        Standard MC
+                                    3 level MC                                                                                      2 level MC
+                            4       4 level MC                                                                                      3 level MC
+                          10        5 level MC                                                                                      4 level MC
+                                    Standard MC
+                            3
+                          10
+                         CPU−time (seconds)2
+                          10                                                                −3
+                                                                                          10
+                                                                                         Standard deviation of estimator
+                            1
+                          10   1                            2                                  
+                            10                           10                                      1             2             3             4
+                                      m (number of nodes in one direction)                     10            10            10            10
+                                        L                                                                      CPU−time (seconds)
+                     Figure 7: Same plots as in Figures 4 and 5 for λ = 0.1, σ2 = 1, mKL = 500, but using actual
+                     CPUtime in seconds to quantify the cost (Matlab implementation running on a 3GHz Intel Core
+                     2 Duo E8400 processor with 3.2GByte of RAM). Left plot: E[k ], with ﬁxed maximum standard
+                                                                                                         eﬀ
+                                     −3                        2
+                     deviation 10       . Right plot: E[k        ], with mL = 256.
+                                                               eﬀ
+                                                                                    17
+                 that this is proportional to the cost of obtaining one sample on the ﬁnest grid and thus to solving
+                 a deterministic PDE to the same accuracy ε. For the horizontal ﬂux −k ∂p at the centre of the
+                                                                                                ∂x1
+                 domain, we do not quite have β = 2α, but we see in the right table in Table 1 that the asymptotic
+                 order of the cost of the MLMC estimator is indeed close to that of the cost of obtaining one sample
+                 on the ﬁnest grid.
+                    To conclude, in this paper we successfully applied the MLMC algorithm to elliptic PDEs with
+                 randomcoeﬃcients. Thenumericalresultsclearly showtheadvantage ofusingtheMLMCestimator
+                 over a standard MC estimator for this type of model problem for several quantities of interest. They
+                 further show that the gain of the MLMC estimator is not limited to smooth or easy problems. The
+                 improvements are in fact even more pronounced when the linear solver is not quite optimal (γ > 1),
+                 or in cases where the discretisation error is large (α and β are small).
+                    There was nothing special about our choice of uniform grids and isotropic model problems. The
+                 MLMCestimator is expected to perform equally well on locally reﬁned grids and for anisotropic
+                 problemsprovidedasuitable hierarchy of grid levels can beconstructed. The numerical experiments
+                 suggest ways to further improve the performance of the MLMC algorithm. Firstly, as discussed,
+                 in order to choose the coarse level M independent of λ it would be better to choose smoother
+                                                          0
+                 approximations of the random ﬁeld on the coarse meshes, e.g. by truncating the KL-expansion
+                 earlier. This will not aﬀect the asymptotic order of the cost as ε → 0, but it would lead to larger
+                 gains of MLMC over standard MC for a ﬁxed tolerance ε. A way to improve the asymptotic order
+                 of convergence of the MLMC method may be the use of a diﬀerent estimator on each of the levels,
+                 such as a randomised quasi–Monte Carlo estimator [14, 15].
+                    This paper has not addressed the challenges of numerical analysis, but the assumptions of Theo-
+                 rem2.1 have recently been veriﬁed theoretically for certain quantities of interest in the context of ﬁ-
+                 nite          element           spatial           discretisations          in          [1]          and
+                 [5]. The former considers coeﬃcient ﬁelds k ∈ W1,∞ that are bounded uniformly from above
+                 and away from zero. The latter analyses the more challenging case studied in this paper, where k
+                 is not uniformly bounded and is only in C0,η, with η < 1/2.
+                 A Proof of the generalised multilevel Monte Carlo Theorem 2.1
+                 Let us denote the hidden constants in Assumptions i), ii) and iii) by c , c and c , respectively.
+                                                                                              1   2       3
+                 Recall that we assume that
+                                                 M =sM ,             for all ℓ = 1,...,L,
+                                                   ℓ       ℓ−1
+                 for some s ∈ N\{1}, cf (2.4). Without loss of generality, we shall also assume that M = 1. If this
+                                                                                                            0
+                 is not the case, this will only scale the constants c , c and c .
+                                                                      1   2      3
+                    Note also that since standard Monte Carlo estimators are unbiased, we have
+                                                    b     ( E[QMℓ],              ℓ = 0
+                                                  E[Yℓ] =                                                           (A.1)
+                                                             E[QMℓ −QMℓ−1], ℓ > 0
+                    Then, using the notation ⌈x⌉ to denote the unique integer n satisfying the inequalities x ≤ n <
+                 x+1, we start by choosing L to be
+                                             l −1       √      −1 m        −1      √      −1
+                                        L= α log ( 2c ε ) < α log ( 2c ε )+1                                        (A.2)
+                                                      s      1                   s     1
+                                                                    18
+                        so that                                                        ε                               ε
+                                                                                s−α√ < c s−αL ≤ √ ,                                                                        (A.3)
+                                                                                         2          1                    2
+                                                                                                                        
+                                                                                                      bML                  2      1 2              1 2
+                        and hence, due to (A.1) and assumption i),                               E[QM ]−E[Q]                  ≤ 2 ε . This 2ε upper bound on
+                                                                                                    1 2
+                        the square of the bias error, together with the 2ε upper bound on the variance of the estimator
+                                                                      2
+                        to be proved later, gives an ε upper bound on the estimator MSE.
+                              Using the left-hand inequality in (A.3), we obtain the following inequality which will be used
+                        later,                                                                               √
+                                                                    L                     γL              γ            γ/α
+                                                                   X                    s               s ( 2c )
+                                                                          γℓ                                        1            −γ/α
+                                                                         s      < 1−s−γ <                    1−s−γ             ε        .                                  (A.4)
+                                                                   ℓ=0
+                              We now need to consider the diﬀerent possible values for β.
+                                                                         −2                   −βℓ
+                              a) If β=γ, we set N = 2ε                        (L+1)c s                 so that
+                                                              ℓ                            2
+                                                                                   L                    L
+                                                                   bML            X b                  X −1−βℓ                        1 2
+                                                               V[Q        ]  =          V[Y ] ≤              c N s               ≤ ε,
+                                                                     M                       ℓ                2    ℓ                  2
+                                                                                  ℓ=0                  ℓ=0
+                        which is the required upper bound on the variance of the estimator. Since
+                                     −2                   −βℓ
+                        N ≤2ε (L+1)c s                          +1, the computational complexity is bounded by
+                           ℓ                          2
+                                                                              L                                                          L        !
+                                                           bML               X γℓ                             −2            2          Xγℓ
+                                                       C(Q        ) ≤ c            N s        ≤ c         2ε (L+1) c +                       s
+                                                             M             3          l              3                          2
+                                                                             ℓ=0                                                       ℓ=0
+                                      −1                                   −1            −γ/α          −2        −2            2                  1
+                        For ε<e           <1wehave 1<logε                       and ε            ≤ε ≤ε (logε) since α ≥ 2γ. Hence, using the
+                                                                                                      bML            −2           2
+                        inequalities in (A.2) and (A.4), it follows that C(QM ) . ε                                     (logε) .
+                                                                       l     −2               −(β−γ)/2−1 −(β+γ)ℓ/2m
+                              b) For β>γ, we set N = 2ε                           c    1−s                       s                  so that
+                                                                 ℓ                 2
+                                                           L                                               L
+                                                         X b                  1 2             −(β−γ)/2         X−(β−γ)ℓ/2                   1 2
+                                                               V[Yℓ] ≤ 2 ε             1−s                           s                 < 2ε .
+                                                         ℓ=0                                                   ℓ=0
+                        Since                                                                               
+                                                                              −2                −(β−γ)/2 −1 −(β+γ)ℓ/2
+                                                                 N <2ε c 1−s                                       s                +1,
+                                                                    ℓ               2
+                        the computational complexity is bounded by
+                                                                                                                                 L        !
+                                                                bML                    −2                −(β−γ)/2 −2             Xγl
+                                                           C(Q        ) ≤ c        2ε       c     1−s                       +          s       .
+                                                                  M           3              2
+                                                                                                                                 l=0
+                                               −1                      −γ/α          −2                                                                        bML             −2
+                        Again for ε<e              <1wehaveε                    ≤ε andhenceduetoinequality(A.4)wehaveC(QM ). ε .
+                                                                       l     −2       (γ−β)L/2             −(γ−β)/2−1 −(β+γ)ℓ/2m
+                              c) For β<γ, we set N = 2ε                         c s                  1−s                      s                 , so that
+                                                                 ℓ                2
+                                                   L                                                                L
+                                                  X b                  1 2 −(γ−β)L/2                   −(γ−β)/2         X(γ−β)ℓ/2                  1 2
+                                                        V[Yℓ] < 2 ε s                            1−s                          s               < 2ε .
+                                                  ℓ=0                                                                   ℓ=0
+                                                                                                    19
+                                                              
+                                 −2    (γ−β)L/2      −(γ−β)/2 −1 −(β+γ)ℓ/2
+                Since N < 2ε       c s           1−s              s          +1, the computational complexity is
+                        ℓ           2
+                bounded by
+                                                                                L               L     !
+                             bML               −2     (γ−β)L/2      −(γ−β)/2 −1X (γ−β)ℓ/2        Xγℓ
+                          C(Q    )   ≤ c 2ε c s                 1−s                  s        +      s
+                               M         3         2
+                                                                                 ℓ=0     !       ℓ=0
+                                                                                  L
+                                               −2     (γ−β)L       −(γ−β)/2 −2    Xγℓ
+                                     ≤ c 2ε c s               1−s              +      s    .
+                                         3         2
+                                                                                   ℓ=0
+                                                                 √
+                                                      (γ−β)L          (γ−β)/α γ−β −(γ−β)/α                   −1
+                Using the ﬁrst inequality in (A.3), s        <     2c          s    ε         . Also, for ε<e    <1
+                                                                     1
+                          −γ/α      −2−(γ−β)/α             1                                                 bML
+                we have ε       ≤ε             since α ≥ 2β. Hence, due to inequality (A.4), we have C(QM ) .
+                 −2−(γ−β)/α
+                ε           .
+                References
+                 [1] A. Barth, C. Schwab, and N. Zollinger. Multi–level Monte Carlo ﬁnite element method for
+                     elliptic PDE’s with stochastic coeﬃcients. Numer. Math., Online First, 09 April 2011.
+                 [2] A. Brandt, M. Galun, and D. Ron. Optimal multigrid algorithms for calculating thermody-
+                     namic limits. J. Stat. Phys., 74(1-2):313–348, 1994.
+                 [3] A. Brandt and V. Ilyin. Multilevel monte carlo methods for studying large scale phenomena
+                     in ﬂuids. J. Mol. Liq., 105(2-3):245–248, 2003.
+                 [4] J. Charrier. Strong and weak error estimates for the solutions of elliptic partial diﬀerential
+                     equations with random coeﬃcients. Technical Report HAL:inria-00490045, Hyper Articles en
+                     Ligne, INRIA, 2010. Available at http://hal.inria.fr/inria-00490045/en/.
+                 [5] J. Charrier, R. Scheichl, and A.L. Teckentrup. Finite element error analysis of elliptic pdes
+                     with random coeﬃcients and its application to multilevel monte carlo methods. Technical
+                     report, University of Bath, 2011. BICS Preprint 02/11.
+                 [6] K.A. Cliﬀe, I.G. Graham, R. Scheichl, and L. Stals. Parallel computation of ﬂow in heteroge-
+                     neous media using mixed ﬁnite elements. J. Comput. Phys., 164:258–282, 2000.
+                 [7] G. de Marsily. Quantitative Hydrogeology. Academic Press, 1986.
+                 [8] G. de Marsily, F. Delay, J. Goncalves, P. Renard, V. Teles, and S. Violette. Dealing with
+                     spatial heterogeneity. Hydrogeol. J, 13:161–183, 2005.
+                 [9] P. Delhomme. Spatial variability and uncertainty in groundwater ﬂow param- eters, a geosta-
+                     tistical approach. Water Resourc. Res., pages 269–280, 1979.
+                [10] O.G. Ernst, C.E. Powell, D.J. Silvester, and E. Ullmann. Eﬃcient solvers for a linear stochastic
+                     galerkin mixed formulation of diﬀusion problems with random data. SIAM J. Sci. Comput.,
+                     31(2):1424–1447, 1979.
+                [11] R.G. Ghanem and P.D. Spanos. Stochastic ﬁnite elements: a spectral approach. Springer-
+                     Verlag, New York, 1991.
+                                                                 20
+       [12] M.B. Giles. Improved multilevel Monte Carlo convergence using the Milstein scheme. volume
+         256 of Monte Carlo and Quasi-Monte Carlo methods 2006, pages 343–358. Springer, 2007.
+       [13] M.B. Giles. Multilevel Monte Carlo path simulation. Operations Research, 256:981–986, 2008.
+       [14] M.B. Giles and B.J. Waterhouse. Multilevel quasi-Monte Carlo path simulation. In Advanced
+         ﬁnancial modelling, volume 8 of Radon Ser. Comput. Appl. Math., pages 165–181. Walter de
+         Gruyter, Berlin, 2009.
+       [15] I.G. Graham, F.Y. Kuo, D. Nuyens, R. Scheichl, and I.H. Sloan. Quasi-monte carlo methods for
+         elliptic pdes with random coeﬃcients and applications. J. Comput. Phys., 230(10):3668–3694,
+         2011.
+       [16] S. Heinrich. Multilevel Monte Carlo methods. volume 2179 of Lecture notes in Computer
+         Science, pages 3624–3651. Springer, Philadelphia, PA, 2001.
+       [17] R.J. Hoeksema and P.K. Kitanidis. Analysis of the spatial structure of properties of selected
+         aquifers. Water Resour. Res., 21:536–572, 1985.
+       [18] O.G. Ernst M. Eiermann and E. Ullmann. Computational aspects of the stochastic ﬁnite
+         element method.
+       [19] O.P. Le Maˆıtre and O.M. Kino. Spectral Methods for Uncertainty Quantiﬁcation, With Appli-
+         cations to Fluid Dynamics. Springer-Verlag, 2010.
+       [20] G. Da Prato and J. Zabczyk. Stochastic equations in inﬁnite dimensions, volume 44 of Ency-
+         clopedia of Mathematics and its Applications. Cambridge University Press, Cambridge, 1992.
+       [21] C. Schwab and R.A. Todor. Karhunen-Lo`eve approximation of random ﬁelds by generalized
+         fast multipole methods. J. Comput. Phys., 217(1):100–122, 2006.
+       [22] P.S. Vassilevski. Multilevel Block Factorization Preconditioners: Matrix-based Analysis and
+         Algorithms for Solving Finite Element Equations. Springer-Verlag, 2008.
+       [23] D. Xiu. Numerical Methods for Stochastic Computations, A Spectral Method Approach. Prince-
+         ton University Press, 2010.
+                            21

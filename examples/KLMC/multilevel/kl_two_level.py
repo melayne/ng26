@@ -386,7 +386,7 @@ def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
     hierarchy = build_hierarchy(
         coarse_mesh,
         form_setup,
-        n_refines=3,
+        n_refines=1,
         order=1,
         dirichlet="left|right|top|bottom",
         dirichlet_value=0.0,

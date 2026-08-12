@@ -594,8 +594,8 @@ class MultigridHierarchy:
     levels: list[Level]
 
     def __post_init__(self) -> None:
-        if len(self.levels) < 2:
-            raise ValueError("A multigrid hierarchy needs at least 2 levels.")
+        if len(self.levels) < 1:
+            raise ValueError("A multigrid hierarchy needs at least one level.")
         if self.levels[0].P is not None or self.levels[0].PT is not None:
             raise ValueError("Coarsest level (index 0) must have P = PT = None.")
         for i, lvl in enumerate(self.levels[1:], start=1):
@@ -654,7 +654,7 @@ def build_hierarchy(
     form_setup
         ``setup(fes) -> (a, f)`` from ``build_form_setup``.
     n_refines
-        Number of refinements (>= 1); produces ``n_refines + 1`` levels.
+        Number of refinements (>= 0); produces ``n_refines + 1`` levels.
     order
         H1 polynomial order on every level.
     dirichlet
@@ -675,9 +675,13 @@ def build_hierarchy(
     Notes
     -----
     Each level assembles the same PDE on its mesh. Coarsest level has no ``P``/``PT``.
+
+    ``n_refines=0`` produces one level containing only the initial
+    coarse discretization. Each additional refinement adds one level.
     """
-    if n_refines < 1:
-        raise ValueError("n_refines must be >= 1.")
+   
+    if n_refines < 0:
+        raise ValueError("n_refines must be nonnegative.")
 
     working = ng.Mesh(coarse_mesh.ngmesh.Copy())
     levels: list[Level] = []

@@ -454,14 +454,14 @@ def parse_args() -> argparse.Namespace:
             "for example: --level-maxhs 0.30 0.15 0.075"
         ),
     )
-    parser.add_argument("--coefficient-grid-size", type=int, default=32)
-    parser.add_argument("--num-modes", type=int, default=100, dest="num_modes_2d")
+    parser.add_argument("--coefficient-grid-size", type=int, default=36)
+    parser.add_argument("--num-modes", type=int, default=1000, dest="num_modes_2d")
     parser.add_argument("--ell", type=float, default=0.30, dest="correlation_length")
     parser.add_argument("--sigma", type=float, default=1.0, dest="standard_deviation")
     parser.add_argument("--mean-log-kappa", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--minimum-samples", type=int, default=20)
-    parser.add_argument("--maximum-samples", type=int, default=30_000)
+    parser.add_argument("--maximum-samples", type=int, default=10000)
     parser.add_argument("--batch-size", type=int, default=10)
     parser.add_argument("--quiet", action="store_true")
     return parser.parse_args()
