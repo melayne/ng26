@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import math
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -73,6 +74,40 @@ def create_voxel_coefficient(
         linear=True,
     )
 
+def make_coefficient_from_xi(
+    X: np.ndarray,
+    Y: np.ndarray,
+    evaluate_log_conductivity: Callable[
+        [
+            np.ndarray | float,
+            np.ndarray | float,
+            np.ndarray,
+        ],
+        np.ndarray,
+    ],
+) -> Callable[
+    [np.ndarray],
+    ng.CoefficientFunction,
+]:
+    """
+    Construct a function that maps one KL coefficient vector to kappa.
+
+    X, Y, and the KL evaluator remain fixed. The returned function only
+    requires the newly sampled Gaussian coefficient vector xi.
+    """
+
+    def coefficient_from_xi(
+        xi: np.ndarray,
+    ) -> ng.CoefficientFunction:
+        return create_voxel_coefficient(
+            xi=xi,
+            X=X,
+            Y=Y,
+            evaluate_log_conductivity=evaluate_log_conductivity,
+        )
+
+    return coefficient_from_xi
+
 
 def create_rngs(seed: int, num_levels: int) -> tuple[np.random.Generator, ...]:
     seed_sequence = np.random.SeedSequence(seed)
@@ -139,7 +174,9 @@ class MCLevel:
         conductivity_fields: list[ng.GridFunction] = []
 
         def form_setup(fes):
-            coefficient_space = ng.H1(fes.mesh, order=1)
+            coefficient_space = ng.L2(fes.mesh, order=0)
+            # coefficient_space = ng.H1(fes.mesh, order=1)
+
             conductivity = ng.GridFunction(coefficient_space)
             conductivity.Set(ng.CoefficientFunction(1.0))
             conductivity_fields.append(conductivity)
@@ -427,10 +464,22 @@ class MLMCTerm:
         default_factory=list
     )
 
+    sample_durations_seconds: list[float] = field(
+        default_factory=list
+    )
+
     def draw_sample(self) -> float:
         """
-        Draw one independent sample of this MLMC term.
+        Draw, solve, and store one sample of this MLMC term.
+
+        The recorded duration includes drawing ``xi``, constructing
+        ``kappa``, solving the required PDE level or level pair,
+        evaluating the QoI, and updating the correction statistics.
+
+        A duration is stored only after the complete sample succeeds.
         """
+        sample_started = time.perf_counter()
+
         xi = self.rng.standard_normal(
             self.number_of_modes
         )
@@ -440,35 +489,55 @@ class MLMCTerm:
         kappa = self.coefficient_from_xi(xi)
 
         if self.level_index == 0:
+            q_lower = None
             q_upper = self.upper_level.solve_qoi(
                 kappa
             )
+            correction = q_upper
+        else:
+            if self.lower_level is None:
+                raise RuntimeError(
+                    "A correction term requires a lower MCLevel."
+                )
 
-            self.update_statistics(
-                q_upper=q_upper,
+            q_lower = self.lower_level.solve_qoi(
+                kappa
             )
 
-            return q_upper
-
-        if self.lower_level is None:
-            raise RuntimeError(
-                "A correction term requires a lower MCLevel."
+            q_upper = self.upper_level.solve_qoi(
+                kappa
             )
-
-        q_lower = self.lower_level.solve_qoi(
-            kappa
-        )
-
-        q_upper = self.upper_level.solve_qoi(
-            kappa
-        )
+            correction = q_upper - q_lower
 
         self.update_statistics(
             q_upper=q_upper,
             q_lower=q_lower,
         )
 
-        return q_upper - q_lower
+        elapsed_seconds = (
+            time.perf_counter() - sample_started
+        )
+        self.sample_durations_seconds.append(
+            elapsed_seconds
+        )
+
+        return correction
+
+    def add_samples(
+        self,
+        number_of_samples: int,
+    ) -> None:
+        """
+        Draw and store additional samples of this MLMC correction term.
+        """
+        if number_of_samples < 0:
+            raise ValueError(
+                "number_of_samples must be nonnegative."
+            )
+
+        for _ in range(number_of_samples):
+            self.draw_sample()
+
 
     def update_statistics(
         self,
@@ -550,7 +619,161 @@ class MLMCTerm:
 
         return upper - lower
 
+    @property
+    def total_sampling_time_seconds(self) -> float:
+        """
+        Return the total time spent generating successful Y_l samples.
+        """
+        return float(
+            sum(self.sample_durations_seconds)
+        )
 
+    @property
+    def mean_sample_time_seconds(self) -> float:
+        """
+        Return the average time required for one successful Y_l sample.
+        """
+        if not self.sample_durations_seconds:
+            return float("nan")
+
+        return float(
+            np.mean(self.sample_durations_seconds)
+        )
+
+    def run_to_mean_variance_target(
+        self,
+        target_variance: float,
+        *,
+        minimum_samples: int = 10,
+        maximum_samples: int = 100_000,
+        samples_per_iteration: int = 1,
+        verbose: bool = False,
+    ) -> bool:
+        """
+        Sample this correction term until its estimated mean variance
+        reaches the requested target.
+
+        The stopping criterion is
+
+            sample_variance(Y_l) / N_l <= target_variance.
+
+        Parameters
+        ----------
+        target_variance:
+            Target variance for the estimated correction mean
+
+                mean(Y_l).
+
+            This is not the raw variance of individual Y_l samples.
+
+        minimum_samples:
+            Minimum initial number of samples. At least two samples are
+            required to estimate a sample variance.
+
+        maximum_samples:
+            Maximum total number of samples allowed for this term.
+
+        samples_per_iteration:
+            Number of samples added before checking the stopping criterion
+            again. The adaptive loop is allowed at most
+
+                ceil((maximum_samples - minimum_samples)
+                     / samples_per_iteration)
+
+            iterations so the sample budget can be fully used.
+
+        verbose:
+            Print the current variance after each sampling iteration.
+
+        Returns
+        -------
+        bool:
+            True if the term reached its target. False if a safety limit was
+            reached first.
+
+        Notes
+        -----
+        Existing samples are retained. Therefore, calling this method again
+        continues from the term's current state.
+        """
+        if (
+            not np.isfinite(target_variance)
+            or target_variance <= 0.0
+        ):
+            raise ValueError(
+                "target_variance must be finite and positive."
+            )
+
+        if minimum_samples < 2:
+            raise ValueError(
+                "minimum_samples must be at least 2."
+            )
+
+        if maximum_samples < minimum_samples:
+            raise ValueError(
+                "maximum_samples must be at least minimum_samples."
+            )
+
+        if samples_per_iteration < 1:
+            raise ValueError(
+                "samples_per_iteration must be positive."
+            )
+
+        maximum_iterations = math.ceil(
+            (maximum_samples - minimum_samples)
+            / samples_per_iteration
+        )
+
+        # Generate the pilot samples needed to estimate Var(Y_l).
+        if self.sample_count < minimum_samples:
+            number_of_pilot_samples = (
+                minimum_samples - self.sample_count
+            )
+
+            # Do not exceed the sample limit.
+            number_of_pilot_samples = min(
+                number_of_pilot_samples,
+                maximum_samples - self.sample_count,
+            )
+
+            self.add_samples(number_of_pilot_samples)
+
+        # The pilot samples might already satisfy the target.
+        if self.variance_of_mean <= target_variance:
+            return True
+
+        for iteration in range(
+            1,
+            maximum_iterations + 1,
+        ):
+            remaining_sample_budget = (
+                maximum_samples - self.sample_count
+            )
+
+            if remaining_sample_budget <= 0:
+                return False
+
+            number_to_add = min(
+                samples_per_iteration,
+                remaining_sample_budget,
+            )
+
+            self.add_samples(number_to_add)
+
+            if verbose:
+                print(
+                    f"Y_{self.level_index}: "
+                    f"iteration={iteration}, "
+                    f"N={self.sample_count}, "
+                    f"V={self.sample_variance:.3e}, "
+                    f"V/N={self.variance_of_mean:.3e}, "
+                    f"target={target_variance:.3e}"
+                )
+
+            if self.variance_of_mean <= target_variance:
+                return True
+
+        return False
 #`------------------------------------------------
 #`------------------------------------------------
 #`------------------------------------------------
@@ -712,12 +935,7 @@ class MultilevelMonteCarlo:
             )
 
         term = self.terms[level_index]
-
-        for _ in range(number_of_samples):
-            # draw_sample generates xi, constructs kappa, evaluates
-            # the required QoIs, stores them, and updates the term's
-            # running mean and variance.
-            term.draw_sample()
+        term.add_samples(number_of_samples)
 
     def run_fixed(
         self,
@@ -748,6 +966,115 @@ class MultilevelMonteCarlo:
                 level_index=level_index,
                 number_of_samples=number_of_samples,
             )
+
+    def run_target_variance(
+        self,
+        target_variance: float,
+        *,
+        minimum_samples: int = 10,
+        maximum_samples_per_term: int = 100_000,
+        samples_per_iteration: int = 1,
+        verbose: bool = True,
+    ) -> bool:
+        """
+        Run every MLMC term until the total estimator-variance target
+        is reached.
+
+        The total target is divided equally among the MLMC terms. If
+        there are K terms, each term receives the target
+
+            target_variance / K.
+
+        Each term independently checks
+
+            sample_variance(Y_l) / N_l
+                <= target_variance / K.
+
+        Returns
+        -------
+        bool:
+            True if every term reached its assigned target and the total
+            estimator variance is no greater than ``target_variance``.
+            False if one or more terms reached a safety limit first.
+        """
+        if (
+            not np.isfinite(target_variance)
+            or target_variance <= 0.0
+        ):
+            raise ValueError(
+                "target_variance must be finite and positive."
+            )
+
+        number_of_terms = len(self.terms)
+
+        if number_of_terms == 0:
+            raise RuntimeError(
+                "There are no MLMC terms to sample."
+            )
+
+        term_variance_target = (
+            target_variance / number_of_terms
+        )
+
+        term_results: list[bool] = []
+
+        for term in self.terms:
+            converged = (
+                term.run_to_mean_variance_target(
+                    target_variance=term_variance_target,
+                    minimum_samples=minimum_samples,
+                    maximum_samples=(
+                        maximum_samples_per_term
+                    ),
+                    samples_per_iteration=(
+                        samples_per_iteration
+                    ),
+                    verbose=verbose,
+                )
+            )
+
+            term_results.append(converged)
+
+        all_terms_converged = all(term_results)
+
+        total_variance_converged = (
+            all_terms_converged
+            and self.estimator_variance <= target_variance
+        )
+
+        if verbose:
+            print()
+            print("MLMC sampling summary")
+
+            for term, converged in zip(
+                self.terms,
+                term_results,
+                strict=True,
+            ):
+                print(
+                    f"Y_{term.level_index}: "
+                    f"N={term.sample_count}, "
+                    f"V={term.sample_variance:.3e}, "
+                    f"V/N={term.variance_of_mean:.3e}, "
+                    f"target={term_variance_target:.3e}, "
+                    f"converged={converged}"
+                )
+
+            print()
+            print(
+                "MLMC estimator variance: "
+                f"{self.estimator_variance:.3e}"
+            )
+            print(
+                "Target estimator variance: "
+                f"{target_variance:.3e}"
+            )
+            print(
+                "Total variance converged: "
+            f"{total_variance_converged}"
+        )
+
+        return total_variance_converged
 
     @property
     def estimate_qoi(self) -> float:
@@ -831,19 +1158,198 @@ class MultilevelMonteCarlo:
 
 
 
+if __name__ == "__main__":
+    SEED = 7
+
+    correlation_length = 0.3
+    num_modes_2d = 1000
+    mean_log_conductivity = 0.0
+    standard_deviation = 1.0
+    variance = standard_deviation**2
+    grid_size = 64
+    n_levels = 5
+
+    KL_x, KL_y = grid_size, grid_size
+    X, Y, KL_points = cartesian_grid_2d(KL_x, KL_y)
 
 
+    frequencies_1d, normalizations_1d, eigenvalues_1d, _ = get_1d_eigenpairs(
+        num_modes=num_modes_2d,
+        correlation_length=correlation_length,
+    )
+
+    unit_eigenvalues_2d, mode_indices_2d, evaluate_eigenfunctions_2d = leading_2d_eigenpairs(
+        eigenvalues_1d=eigenvalues_1d,
+        frequencies_1d=frequencies_1d,
+        normalizations_1d=normalizations_1d,
+        correlation_length=correlation_length,
+        num_modes_2d=num_modes_2d,
+        method="heap",
+    )
+
+    # ===============================================================
+    # evaluate_log_conductivity returns log(kappa) on the KL grid.
+    # ===============================================================
+    evaluate_log_conductivity = make_2d_kl_evaluator(
+        eigenvalues_2d=unit_eigenvalues_2d,
+        eigenfunction_evaluator=evaluate_eigenfunctions_2d,
+        mean_log_conductivity=mean_log_conductivity,
+        variance=variance,
+    )
 
 
+    print("Done with KL expansion")
+    # rngs = create_rngs(SEED, n_levels)
+
+    coefficient_from_xi = make_coefficient_from_xi(
+        X=X,
+        Y=Y,
+        evaluate_log_conductivity=evaluate_log_conductivity,
+    )
 
 
+    # Every call to this factory creates an independent MCLevel.
+    mc_level_factory = MCLevelFactory(
+        coarse_maxh=0.3,
+        relative_solver_tolerance=1.0e-6,
+        maximum_vcycles=1000,
+        pre_sweeps=2,
+        post_sweeps=2,
+        coarse_direct=True,
+        coarse_sweeps=20,
+        dirichlet="left|right",
+        dirichlet_value={
+            "left": 1.0,
+            "right": 0.0,
+        },
+        order=1,
+    )
 
+    mlmc = MultilevelMonteCarlo.create(
+        number_of_levels=n_levels,
+        mc_level_factory=mc_level_factory,
+        coefficient_from_xi=coefficient_from_xi,
+        number_of_modes=num_modes_2d,
+        seed=SEED,
+    )
 
+    target_variance = 2.0e-4
 
+    run_started = time.perf_counter()
 
+    converged = mlmc.run_target_variance(
+        target_variance=target_variance,
+        minimum_samples=5,
+        maximum_samples_per_term=15_000,
+        samples_per_iteration=2,
+        verbose=False,
+    )
 
+    total_wall_time_seconds = (
+        time.perf_counter() - run_started
+    )
 
+    per_term_target = (
+        target_variance / n_levels
+    )
 
+    sum_of_term_times_seconds = sum(
+        term.total_sampling_time_seconds
+        for term in mlmc.terms
+    )
+
+    print()
+    print("MLMC variance-target test")
+    print(
+        f"Total target: {target_variance:.6e}"
+    )
+    print(
+        f"Per-term target: {per_term_target:.6e}"
+    )
+    print()
+
+    for term in mlmc.terms:
+        print(
+            f"Y_{term.level_index}: "
+            f"N={term.sample_count:4d}, "
+            f"V={term.sample_variance:.6e}, "
+            f"V/N={term.variance_of_mean:.6e}, "
+            f"passed="
+            f"{term.variance_of_mean <= per_term_target}, "
+            f"total time="
+            f"{term.total_sampling_time_seconds:.3f}s, "
+            f"time/sample="
+            f"{term.mean_sample_time_seconds:.6f}s"
+        )
+
+    print()
+    print(
+        "Sum of measured Y_l sample times: "
+        f"{sum_of_term_times_seconds:.3f}s"
+    )
+    print(
+        "Complete run wall time: "
+        f"{total_wall_time_seconds:.3f}s"
+    )
+    print()
+    print(
+        f"MLMC estimate: {mlmc.estimate_qoi:.8e}"
+    )
+    print(
+        "Estimator variance: "
+        f"{mlmc.estimator_variance:.8e}"
+    )
+    print(
+        f"Standard error: {mlmc.standard_error:.8e}"
+    )
+    print(f"Converged: {converged}")
+
+    # Check the stored samples and running statistics.
+    for term in mlmc.terms:
+        if (
+            term.sample_count
+            != len(term.sample_durations_seconds)
+        ):
+            raise RuntimeError(
+                f"Y_{term.level_index} has inconsistent "
+                "stored timing counts."
+            )
+
+        if term.sample_count != len(term.corrections):
+            raise RuntimeError(
+                f"Y_{term.level_index} has inconsistent "
+                "stored sample counts."
+            )
+
+        if not np.isclose(
+            term.mean,
+            np.mean(term.corrections),
+        ):
+            raise RuntimeError(
+                f"Y_{term.level_index} has an incorrect "
+                "running mean."
+            )
+
+    if not converged:
+        raise RuntimeError(
+            "The MLMC test did not reach its target."
+        )
+
+    if mlmc.estimator_variance > target_variance:
+        raise RuntimeError(
+            "The reported estimator variance is larger "
+            "than the target."
+        )
+
+#================================================================================
+#================================================================================
+#================================================================================
+#
+#  SCRATCH
+#
+#================================================================================
+#================================================================================
+#================================================================================
 
 # @dataclass
 # class MultilevelMonteCarlo:
@@ -1102,268 +1608,6 @@ class MultilevelMonteCarlo:
 #         )
 
 
-
-
-# @dataclass
-# class ReusableMultigridProblem:
-#     """Nested hierarchy whose conductivity fields can be updated in place."""
-
-#     hierarchy: MultigridHierarchy
-#     conductivity_fields: tuple[ng.GridFunction, ...]
-#     solver_config: VCycleConfig
-#     relative_solver_tolerance: float
-#     maximum_vcycles: int
-#     allow_direct_fallback: bool
-#     direct_fallback_counts: np.ndarray
-
-#     @classmethod
-#     def build(
-#         cls,
-#         *,
-#         coarse_maxh: float,
-#         number_of_levels: int,
-#         order: int,
-#         relative_solver_tolerance: float,
-#         maximum_vcycles: int,
-#         pre_sweeps: int,
-#         post_sweeps: int,
-#         allow_direct_fallback: bool,
-#     ) -> "ReusableMultigridProblem":
-#         """Build nested geometry, FE spaces, forms, and grid transfers once."""
-#         if number_of_levels < 2:
-#             raise ValueError("number_of_levels must be at least 2.")
-#         if coarse_maxh <= 0.0:
-#             raise ValueError("coarse_maxh must be positive.")
-#         if order < 1:
-#             raise ValueError("order must be positive.")
-#         if relative_solver_tolerance <= 0.0:
-#             raise ValueError("relative_solver_tolerance must be positive.")
-#         if maximum_vcycles < 1:
-#             raise ValueError("maximum_vcycles must be positive.")
-
-#         conductivity_fields: list[ng.GridFunction] = []
-
-#         def form_setup(fes):
-#             coefficient_space = ng.H1(fes.mesh, order=1)
-#             conductivity = ng.GridFunction(coefficient_space)
-#             conductivity.Set(ng.CoefficientFunction(1.0))
-#             conductivity_fields.append(conductivity)
-
-#             u, v = fes.TnT()
-#             a = ng.BilinearForm(fes, symmetric=True)
-#             a += (
-#                 conductivity
-#                 * ng.InnerProduct(ng.grad(u), ng.grad(v))
-#                 * ng.dx
-#             )
-#             f = ng.LinearForm(fes)
-#             return a, f
-
-#         coarse_mesh = ng.Mesh(
-#             unit_square.GenerateMesh(maxh=coarse_maxh)
-#         )
-#         hierarchy = build_hierarchy(
-#             coarse_mesh,
-#             form_setup,
-#             n_refines=number_of_levels - 1,
-#             order=order,
-#             dirichlet="left|right",
-#             dirichlet_value={"left": 0.0, "right": 1.0},
-#             verbose=False,
-#         )
-
-#         if len(conductivity_fields) != hierarchy.nlevels:
-#             raise RuntimeError(
-#                 "Expected one conductivity field per multigrid level."
-#             )
-
-#         return cls(
-#             hierarchy=hierarchy,
-#             conductivity_fields=tuple(conductivity_fields),
-#             solver_config=VCycleConfig(
-#                 pre_sweeps=pre_sweeps,
-#                 post_sweeps=post_sweeps,
-#                 coarse_direct=True,
-#             ),
-#             relative_solver_tolerance=relative_solver_tolerance,
-#             maximum_vcycles=maximum_vcycles,
-#             allow_direct_fallback=allow_direct_fallback,
-#             direct_fallback_counts=np.zeros(
-#                 number_of_levels,
-#                 dtype=int,
-#             ),
-#         )
-
-#     def update_conductivity(self, kappa, finest_level: int) -> None:
-#         """Interpolate one sample and reassemble levels 0 through finest."""
-#         if not 0 <= finest_level < self.hierarchy.nlevels:
-#             raise IndexError("finest_level is outside the hierarchy.")
-
-#         for level_index in range(finest_level + 1):
-#             conductivity = self.conductivity_fields[level_index]
-#             level = self.hierarchy.levels[level_index]
-
-#             conductivity.Set(kappa)
-#             level.a.Assemble()
-#             level.refresh()
-
-#     def reset_solution(
-#         self,
-#         level_index: int,
-#         *,
-#         use_coarse_initial_guess: bool,
-#     ) -> None:
-#         """Initialize one level and impose its nonzero boundary data."""
-#         level = self.hierarchy.levels[level_index]
-
-#         if use_coarse_initial_guess:
-#             if level_index == 0 or level.P is None:
-#                 raise ValueError(
-#                     "A coarse initial guess requires level_index >= 1."
-#                 )
-#             coarse_solution = self.hierarchy.levels[level_index - 1].gfu
-#             level.gfu.vec.data = level.P * coarse_solution.vec
-#         else:
-#             level.gfu.vec.FV().NumPy()[:] = 0.0
-
-#         level.enforce_dirichlet(level.gfu.vec)
-
-#     def solve_level(
-#         self,
-#         level_index: int,
-#         *,
-#         use_coarse_initial_guess: bool = False,
-#     ) -> ng.GridFunction:
-#         """Solve level_index directly at level zero or by repeated V-cycles."""
-#         self.reset_solution(
-#             level_index,
-#             use_coarse_initial_guess=use_coarse_initial_guess,
-#         )
-#         level = self.hierarchy.levels[level_index]
-
-#         if level_index == 0:
-#             residual = level.residual(level.f.vec, level.gfu.vec)
-#             correction = level.gfu.vec.CreateVector()
-#             correction.data = (
-#                 level.a.mat.Inverse(level.fes.FreeDofs())
-#                 * residual
-#             )
-#             level.gfu.vec.data += correction
-#             level.enforce_dirichlet(level.gfu.vec)
-#             return level.gfu
-
-#         subhierarchy = MultigridHierarchy(
-#             self.hierarchy.levels[: level_index + 1]
-#         )
-#         solver = MultigridSolver(
-#             subhierarchy,
-#             self.solver_config,
-#         )
-#         initial_residual = level.residual_norm()
-#         solver.solve(
-#             max_cycles=self.maximum_vcycles,
-#             tol=self.relative_solver_tolerance,
-#             norms=("l2", "energy"),
-#             stop_norm="l2",
-#             verbose=False,
-#         )
-#         final_residual = level.residual_norm()
-
-#         if (
-#             initial_residual > 0.0
-#             and final_residual
-#             > self.relative_solver_tolerance * initial_residual
-#         ):
-#             if not self.allow_direct_fallback:
-#                 raise RuntimeError(
-#                     f"Level {level_index} V-cycle solve did not reach its "
-#                     f"relative tolerance after {self.maximum_vcycles} cycles: "
-#                     f"initial residual={initial_residual:.3e}, "
-#                     f"final residual={final_residual:.3e}. Increase "
-#                     "--maximum-vcycles, relax --linear-tolerance, or allow "
-#                     "the default direct fallback."
-#                 )
-
-#             # Complete the unresolved residual exactly on the free DOFs.
-#             # This preserves sample correctness while recording that the
-#             # V-cycle was not robust for this conductivity realization.
-#             residual = level.residual(level.f.vec, level.gfu.vec)
-#             correction = level.gfu.vec.CreateVector()
-#             correction.data = (
-#                 level.a.mat.Inverse(level.fes.FreeDofs())
-#                 * residual
-#             )
-#             level.gfu.vec.data += correction
-#             level.enforce_dirichlet(level.gfu.vec)
-#             self.direct_fallback_counts[level_index] += 1
-
-#         return subhierarchy.finest.gfu
-
-#     def evaluate_qoi(self, level_index: int) -> float:
-#         """Evaluate the flux QoI using the coefficient assembled on this level."""
-#         level = self.hierarchy.levels[level_index]
-#         conductivity = self.conductivity_fields[level_index]
-#         return quantity_of_interest(
-#             level.gfu,
-#             level.mesh,
-#             conductivity,
-#         )
-
-#     def solve_qoi(
-#         self,
-#         level_index: int,
-#         *,
-#         use_coarse_initial_guess: bool = False,
-#     ) -> float:
-#         """Solve one level and evaluate its QoI."""
-#         self.solve_level(
-#             level_index,
-#             use_coarse_initial_guess=use_coarse_initial_guess,
-#         )
-#         return self.evaluate_qoi(level_index)
-
-
-
-# if __name__ == "__main__":
-#     SEED = 7
-    
-#     correlation_length = 0.3
-#     num_modes_2d = 1000
-#     mean_log_conductivity = 0.0
-#     standard_deviation = 1.0
-#     variance = standard_deviation**2
-#     grid_size = 32
-#     n_levels = 3
-
-#     KL_x, KL_y = grid_size, grid_size
-#     X, Y, KL_points = cartesian_grid_2d(KL_x, KL_y)
-
-    
-#     frequencies_1d, normalizations_1d, eigenvalues_1d, _ = get_1d_eigenpairs(
-#         num_modes=num_modes_2d,
-#         correlation_length=correlation_length,
-#     )
- 
-#     unit_eigenvalues_2d, mode_indices_2d, evaluate_eigenfunctions_2d = leading_2d_eigenpairs(
-#         eigenvalues_1d=eigenvalues_1d,
-#         frequencies_1d=frequencies_1d,
-#         normalizations_1d=normalizations_1d,
-#         correlation_length=correlation_length,
-#         num_modes_2d=num_modes_2d,
-#         method="heap",
-#     )
-
-#     # ===============================================================
-#     # evaluate_log_conductivity returns log(kappa) on the KL grid.
-#     # ===============================================================
-#     evaluate_log_conductivity = make_2d_kl_evaluator(
-#         eigenvalues_2d=unit_eigenvalues_2d,
-#         eigenfunction_evaluator=evaluate_eigenfunctions_2d,
-#         mean_log_conductivity=mean_log_conductivity,
-#         variance=variance,
-#     )
-
-#     rngs = create_rngs(SEED, n_levels)
 
 #     def main(*, show_plots: bool = True, plot_dir: Path = DEFAULT_PLOT_DIR) -> None:
 #         # ------------------------------------------------------------------

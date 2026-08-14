@@ -766,6 +766,43 @@ def make_2d_kl_evaluator(
     square_root_theta = np.sqrt(theta)
     mean = float(mean_log_conductivity)
 
+    
+    # def evaluate(
+    #     x: np.ndarray | float,
+    #     y: np.ndarray | float,
+    #     coefficients: np.ndarray,
+    # ) -> np.ndarray:
+    #     xi = np.asarray(
+    #         coefficients,
+    #         dtype=float,
+    #     )
+
+    #     if xi.shape != theta.shape:
+    #         raise ValueError(
+    #             "coefficients must have shape "
+    #             f"{theta.shape}, but received {xi.shape}."
+    #         )
+
+    #     eigenfunctions = eigenfunction_evaluator(
+    #         x,
+    #         y,
+    #     )
+
+    #     # eigenfunctions[..., n] is b_n(x, y).
+    #     # The sum removes the final mode dimension.
+    #     return (
+    #         mean
+    #         + np.sum(
+    #             eigenfunctions
+    #             * square_root_theta
+    #             * xi,
+    #             axis=-1,
+    #         )
+    #     )
+    cached_x = None
+    cached_y = None
+    cached_B = None
+
     def evaluate(
         x: np.ndarray | float,
         y: np.ndarray | float,
@@ -781,22 +818,15 @@ def make_2d_kl_evaluator(
                 "coefficients must have shape "
                 f"{theta.shape}, but received {xi.shape}."
             )
-
-        eigenfunctions = eigenfunction_evaluator(
-            x,
-            y,
-        )
-
-        # eigenfunctions[..., n] is b_n(x, y).
-        # The sum removes the final mode dimension.
-        return (
-            mean
-            + np.sum(
-                eigenfunctions
-                * square_root_theta
-                * xi,
-                axis=-1,
-            )
+        nonlocal cached_x, cached_y, cached_B
+        
+        if cached_B is None or x is not cached_x or y is not cached_y:
+            cached_B = eigenfunction_evaluator(x, y)
+            cached_x = x
+            cached_y = y
+        return mean + np.sum(
+            cached_B * square_root_theta * xi,
+            axis=-1,
         )
 
     return evaluate
