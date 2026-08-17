@@ -30,6 +30,7 @@ pyproject.toml
 
 # Folders to ignore
 in_progress/
+tmp/
 
 # LaTeX build artifacts (keep .tex sources and .pdf outputs)
 *.aux
