@@ -287,44 +287,6 @@ def _direct_solve_validated(
 
     return np.asarray(solution)
 
-
-# def direct_solve(
-#     A: MatrixLike,
-#     b: np.ndarray,
-# ) -> np.ndarray:
-#     r"""Solve a linear system A x = b using the direct solver.
-
-#     Parameters
-#     ----------
-#     A
-#         The real or complex coefficient matrix A.
-#     b
-#         The compatible real or complex right-hand side b.
-
-#     Returns
-#     -------
-#     solution
-#         The real or complex solution x.
-
-#     Raises
-#     ------
-#     TypeError
-#         If A is a LinearOperator or another unsupported matrix type.
-#     ValueError
-#         If A is not square or b is not a compatible one-dimensional vector.
-
-#     """
-
-#     if isinstance(A, LinearOperator):
-#         raise TypeError(
-#             "A LinearOperator cannot be used with a direct solver. "
-#             "Use an iterative solver instead."
-#         )
-
-#     b_vector, _ = _validate_linear_system(A, b)
-
-#     return _direct_solve_validated(A, b_vector)
-
 def direct_solve(
     A: MatrixLike,
     b: np.ndarray,
@@ -340,12 +302,13 @@ def direct_solve(
     b
         The compatible real or complex right-hand side b.
     x0
-        The initial guess for the solution x. Defaults to zeros.
+        Optional vector used to calculate the initial residual.
+        It does not affect the direct-solver solution.
 
     Returns
     -------
-    solution
-        The real or complex solution x.
+    SolveResult
+         The solution and diagnostic information.
 
     Raises
     ------
