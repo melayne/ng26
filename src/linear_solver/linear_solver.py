@@ -1,9 +1,11 @@
 #===============================================================================
 # Imports
 #===============================================================================
+import warnings
 from dataclasses import dataclass
-from typing import TypeAlias, Literal, Callable
 from time import perf_counter
+from typing import Callable, Literal, TypeAlias
+
 import numpy as np
 from scipy import sparse
 from scipy.linalg import solve as dense_solve
@@ -13,7 +15,6 @@ from scipy.sparse.linalg import (
     gmres,
     spsolve,
 )
-import warnings
 
 #===============================================================================
 # Type Aliases
@@ -62,6 +63,61 @@ class SolveResult:
 #===============================================================================
 # Helper Functions
 #===============================================================================
+def _matrix_shape(A: MatrixLike) -> tuple[int, int]:
+    """Return the shape of a supported two-dimensional matrix object."""
+    if not (
+        isinstance(A, (np.ndarray, LinearOperator))
+        or sparse.issparse(A)
+    ):
+        raise TypeError(f"Unsupported matrix type: {type(A)}")
+
+    shape = getattr(A, "shape", None)
+    if shape is None or len(shape) != 2:
+        raise ValueError("A must be two-dimensional.")
+
+    return int(shape[0]), int(shape[1])
+
+
+def _validate_linear_system(
+    A: MatrixLike,
+    b: np.ndarray,
+    x0: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray | None]:
+    """Validate dimensions and normalize the system vectors."""
+    n_rows, n_cols = _matrix_shape(A)
+    if n_rows != n_cols:
+        raise ValueError("A must be square.")
+
+    b_vector = np.asarray(b)
+    if b_vector.ndim != 1:
+        raise ValueError("b must be one-dimensional.")
+    if b_vector.shape[0] != n_rows:
+        raise ValueError("The dimensions of A and b do not agree.")
+
+    if x0 is None:
+        return b_vector, None
+
+    x0_vector = np.asarray(x0)
+    if x0_vector.shape != b_vector.shape:
+        raise ValueError("x0 must have the same shape as b.")
+
+    return b_vector, x0_vector
+
+
+def _solver_dtype(A: MatrixLike, vector: np.ndarray) -> np.dtype:
+    """Choose an inexact solver dtype without discarding complex values."""
+    matrix_dtype = getattr(A, "dtype", None)
+    dtype = (
+        np.result_type(vector.dtype)
+        if matrix_dtype is None
+        else np.result_type(matrix_dtype, vector.dtype)
+    )
+
+    if not np.issubdtype(dtype, np.inexact):
+        return np.dtype(float)
+    return np.dtype(dtype)
+
+
 def as_csr_matrix(A: MatrixLike) -> sparse.csr_matrix:
     """Convert a MatrixLike object to a CSR sparse matrix."""
     if isinstance(A, LinearOperator):
@@ -69,7 +125,7 @@ def as_csr_matrix(A: MatrixLike) -> sparse.csr_matrix:
             "LinearOperator has no sparse matrix form; "
             "use iterative solvers with matvecs instead."
         )
-    
+
     if isinstance(A, np.ndarray):
         return sparse.csr_matrix(A)
 
@@ -131,30 +187,28 @@ def jacobi_preconditioner(
         The Jacobi preconditioner M^{-1} ≈ D^{-1}, D = diag(A).
     """
 
-    if isinstance(A, LinearOperator):
-        raise TypeError(
-            "Jacobi needs an explicit matrix to read the diagonal."
-        )
-        
+    n_rows, n_cols = _matrix_shape(A)
+    if n_rows != n_cols:
+        raise ValueError("Jacobi requires a square matrix.")
+
     if isinstance(A, np.ndarray):
-        diagonal = np.diag(A).astype(float, copy=True)
+        diagonal = np.asarray(np.diag(A)).copy()
     elif sparse.issparse(A):
         # Convert first: SciPy stubs omit `.diagonal` on the generic
         # spmatrix/sparray types after issparse().
         A = sparse.csr_matrix(A)
-        diagonal = np.asarray(A.diagonal(), dtype=float)
+        diagonal = np.asarray(A.diagonal())
     else:
         raise TypeError(f"Unsupported matrix type for Jacobi: {type(A)}")
 
-    if np.any(diagonal == 0.0):
+    if np.any(diagonal == 0):
         raise ValueError("Jacobi requires a nonzero diagonal.")
 
     inverse_diagonal = 1.0 / diagonal
-    n = diagonal.shape[0]
     return LinearOperator(
-        shape=(n, n),
-        matvec=lambda r: inverse_diagonal * np.asarray(r, dtype=float),
-        dtype=float,
+        shape=(n_rows, n_cols),
+        matvec=lambda r: inverse_diagonal * np.asarray(r),
+        dtype=inverse_diagonal.dtype,
     )
 
 def gauss_seidel_preconditioner():
@@ -164,8 +218,13 @@ def build_preconditioner(
     A: MatrixLike,
     preconditioner: PreconditionerSpec = None,
 ) -> MatrixLike | None:
-    """Normalize a preconditioner spec for SciPy iterative solvers."""
-    
+    """Normalize a preconditioner specification for SciPy solvers.
+
+    A matrix or ``LinearOperator`` supplied here must approximate ``A^{-1}``.
+    SciPy applies it directly to each residual; SciPy does not solve a system
+    with the supplied preconditioner matrix.
+    """
+
     if preconditioner is None:
         return None
 
@@ -203,10 +262,10 @@ def build_preconditioner(
         return LinearOperator(
             shape=getattr(A, "shape"),
             matvec=preconditioner,
-            dtype=float,
+            dtype=getattr(A, "dtype", None),
         )
 
-    raise ValueError(
+    raise TypeError(
         "preconditioner must be None, 'jacobi', a matrix, "
         "a LinearOperator, or a callable."
     )
@@ -216,24 +275,85 @@ def build_preconditioner(
 #===============================================================================
 # Solvers
 #===============================================================================
-def direct_solve(
-    A: MatrixLike, 
-    b: np.ndarray, 
+def _direct_solve_validated(
+    A: np.ndarray | sparse.spmatrix | sparse.sparray,
+    b: np.ndarray,
 ) -> np.ndarray:
+    """Solve a direct system after its dimensions have been validated."""
+    if isinstance(A, np.ndarray):
+        solution = dense_solve(A, b)
+    else:
+        solution = spsolve(sparse.csc_matrix(A), b)
+
+    return np.asarray(solution)
+
+
+# def direct_solve(
+#     A: MatrixLike,
+#     b: np.ndarray,
+# ) -> np.ndarray:
+#     r"""Solve a linear system A x = b using the direct solver.
+
+#     Parameters
+#     ----------
+#     A
+#         The real or complex coefficient matrix A.
+#     b
+#         The compatible real or complex right-hand side b.
+
+#     Returns
+#     -------
+#     solution
+#         The real or complex solution x.
+
+#     Raises
+#     ------
+#     TypeError
+#         If A is a LinearOperator or another unsupported matrix type.
+#     ValueError
+#         If A is not square or b is not a compatible one-dimensional vector.
+
+#     """
+
+#     if isinstance(A, LinearOperator):
+#         raise TypeError(
+#             "A LinearOperator cannot be used with a direct solver. "
+#             "Use an iterative solver instead."
+#         )
+
+#     b_vector, _ = _validate_linear_system(A, b)
+
+#     return _direct_solve_validated(A, b_vector)
+
+def direct_solve(
+    A: MatrixLike,
+    b: np.ndarray,
+    *,
+    x0: np.ndarray | None = None,
+) -> SolveResult:
     r"""Solve a linear system A x = b using the direct solver.
 
     Parameters
     ----------
     A
-        The coefficient matrix A, A \in \mathbb{R}^{n \times n}.
+        The real or complex coefficient matrix A.
     b
-        The right-hand side b, b \in \mathbb{R}^n.
+        The compatible real or complex right-hand side b.
+    x0
+        The initial guess for the solution x. Defaults to zeros.
 
     Returns
     -------
     solution
-        The solution x, x \in \mathbb{R}^n.
-    
+        The real or complex solution x.
+
+    Raises
+    ------
+    TypeError
+        If A is a LinearOperator or another unsupported matrix type.
+    ValueError
+        If A is not square or b is not a compatible one-dimensional vector.
+
     """
 
     if isinstance(A, LinearOperator):
@@ -242,27 +362,55 @@ def direct_solve(
             "Use an iterative solver instead."
         )
 
-    if isinstance(A, np.ndarray):
-        solution = dense_solve(A, b)
+    b_vector, x0_vector = _validate_linear_system(A, b, x0)
 
-    elif sparse.issparse(A):
-        A_solve = sparse.csc_matrix(A)
-        solution = spsolve(A_solve, b)
+    initial_vector = (
+        np.zeros_like(b_vector)
+        if x0_vector is None
+        else x0_vector
+    )
+    initial_residual_norm = float(
+        np.linalg.norm(b_vector - A @ initial_vector)
+    )
 
-    else:
-        raise TypeError(f"Unsupported matrix type: {type(A)}")
+    start_time = perf_counter()
+    solution = _direct_solve_validated(A, b_vector)
+    solve_time = perf_counter() - start_time
 
-    return np.asarray(solution).reshape(-1)
+    solution = np.asarray(solution)
+    final_residual_norm = float(
+        np.linalg.norm(b_vector - A @ solution)
+    )
+
+    success = bool(np.all(np.isfinite(solution)))
+    message = (
+        "Direct solve completed."
+        if success
+        else "Direct solve produced nonfinite values."
+    )
+
+    return SolveResult(
+        solution=solution,
+        success=success,
+        solver_name="direct",
+        iterations=None,
+        initial_residual_norm=initial_residual_norm,
+        final_residual_norm=final_residual_norm,
+        residual_history=[],
+        solve_time=solve_time,
+        message=message,
+    )
 
 def cg_solve(
     A: MatrixLike,
     b: np.ndarray,
     *,
     x0: np.ndarray | None = None,
-    preconditioner: MatrixLike | None = None,
+    preconditioner: PreconditionerSpec = None,
     relative_tolerance: float = 1e-8,
     absolute_tolerance: float = 0.0,
     maximum_iterations: int | None = None,
+    record_residual_history: bool = False,
 ) -> SolveResult:
     """Solve A x = b with conjugate gradients (SPD matrices).
 
@@ -274,44 +422,39 @@ def cg_solve(
         One-dimensional right-hand side.
     x0 : numpy.ndarray, optional
         Initial guess. Defaults to zeros.
-    preconditioner : MatrixLike, optional
-        Left preconditioner for SciPy CG. May be a dense/sparse matrix
-        (SciPy solves M z = r each step) or a LinearOperator whose
-        matvec applies M^{-1}.
+    preconditioner : PreconditionerSpec, optional
+        Approximation of A^{-1}. A dense or sparse matrix is applied directly
+        to each residual; SciPy does not solve a system with it. The string
+        "jacobi" constructs a diagonal approximate inverse.
     relative_tolerance, absolute_tolerance : float
         SciPy CG stopping tolerances.
     maximum_iterations : int, optional
         Iteration cap. SciPy default if None.
+    record_residual_history : bool, optional
+        Record the exact residual after every iteration. Disabled by default
+        because it requires one additional matrix-vector product per iteration.
 
     Returns
     -------
     SolveResult
     """
-    b = np.asarray(b, dtype=float)
-    if b.ndim != 1:
-        raise ValueError("b must be one-dimensional.")
+    if relative_tolerance < 0.0 or absolute_tolerance < 0.0:
+        raise ValueError("Solver tolerances must be nonnegative.")
+    if maximum_iterations is not None and maximum_iterations < 1:
+        raise ValueError("maximum_iterations must be positive or None.")
 
-    n_rows, n_cols = getattr(A, "shape")
-    if n_rows != n_cols:
-        raise ValueError("A must be square.")
-    if b.shape[0] != n_rows:
-        raise ValueError("The dimensions of A and b do not agree.")
+    b_vector, x0_vector = _validate_linear_system(A, b, x0)
+    dtype = _solver_dtype(A, b_vector)
+    b_vector = np.asarray(b_vector, dtype=dtype)
 
-    if preconditioner is not None:
-        m_rows, m_cols = getattr(preconditioner, "shape")
-        if (m_rows, m_cols) != (n_rows, n_cols):
-            raise ValueError(
-                "The preconditioner must have the same shape as A."
-            )
-
-    if x0 is None:
-        x0_vec = np.zeros_like(b)
+    if x0_vector is None:
+        x0_vector = np.zeros_like(b_vector)
     else:
-        x0_vec = np.asarray(x0, dtype=float)
-        if x0_vec.shape != b.shape:
-            raise ValueError("x0 must have the same shape as b.")
+        x0_vector = np.asarray(x0_vector, dtype=dtype)
 
-    initial_residual_norm = float(np.linalg.norm(b - A @ x0_vec))
+    initial_residual_norm = float(
+        np.linalg.norm(b_vector - A @ x0_vector)
+    )
 
     residual_history: list[float] = []
     iteration_count = 0
@@ -319,27 +462,36 @@ def cg_solve(
     def callback(xk: np.ndarray) -> None:
         nonlocal iteration_count
         iteration_count += 1
-        residual_history.append(float(np.linalg.norm(b - A @ xk)))
+        if record_residual_history:
+            residual = b_vector - A @ xk
+            residual_history.append(float(np.linalg.norm(residual)))
 
     start_time = perf_counter()
+    M = build_preconditioner(A, preconditioner)
     solution, info = cg(
         A,
-        b,
-        x0=x0_vec,
+        b_vector,
+        x0=x0_vector,
         rtol=relative_tolerance,
         atol=absolute_tolerance,
         maxiter=maximum_iterations,
-        M=preconditioner,
+        M=M,
         callback=callback,
     )
     solve_time = perf_counter() - start_time
 
-    solution = np.asarray(solution, dtype=float).reshape(-1)
-    final_residual_norm = float(np.linalg.norm(b - A @ solution))
+    solution = np.asarray(solution)
+    final_residual_norm = float(
+        np.linalg.norm(b_vector - A @ solution)
+    )
 
-    if info == 0:
+    finite_solution = bool(np.all(np.isfinite(solution)))
+    if info == 0 and finite_solution:
         success = True
         message = "CG converged."
+    elif info == 0:
+        success = False
+        message = "CG produced nonfinite values."
     elif info > 0:
         success = False
         message = (
@@ -374,11 +526,12 @@ def iterative_solve():
 def solve_linear_system(
     system: LinearSystem,
     method: SolverMethod = "direct",
-    preconditioner=None,
+    preconditioner: PreconditionerSpec = None,
     relative_tolerance: float = 1e-8,
     absolute_tolerance: float = 0.0,
     maximum_iterations: int | None = None,
     gmres_restart: int | None = None,
+    record_residual_history: bool = False,
 ) -> SolveResult:
     """
     Solve one linear system A x = b.
@@ -400,362 +553,47 @@ def solve_linear_system(
         Maximum number of iterative-solver iterations.
     gmres_restart
         Number of GMRES inner iterations before restarting.
+    record_residual_history
+        Whether to compute and retain exact residual norms after every
+        iterative-solver step. This adds a matrix-vector product per step.
     """
-    A = system.A
-    b = np.asarray(system.b)
-    x0 = None if system.x0 is None else np.asarray(system.x0)
-
-    #Note: SciPy's sparray stubs omit `.shape`; getattr keeps runtime behavior.
-    n_rows, n_cols = getattr(A, "shape")
-    
-    if n_rows != n_cols:
-        raise ValueError("A must be square.")
-
-    if b.ndim != 1:
-        raise ValueError("b must be one-dimensional.")
-
-    if b.shape[0] != n_rows:
-        raise ValueError("The dimensions of A and b do not agree.")
-
-    if x0 is not None and x0.shape != b.shape:
-        raise ValueError("x0 must have the same shape as b.")
-
     if method not in {"direct", "cg", "gmres"}:
         raise ValueError(
             "method must be 'direct', 'cg', or 'gmres'."
         )
 
-    initial_vector = np.zeros_like(b) if x0 is None else x0
-    initial_residual = b - A @ initial_vector
-    initial_residual_norm = np.linalg.norm(initial_residual)
-
-    residual_history = []
-    iteration_count = 0
-
-    start_time = perf_counter()
-
     if method == "direct":
-        if preconditioner is not None:
+        if not (
+            preconditioner is None
+            or (
+                isinstance(preconditioner, str)
+                and preconditioner == "none"
+            )
+        ):
             warnings.warn(
                 "The preconditioner is ignored by the direct solver.",
                 UserWarning,
                 stacklevel=2,
             )
-            
-        solution = direct_solve(A, b)
-        success = bool(np.all(np.isfinite(solution)))
-        message = (
-            "Direct solve completed."
-            if success
-            else "Direct solve produced nonfinite values."
+
+        return direct_solve(
+            system.A,
+            system.b,
+            x0=system.x0,
         )
-        iteration_count = None
-    
-    elif method == "cg":
-        M = build_preconditioner(A, preconditioner)
+        
+    if method == "cg":
         return cg_solve(
-            A,
-            b,
-            x0=x0,
-            preconditioner=M,
+            system.A,
+            system.b,
+            x0=system.x0,
+            preconditioner=preconditioner,
             relative_tolerance=relative_tolerance,
             absolute_tolerance=absolute_tolerance,
             maximum_iterations=maximum_iterations,
+            record_residual_history=record_residual_history,
         )
 
-    elif method == "gmres":
+    if method == "gmres":
         raise NotImplementedError("GMRES solver not implemented.")
 
-    # else:
-    #     M = make_preconditioner(A, preconditioner)
-
-    #     if method == "cg":
-
-    #         def callback(xk):
-    #             nonlocal iteration_count
-    #             iteration_count += 1
-
-    #             residual = b - A @ xk
-    #             residual_history.append(np.linalg.norm(residual))
-
-    #         solution, info = cg(
-    #             A,
-    #             b,
-    #             x0=x0,
-    #             rtol=relative_tolerance,
-    #             atol=absolute_tolerance,
-    #             maxiter=maximum_iterations,
-    #             M=M,
-    #             callback=callback,
-    #         )
-
-    #     else:
-
-    #         def callback(relative_residual):
-    #             nonlocal iteration_count
-    #             iteration_count += 1
-    #             residual_history.append(float(relative_residual))
-
-    #         solution, info = gmres(
-    #             A,
-    #             b,
-    #             x0=x0,
-    #             rtol=relative_tolerance,
-    #             atol=absolute_tolerance,
-    #             maxiter=maximum_iterations,
-    #             restart=gmres_restart,
-    #             M=M,
-    #             callback=callback,
-    #             callback_type="pr_norm",
-    #         )
-
-    #     if info == 0:
-    #         success = True
-    #         message = "Iterative solver converged."
-    #     elif info > 0:
-    #         success = False
-    #         message = (
-    #             f"Solver did not converge within its iteration limit "
-    #             f"(info={info})."
-    #         )
-    #     else:
-    #         success = False
-    #         message = f"Solver failed because of a numerical breakdown (info={info})."
-
-    solve_time = perf_counter() - start_time
-
-    # SciPy sparse/LinearOperator stubs omit mature ``__matmul__`` typing.
-    final_residual = b - (A @ solution)  # type: ignore[operator]
-    final_residual_norm = float(np.linalg.norm(final_residual))
-
-    return SolveResult(
-        solution=np.asarray(solution),
-        success=success,
-        solver_name=method,
-        iterations=iteration_count,
-        initial_residual_norm=float(initial_residual_norm),
-        final_residual_norm=float(final_residual_norm),
-        residual_history=residual_history,
-        solve_time=solve_time,
-        message=message,
-    )
-
-
-# def jacobi_preconditioner(A: sparse.spmatrix) -> LinearOperator:
-#     """
-#     Construct the Jacobi approximate-inverse operator
-
-#         r -> D^{-1} r,
-
-#     where D is the diagonal of A.
-#     """
-#     if not sparse.issparse(A):
-#         raise TypeError(
-#             "Jacobi preconditioning requires an explicit SciPy sparse matrix."
-#         )
-
-#     diagonal = np.asarray(A.diagonal())
-
-#     if np.any(diagonal == 0):
-#         raise ValueError(
-#             "Jacobi preconditioning cannot be used when A has a zero diagonal entry."
-#         )
-
-#     inverse_diagonal = 1.0 / diagonal
-
-#     return LinearOperator(
-#         shape=A.shape,
-#         matvec=lambda r: inverse_diagonal * r,
-#         dtype=A.dtype,
-#     )
-
-
-# def make_preconditioner(
-#     A: sparse.spmatrix | LinearOperator,
-#     preconditioner: (
-#         None
-#         | str
-#         | LinearOperator
-#         | Callable[[np.ndarray], np.ndarray]
-#     ),
-# ) -> LinearOperator | None:
-#     """Convert a preconditioner specification to a LinearOperator."""
-
-#     if preconditioner is None or preconditioner == "none":
-#         return None
-
-#     if preconditioner == "jacobi":
-#         return jacobi_preconditioner(A)
-
-#     if isinstance(preconditioner, LinearOperator):
-#         if preconditioner.shape != A.shape:
-#             raise ValueError(
-#                 "The preconditioner must have the same shape as A."
-#             )
-#         return preconditioner
-
-#     if callable(preconditioner):
-#         return LinearOperator(
-#             shape=A.shape,
-#             matvec=preconditioner,
-#             dtype=A.dtype,
-#         )
-
-#     raise ValueError(
-#         "preconditioner must be None, 'jacobi', "
-#         "a LinearOperator, or a callable."
-#     )
-
-
-# def solve_linear_system(
-#     system: LinearSystem,
-#     method: str = "direct",
-#     preconditioner=None,
-#     relative_tolerance: float = 1e-8,
-#     absolute_tolerance: float = 0.0,
-#     maximum_iterations: int | None = None,
-#     gmres_restart: int | None = None,
-# ) -> SolveResult:
-#     """
-#     Solve one linear system A x = b.
-
-#     Parameters
-#     ----------
-#     system
-#         Linear system containing A, b, and an optional x0.
-#     method
-#         One of "direct", "cg", or "gmres".
-#     preconditioner
-#         None, "jacobi", a LinearOperator, or a callable implementing
-#         r -> P^{-1} r.
-#     relative_tolerance
-#         Relative convergence tolerance for iterative methods.
-#     absolute_tolerance
-#         Absolute convergence tolerance for iterative methods.
-#     maximum_iterations
-#         Maximum number of iterative-solver iterations.
-#     gmres_restart
-#         Number of GMRES inner iterations before restarting.
-#     """
-#     A = system.A
-#     b = np.asarray(system.b)
-#     x0 = None if system.x0 is None else np.asarray(system.x0)
-
-#     if A.shape[0] != A.shape[1]:
-#         raise ValueError("A must be square.")
-
-#     if b.ndim != 1:
-#         raise ValueError("b must be one-dimensional.")
-
-#     if b.shape[0] != A.shape[0]:
-#         raise ValueError("The dimensions of A and b do not agree.")
-
-#     if x0 is not None and x0.shape != b.shape:
-#         raise ValueError("x0 must have the same shape as b.")
-
-#     if method not in {"direct", "cg", "gmres"}:
-#         raise ValueError(
-#             "method must be 'direct', 'cg', or 'gmres'."
-#         )
-
-#     initial_vector = np.zeros_like(b) if x0 is None else x0
-#     initial_residual = b - A @ initial_vector
-#     initial_residual_norm = np.linalg.norm(initial_residual)
-
-#     residual_history = []
-#     iteration_count = 0
-
-#     start_time = perf_counter()
-
-#     if method == "direct":
-#         if not sparse.issparse(A):
-#             raise TypeError(
-#                 "The direct solver requires an explicit SciPy sparse matrix."
-#             )
-
-#         if preconditioner is not None:
-#             raise ValueError(
-#                 "The direct solver does not use a preconditioner."
-#             )
-
-#         solution = spsolve(A, b)
-#         success = np.all(np.isfinite(solution))
-#         message = (
-#             "Direct solve completed."
-#             if success
-#             else "Direct solve produced nonfinite values."
-#         )
-#         iteration_count = None
-
-#     else:
-#         M = make_preconditioner(A, preconditioner)
-
-#         if method == "cg":
-
-#             def callback(xk):
-#                 nonlocal iteration_count
-#                 iteration_count += 1
-
-#                 residual = b - A @ xk
-#                 residual_history.append(np.linalg.norm(residual))
-
-#             solution, info = cg(
-#                 A,
-#                 b,
-#                 x0=x0,
-#                 rtol=relative_tolerance,
-#                 atol=absolute_tolerance,
-#                 maxiter=maximum_iterations,
-#                 M=M,
-#                 callback=callback,
-#             )
-
-#         else:
-
-#             def callback(relative_residual):
-#                 nonlocal iteration_count
-#                 iteration_count += 1
-#                 residual_history.append(float(relative_residual))
-
-#             solution, info = gmres(
-#                 A,
-#                 b,
-#                 x0=x0,
-#                 rtol=relative_tolerance,
-#                 atol=absolute_tolerance,
-#                 maxiter=maximum_iterations,
-#                 restart=gmres_restart,
-#                 M=M,
-#                 callback=callback,
-#                 callback_type="pr_norm",
-#             )
-
-#         if info == 0:
-#             success = True
-#             message = "Iterative solver converged."
-#         elif info > 0:
-#             success = False
-#             message = (
-#                 f"Solver did not converge within its iteration limit "
-#                 f"(info={info})."
-#             )
-#         else:
-#             success = False
-#             message = f"Solver failed because of a numerical breakdown (info={info})."
-
-#     solve_time = perf_counter() - start_time
-
-#     final_residual = b - A @ solution
-#     final_residual_norm = np.linalg.norm(final_residual)
-
-#     return SolveResult(
-#         solution=np.asarray(solution),
-#         success=success,
-#         solver_name=method,
-#         iterations=iteration_count,
-#         initial_residual_norm=float(initial_residual_norm),
-#         final_residual_norm=float(final_residual_norm),
-#         residual_history=residual_history,
-#         solve_time=solve_time,
-#         message=message,
-#     )
