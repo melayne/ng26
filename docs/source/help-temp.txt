@@ -1,0 +1,358 @@
+Help on Mesh in module ngsolve.comp object:
+
+class Mesh(pybind11_builtins.pybind11_object)
+ |  NGSolve interface to the Netgen mesh. Provides access and functionality
+ |  to use the mesh for finite element calculations.
+ |
+ |  Parameters:
+ |
+ |  mesh (netgen.Mesh): a mesh generated from Netgen
+ |
+ |  Method resolution order:
+ |      Mesh
+ |      pybind11_builtins.pybind11_object
+ |      builtins.object
+ |
+ |  Methods defined here:
+ |
+ |  BBBoundaries(...)
+ |      BBBoundaries(self: ngsolve.comp.Mesh, pattern: str) -> ngsolve.comp.Region
+ |
+ |      Return co dim 3 boundary mesh-region matching the given regex pattern
+ |
+ |  BBoundaries(...)
+ |      BBoundaries(self: ngsolve.comp.Mesh, pattern: str) -> ngsolve.comp.Region
+ |
+ |      Return co dim 2 boundary mesh-region matching the given regex pattern
+ |
+ |  Boundaries(...)
+ |      Boundaries(*args, **kwargs)
+ |      Overloaded function.
+ |
+ |      1. Boundaries(self: ngsolve.comp.Mesh, pattern: str) -> ngsolve.comp.Region
+ |
+ |      Return boundary mesh-region matching the given regex pattern
+ |
+ |      2. Boundaries(self: ngsolve.comp.Mesh, bnds: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> ngsolve.comp.Region
+ |
+ |      Generate boundary mesh-region by boundary condition numbers
+ |
+ |  BoundaryCF(...)
+ |      BoundaryCF(self: ngsolve.comp.Mesh, values: dict, default: ngsolve.fem.CoefficientFunction = None) -> ngsolve.fem.CoefficientFunction
+ |
+ |      Boundary wise CoefficientFunction.
+ |      First argument is a dict from either boundary names or Region objects to
+ |      CoefficientFunction (-values). Later given names/regions override earlier
+ |      values. Optional last argument (default) is the value for not given boundaries.
+ |      >>> penalty = mesh.BoundaryCF({ "top" : 1e6 }, default=0)
+ |      will create a CF being 1e6 on the top boundary and 0. elsewhere.
+ |
+ |  BuildRefinementTree(...)
+ |      BuildRefinementTree(self: ngsolve.comp.Mesh) -> pyngcore.pyngcore.Array_S_S
+ |
+ |  Contains(...)
+ |      Contains(self: ngsolve.comp.Mesh, x: typing.SupportsFloat | typing.SupportsIndex = 0.0, y: typing.SupportsFloat | typing.SupportsIndex = 0.0, z: typing.SupportsFloat | typing.SupportsIndex = 0.0) -> bool
+ |
+ |      Check if the point (x,y,z) is in the meshed domain (is inside a volume element)
+ |
+ |  Curve(...)
+ |      Curve(self: ngsolve.comp.Mesh, order: typing.SupportsInt | typing.SupportsIndex) -> ngsolve.comp.Mesh
+ |
+ |      Curve the mesh elements for geometry approximation of given order
+ |
+ |  Elements(...)
+ |      Elements(self: ngsolve.comp.Mesh, VOL_or_BND: ngsolve.comp.VorB = <VorB.VOL: 0>) -> ngcomp::ElementRange
+ |
+ |      Return an iterator over elements on VOL/BND
+ |
+ |  GeoParamCF(...)
+ |      GeoParamCF(self: ngsolve.comp.Mesh) -> ngsolve.fem.CoefficientFunction
+ |
+ |  GetBBBoundaries(...)
+ |      GetBBBoundaries(self: ngsolve.comp.Mesh) -> tuple
+ |
+ |      Return list of boundary conditions for co dimension 3
+ |
+ |  GetBBoundaries(...)
+ |      GetBBoundaries(self: ngsolve.comp.Mesh) -> tuple
+ |
+ |      Return list of boundary conditions for co dimension 2
+ |
+ |  GetBoundaries(...)
+ |      GetBoundaries(self: ngsolve.comp.Mesh) -> tuple
+ |
+ |      Return list of boundary condition names
+ |
+ |  GetCurveOrder(...)
+ |      GetCurveOrder(self: ngsolve.comp.Mesh) -> int
+ |
+ |  GetHPElementLevel(...)
+ |      GetHPElementLevel(self: ngsolve.comp.Mesh, ei: ngsolve.comp.ElementId) -> int
+ |
+ |      THIS FUNCTION IS WIP!
+ |       Return HP-refinement level of element
+ |
+ |  GetMaterials(...)
+ |      GetMaterials(self: ngsolve.comp.Mesh) -> tuple
+ |
+ |      Return list of material names
+ |
+ |  GetNE(...)
+ |      GetNE(self: ngsolve.comp.Mesh, arg0: ngsolve.comp.VorB) -> int
+ |
+ |      Return number of elements of codimension VorB.
+ |
+ |  GetPMLTrafo(...)
+ |      GetPMLTrafo(self: ngsolve.comp.Mesh, dom: typing.SupportsInt | typing.SupportsIndex = 1) -> ngsolve.comp.pml.PML
+ |
+ |      Return pml transformation on domain dom
+ |
+ |  GetPMLTrafos(...)
+ |      GetPMLTrafos(self: ngsolve.comp.Mesh) -> list
+ |
+ |      Return list of pml transformations
+ |
+ |  GetParentElement(...)
+ |      GetParentElement(self: ngsolve.comp.Mesh, ei: ngsolve.comp.ElementId) -> ngsolve.comp.ElementId
+ |
+ |      Return parent element id on refined mesh
+ |
+ |  GetParentFaces(...)
+ |      GetParentFaces(self: ngsolve.comp.Mesh, fnum: typing.SupportsInt | typing.SupportsIndex) -> tuple
+ |
+ |      Return parent faces
+ |
+ |  GetParentVertices(...)
+ |      GetParentVertices(self: ngsolve.comp.Mesh, vnum: typing.SupportsInt | typing.SupportsIndex) -> tuple[int, int]
+ |
+ |      Return parent vertex numbers on refined mesh
+ |
+ |  GetPeriodicNodePairs(...)
+ |      GetPeriodicNodePairs(self: ngsolve.comp.Mesh, arg0: ngsolve.fem.NODE_TYPE) -> list
+ |
+ |      returns list of periodic nodes with their identification number as [((master_nr, minion_nr),idnr),...]
+ |
+ |  GetTrafo(...)
+ |      GetTrafo(self: ngsolve.comp.Mesh, eid: ngsolve.comp.ElementId) -> ngsolve.fem.ElementTransformation
+ |
+ |      returns element transformation of given element id
+ |
+ |  LocalHCF(...)
+ |      LocalHCF(self: ngsolve.comp.Mesh) -> ngsolve.fem.CoefficientFunction
+ |
+ |  MapToAllElements(...)
+ |      MapToAllElements(*args, **kwargs)
+ |      Overloaded function.
+ |
+ |      1. MapToAllElements(self: ngsolve.comp.Mesh, arg0: ngsolve.fem.IntegrationRule, arg1: ngsolve.comp.VorB | ngsolve.comp.Region) -> numpy.typing.NDArray[ngsolve.fem.MeshPoint]
+ |
+ |      2. MapToAllElements(self: ngsolve.comp.Mesh, rules: collections.abc.Mapping[ngsolve.fem.ET, ngsolve.fem.IntegrationRule], vb_or_reg: ngsolve.comp.VorB | ngsolve.comp.Region, element_boundary: ngsolve.comp.VorB = <VorB.VOL: 0>) -> numpy.typing.NDArray[ngsolve.fem.MeshPoint]
+ |
+ |  MaterialCF(...)
+ |      MaterialCF(self: ngsolve.comp.Mesh, values: dict, default: ngsolve.fem.CoefficientFunction = None) -> ngsolve.fem.CoefficientFunction
+ |
+ |      Domain wise CoefficientFunction.
+ |      First argument is a dict from either material names or Region objects to
+ |      CoefficientFunction (-values). Later given names/regions override earlier
+ |      values. Optional last argument (default) is the value for not given materials.
+ |      >>> sigma = mesh.MaterialCF({ "steel_.*" : 2e6 }, default=0)
+ |      will create a CF being 2e6 on all domains starting with 'steel_' and 0 elsewhere.
+ |
+ |  Materials(...)
+ |      Materials(*args, **kwargs)
+ |      Overloaded function.
+ |
+ |      1. Materials(self: ngsolve.comp.Mesh, pattern: str) -> ngsolve.comp.Region
+ |
+ |      Return mesh-region matching the given regex pattern
+ |
+ |      2. Materials(self: ngsolve.comp.Mesh, domains: collections.abc.Sequence[typing.SupportsInt | typing.SupportsIndex]) -> ngsolve.comp.Region
+ |
+ |      Generate mesh-region by domain numbers
+ |
+ |  Refine(...)
+ |      Refine(self: ngsolve.comp.Mesh, mark_surface_elements: bool = False, onlyonce: bool = False) -> None
+ |
+ |      Local mesh refinement based on marked elements, uses element-bisection algorithm
+ |
+ |  RefineFromTree(...)
+ |      RefineFromTree(self: ngsolve.comp.Mesh, arg0: pyngcore.pyngcore.Array_S_S) -> None
+ |
+ |  RefineHP(...)
+ |      RefineHP(self: ngsolve.comp.Mesh, levels: typing.SupportsInt | typing.SupportsIndex, factor: typing.SupportsFloat | typing.SupportsIndex = 0.125) -> None
+ |
+ |      Geometric mesh refinement towards marked vertices and edges, uses factor for placement of new points
+ |
+ |  RefineUniform(...)
+ |      RefineUniform(self: ngsolve.comp.Mesh) -> None
+ |
+ |      Uniform mesh-refinement (splitting trigs into 4, and tets into 8)
+ |
+ |  Region(...)
+ |      Region(self: ngsolve.comp.Mesh, vb: ngsolve.comp.VorB, pattern: str | None = '.*') -> ngsolve.comp.Region
+ |
+ |      Return boundary mesh-region matching the given regex pattern
+ |
+ |  RegionCF(...)
+ |      RegionCF(self: ngsolve.comp.Mesh, VorB: ngsolve.comp.VorB, value: dict, default: ngsolve.fem.CoefficientFunction = None) -> ngsolve.fem.CoefficientFunction
+ |
+ |      Region wise CoefficientFunction.
+ |      First argument is VorB, defining the co-dimension,
+ |      second argument is a dict from either region names or Region objects to
+ |      CoefficientFunction (-values). Later given names/regions override earlier
+ |      values. Optional last argument (default) is the value for not given regions.
+ |      >>> sigma = mesh.RegionCF(VOL, { "steel_.*" : 2e6 }, default=0)
+ |      will create a CF being 2e6 on all domains starting with 'steel_' and 0 elsewhere.
+ |
+ |  SetDeformation(...)
+ |      SetDeformation(self: ngsolve.comp.Mesh, gf: ngcomp::GridFunction) -> None
+ |
+ |      Deform the mesh with the given GridFunction
+ |
+ |  SetElementOrder(...)
+ |      SetElementOrder(self: ngsolve.comp.Mesh, eid: ngsolve.comp.ElementId, order: typing.SupportsInt | typing.SupportsIndex) -> None
+ |
+ |      For backward compatibility, not recommended to use
+ |
+ |  SetElementOrders(...)
+ |      SetElementOrders(self: ngsolve.comp.Mesh, eid: ngsolve.comp.ElementId, orders: tuple[typing.SupportsInt | typing.SupportsIndex, typing.SupportsInt | typing.SupportsIndex, typing.SupportsInt | typing.SupportsIndex]) -> None
+ |
+ |      Set anisotropic element order (expert only)
+ |
+ |  SetPML(...)
+ |      SetPML(self: ngsolve.comp.Mesh, pmltrafo: ngsolve.comp.pml.PML, definedon: object) -> None
+ |
+ |      Set PML transformation on domain
+ |
+ |  SetRefinementFlag(...)
+ |      SetRefinementFlag(self: ngsolve.comp.Mesh, ei: ngsolve.comp.ElementId, refine: bool) -> None
+ |
+ |      Set refinementflag for mesh-refinement
+ |
+ |  SetRefinementFlags(...)
+ |      SetRefinementFlags(self: ngsolve.comp.Mesh, refine: collections.abc.Sequence[bool]) -> None
+ |
+ |      Set refinementflags for mesh-refinement
+ |
+ |  SplitElements_Alfeld(...)
+ |      SplitElements_Alfeld(self: ngsolve.comp.Mesh) -> None
+ |
+ |  UnSetPML(...)
+ |      UnSetPML(self: ngsolve.comp.Mesh, definedon: object) -> None
+ |
+ |      Unset PML transformation on domain
+ |
+ |  UnsetDeformation(...)
+ |      UnsetDeformation(self: ngsolve.comp.Mesh) -> None
+ |
+ |      Unset the deformation
+ |
+ |  __call__(...)
+ |      __call__(self: ngsolve.comp.Mesh, x: typing.Annotated[numpy.typing.ArrayLike, numpy.float64] = 0.0, y: typing.Annotated[numpy.typing.ArrayLike, numpy.float64] = 0.0, z: typing.Annotated[numpy.typing.ArrayLike, numpy.float64] = 0.0, VOL_or_BND: ngsolve.comp.VorB = <VorB.VOL: 0>, tol: typing.Annotated[numpy.typing.ArrayLike, numpy.float64] = 0.0001) -> object
+ |
+ |      Get a MappedIntegrationPoint in the point (x,y,z) on the matching volume (VorB=VOL, default) or surface (VorB=BND) element. BBND elements aren't supported
+ |
+ |  __eq__(...)
+ |      __eq__(self: ngsolve.comp.Mesh, mesh: ngsolve.comp.Mesh) -> bool
+ |
+ |  __getitem__(...)
+ |      __getitem__(*args, **kwargs)
+ |      Overloaded function.
+ |
+ |      1. __getitem__(self: ngsolve.comp.Mesh, arg0: ngsolve.comp.ElementId) -> ngsolve.comp.Ngs_Element
+ |
+ |      Return Ngs_Element from given ElementId
+ |
+ |      2. __getitem__(self: ngsolve.comp.Mesh, arg0: ngsolve.comp.NodeId) -> ngsolve.comp.MeshNode
+ |
+ |      Return MeshNode from given NodeId
+ |
+ |  __getstate__(...)
+ |      __getstate__(self: ngsolve.comp.Mesh, /) -> tuple[list]
+ |
+ |  __init__(...)
+ |      __init__(*args, **kwargs)
+ |      Overloaded function.
+ |
+ |      1. __init__(self: ngsolve.comp.Mesh, ngmesh: netgen.libngpy._meshing.Mesh) -> None
+ |
+ |      Make an NGSolve-mesh from a Netgen-mesh
+ |
+ |      2. __init__(self: ngsolve.comp.Mesh, filename: str, comm: pyngcore.pyngcore.MPI_Comm = <pyngcore.pyngcore.MPI_Comm object at 0x000001BD3082DE70>) -> None
+ |
+ |      Load a mesh from file.
+ |      In MPI-parallel mode the mesh is distributed over the MPI-group given by the communicator (WIP!)
+ |
+ |  __setstate__(...)
+ |      __setstate__(self: ngsolve.comp.Mesh, arg0: tuple) -> None
+ |
+ |  nnodes(...)
+ |      nnodes(self: ngsolve.comp.Mesh, arg0: ngsolve.fem.NODE_TYPE) -> int
+ |
+ |      number of nodes given type
+ |
+ |  nodes(...)
+ |      nodes(self: ngsolve.comp.Mesh, node_type: ngsolve.fem.NODE_TYPE) -> ngsolve.comp.MeshNodeRange
+ |
+ |      iterable of mesh nodes of type node_type
+ |
+ |  ----------------------------------------------------------------------
+ |  Readonly properties defined here:
+ |
+ |  comm
+ |      MPI-communicator the Mesh lives in
+ |
+ |  dim
+ |      mesh dimension
+ |
+ |  edges
+ |      iterable of mesh edges
+ |
+ |  faces
+ |      iterable of mesh faces
+ |
+ |  facets
+ |      iterable of mesh facets
+ |
+ |  levels
+ |      multigrid levels
+ |
+ |  ne
+ |      number of volume elements
+ |
+ |  nedge
+ |      number of edges
+ |
+ |  nface
+ |      number of faces
+ |
+ |  nfacet
+ |      number of facets
+ |
+ |  ngmesh
+ |      the Netgen mesh
+ |
+ |  nv
+ |      number of vertices
+ |
+ |  vertices
+ |      iterable of mesh vertices
+ |
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |
+ |  __dict__
+ |
+ |  deformation
+ |      mesh deformation
+ |
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |
+ |  __hash__ = None
+ |
+ |  ----------------------------------------------------------------------
+ |  Static methods inherited from pybind11_builtins.pybind11_object:
+ |
+ |  __new__(*args, **kwargs) class method of pybind11_builtins.pybind11_object
+ |      Create and return a new object.  See help(type) for accurate signature.

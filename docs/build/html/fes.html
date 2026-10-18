@@ -1,0 +1,657 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finite Element Spaces &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Bilinear Forms" href="bilinearforms.html" />
+    <link rel="prev" title="Meshes" href="meshes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Finite Element Spaces</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.FESpace"><code class="docutils literal notranslate"><span class="pre">FESpace</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.ApplyM"><code class="docutils literal notranslate"><span class="pre">FESpace.ApplyM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.ConvertL2Operator"><code class="docutils literal notranslate"><span class="pre">FESpace.ConvertL2Operator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.CouplingType"><code class="docutils literal notranslate"><span class="pre">FESpace.CouplingType()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.CreateDirectSolverCluster"><code class="docutils literal notranslate"><span class="pre">FESpace.CreateDirectSolverCluster()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.CreateSmoothingBlocks"><code class="docutils literal notranslate"><span class="pre">FESpace.CreateSmoothingBlocks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.Elements"><code class="docutils literal notranslate"><span class="pre">FESpace.Elements()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.FinalizeUpdate"><code class="docutils literal notranslate"><span class="pre">FESpace.FinalizeUpdate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.FreeDofs"><code class="docutils literal notranslate"><span class="pre">FESpace.FreeDofs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetDefinedOnRegion"><code class="docutils literal notranslate"><span class="pre">FESpace.GetDefinedOnRegion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetDirichletRegion"><code class="docutils literal notranslate"><span class="pre">FESpace.GetDirichletRegion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetDofNrs"><code class="docutils literal notranslate"><span class="pre">FESpace.GetDofNrs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetDofs"><code class="docutils literal notranslate"><span class="pre">FESpace.GetDofs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetFE"><code class="docutils literal notranslate"><span class="pre">FESpace.GetFE()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetNDofLevel"><code class="docutils literal notranslate"><span class="pre">FESpace.GetNDofLevel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetOrder"><code class="docutils literal notranslate"><span class="pre">FESpace.GetOrder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetTrace"><code class="docutils literal notranslate"><span class="pre">FESpace.GetTrace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.GetTraceTrans"><code class="docutils literal notranslate"><span class="pre">FESpace.GetTraceTrans()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.HideAllDofs"><code class="docutils literal notranslate"><span class="pre">FESpace.HideAllDofs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.InvM"><code class="docutils literal notranslate"><span class="pre">FESpace.InvM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.Mass"><code class="docutils literal notranslate"><span class="pre">FESpace.Mass()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.ParallelDofs"><code class="docutils literal notranslate"><span class="pre">FESpace.ParallelDofs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.Prolongation"><code class="docutils literal notranslate"><span class="pre">FESpace.Prolongation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.Range"><code class="docutils literal notranslate"><span class="pre">FESpace.Range()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.SetCouplingType"><code class="docutils literal notranslate"><span class="pre">FESpace.SetCouplingType()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.SetDefinedOn"><code class="docutils literal notranslate"><span class="pre">FESpace.SetDefinedOn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.SetHarmonicProlongation"><code class="docutils literal notranslate"><span class="pre">FESpace.SetHarmonicProlongation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.SetOrder"><code class="docutils literal notranslate"><span class="pre">FESpace.SetOrder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.SolveM"><code class="docutils literal notranslate"><span class="pre">FESpace.SolveM()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.TestFunction"><code class="docutils literal notranslate"><span class="pre">FESpace.TestFunction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.TnT"><code class="docutils literal notranslate"><span class="pre">FESpace.TnT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.TraceOperator"><code class="docutils literal notranslate"><span class="pre">FESpace.TraceOperator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.TrialFunction"><code class="docutils literal notranslate"><span class="pre">FESpace.TrialFunction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.Update"><code class="docutils literal notranslate"><span class="pre">FESpace.Update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.UpdateDofTables"><code class="docutils literal notranslate"><span class="pre">FESpace.UpdateDofTables()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.autoupdate"><code class="docutils literal notranslate"><span class="pre">FESpace.autoupdate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.components"><code class="docutils literal notranslate"><span class="pre">FESpace.components</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.couplingtype"><code class="docutils literal notranslate"><span class="pre">FESpace.couplingtype</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.dim"><code class="docutils literal notranslate"><span class="pre">FESpace.dim</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.globalorder"><code class="docutils literal notranslate"><span class="pre">FESpace.globalorder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.is_complex"><code class="docutils literal notranslate"><span class="pre">FESpace.is_complex</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.loembedding"><code class="docutils literal notranslate"><span class="pre">FESpace.loembedding</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.lospace"><code class="docutils literal notranslate"><span class="pre">FESpace.lospace</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.mesh"><code class="docutils literal notranslate"><span class="pre">FESpace.mesh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.ndof"><code class="docutils literal notranslate"><span class="pre">FESpace.ndof</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.ndofglobal"><code class="docutils literal notranslate"><span class="pre">FESpace.ndofglobal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.FESpace.type"><code class="docutils literal notranslate"><span class="pre">FESpace.type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Finite Element Spaces</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/fes.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="finite-element-spaces">
+<h1>Finite Element Spaces<a class="headerlink" href="#finite-element-spaces" title="Link to this heading"></a></h1>
+<p>NGSolve is all about finite elements.  Here we have documentation on their implementation of the spaces in code.</p>
+<!-- Using the autodoc tool -->
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.FESpace">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.</span></span><span class="sig-name descname"><span class="pre">FESpace</span></span><a class="headerlink" href="#ngsolve.FESpace" title="Link to this definition"></a></dt>
+<dd><p>Finite Element Space</p>
+<p>Provides the functionality for finite element calculations.</p>
+<p>Some available FESpaces are:</p>
+<p>H1, HCurl, HDiv, L2, FacetFESpace, HDivDiv</p>
+<dl class="simple">
+<dt>2 __init__ overloads:</dt><dd><ol class="arabic simple">
+<li><p>To create a registered FESpace</p></li>
+<li><p>To create a compound FESpace from multiple created FESpaces</p></li>
+</ol>
+</dd>
+</dl>
+<ol class="arabic simple">
+<li></li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>type<span class="classifier">string</span></dt><dd><p>Type of the finite element space. This parameter is automatically
+set if the space is constructed with a generator function.</p>
+</dd>
+<dt>mesh<span class="classifier">ngsolve.Mesh</span></dt><dd><p>Mesh on which the finite element space is defined on.</p>
+</dd>
+<dt>kwargs<span class="classifier">kwargs</span></dt><dd><p>For a description of the possible kwargs have a look a bit further down.</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li></li>
+</ol>
+<p>Parameters:</p>
+<dl>
+<dt>spaces<span class="classifier">list of ngsolve.FESpace</span></dt><dd><p>List of the spaces for the compound finite element space</p>
+</dd>
+<dt>kwargs<span class="classifier">kwargs</span></dt><dd><blockquote>
+<div><p>For a description of the possible kwargs have a look a bit further down.</p>
+</div></blockquote>
+<p>Keyword arguments can be:</p>
+</dd>
+<dt>order: int = 1</dt><dd><p>order of finite element space</p>
+</dd>
+<dt>complex: bool = False</dt><dd><p>Set if FESpace should be complex</p>
+</dd>
+<dt>dirichlet: regexpr</dt><dd><p>Regular expression string defining the dirichlet boundary.
+More than one boundary can be combined by the | operator,
+i.e.: dirichlet = ‘top|right’</p>
+</dd>
+<dt>dirichlet_bbnd: regexpr</dt><dd><p>Regular expression string defining the dirichlet bboundary,
+i.e. points in 2D and edges in 3D.
+More than one boundary can be combined by the | operator,
+i.e.: dirichlet_bbnd = ‘top|right’</p>
+</dd>
+<dt>dirichlet_bbbnd: regexpr</dt><dd><p>Regular expression string defining the dirichlet bbboundary,
+i.e. points in 3D.
+More than one boundary can be combined by the | operator,
+i.e.: dirichlet_bbbnd = ‘top|right’</p>
+</dd>
+<dt>definedon: Region or regexpr</dt><dd><p>FESpace is only defined on specific Region, created with mesh.Materials(‘regexpr’)
+or mesh.Boundaries(‘regexpr’). If given a regexpr, the region is assumed to be
+mesh.Materials(‘regexpr’).</p>
+</dd>
+<dt>dim: int = 1</dt><dd><p>Create multi dimensional FESpace (i.e. [H1]^3)</p>
+</dd>
+<dt>dgjumps: bool = False</dt><dd><p>Enable discontinuous space for DG methods, this flag is needed for DG methods,
+since the dofs have a different coupling then and this changes the sparsity
+pattern of matrices.</p>
+</dd>
+<dt>autoupdate: bool = False</dt><dd><p>Automatically update on a change to the mesh.</p>
+</dd>
+<dt>low_order_space: bool = True</dt><dd><p>Generate a lowest order space together with the high-order space,
+needed for some preconditioners.</p>
+</dd>
+<dt>hoprolongation: bool = False</dt><dd><p>Create high order prolongation operators,
+only available for H1 and L2 on simplicial meshes</p>
+</dd>
+<dt>order_policy: ORDER_POLICY = ORDER_POLICY.OLDSTYLE</dt><dd><p>CONSTANT .. use the same fixed order for all elements,
+NODAL ….. use the same order for nodes of same shape,
+VARIABLE … use an individual order for each edge, face and cell,
+OLDSTYLE .. as it used to be for the last decade</p>
+</dd>
+<dt>print: bool = False</dt><dd><p>(historic) print some output into file set by ‘SetTestoutFile’</p>
+</dd>
+</dl>
+<p>segmorder: none
+trigorder: none
+quadorder: none
+tetorder: none
+hexorder: none
+prismorder: none
+pyramidorder: none</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.ApplyM">
+<span class="sig-name descname"><span class="pre">ApplyM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.Region</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.ApplyM" title="Link to this definition"></a></dt>
+<dd><p>Apply mass-matrix. Available only for L2-like spaces</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.ConvertL2Operator">
+<span class="sig-name descname"><span class="pre">ConvertL2Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2space</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseMatrix</span></span></span><a class="headerlink" href="#ngsolve.FESpace.ConvertL2Operator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.CouplingType">
+<span class="sig-name descname"><span class="pre">CouplingType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dofnr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.COUPLING_TYPE</span></span></span><a class="headerlink" href="#ngsolve.FESpace.CouplingType" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Get coupling type of a degree of freedom.</p>
+</div></blockquote>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>dofnr<span class="classifier">int</span></dt><dd><p>input dof number</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.CreateDirectSolverCluster">
+<span class="sig-name descname"><span class="pre">CreateDirectSolverCluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#ngsolve.FESpace.CreateDirectSolverCluster" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.CreateSmoothingBlocks">
+<span class="sig-name descname"><span class="pre">CreateSmoothingBlocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pyngcore.pyngcore.Table_I</span></span></span><a class="headerlink" href="#ngsolve.FESpace.CreateSmoothingBlocks" title="Link to this definition"></a></dt>
+<dd><p>Create table of smoothing blocks for block-Jacobi/block-Gauss-Seidel preconditioners.</p>
+<p>Every table entry describes the set of dofs belonging a Jacobi/Gauss-Seidel block.</p>
+<p>Paramters:</p>
+<dl class="simple">
+<dt>blocktype: string | [ string ] | int</dt><dd><p>describes blocktype.
+string form [“vertex”, “edge”, “face”,  “facet”, “vertexedge”, ….]
+or list of strings for combining multiple blocktypes
+int is for backward compatibility with old style blocktypes</p>
+</dd>
+<dt>condense: bool = False</dt><dd><p>exclude dofs eliminated by static condensation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.Elements">
+<span class="sig-name descname"><span class="pre">Elements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.FESpace.Elements" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>Elements(self: ngsolve.comp.FESpace, VOL_or_BND: ngsolve.comp.VorB = &lt;VorB.VOL: 0&gt;) -&gt; ngsolve.comp.FESpaceElementRange</p></li>
+</ol>
+<p>Returns an iterable range of elements.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>VOL_or_BND<span class="classifier">ngsolve.comp.VorB</span></dt><dd><p>input VOL, BND, BBND,…</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>Elements(self: ngsolve.comp.FESpace, arg0: ngsolve.comp.Region) -&gt; collections.abc.Iterator[ngsolve.comp.FESpaceElement]</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.FinalizeUpdate">
+<span class="sig-name descname"><span class="pre">FinalizeUpdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.FinalizeUpdate" title="Link to this definition"></a></dt>
+<dd><p>finalize update</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.FreeDofs">
+<span class="sig-name descname"><span class="pre">FreeDofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupling</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pyngcore.pyngcore.BitArray</span></span></span><a class="headerlink" href="#ngsolve.FESpace.FreeDofs" title="Link to this definition"></a></dt>
+<dd><p>Return BitArray of free (non-Dirichlet) dofsn
+coupling=False … all free dofs including local dofsn
+coupling=True …. only element-boundary free dofs</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>coupling<span class="classifier">bool</span></dt><dd><p>input coupling</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetDefinedOnRegion">
+<span class="sig-name descname"><span class="pre">GetDefinedOnRegion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;VorB.VOL:</span> <span class="pre">0&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.Region</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetDefinedOnRegion" title="Link to this definition"></a></dt>
+<dd><p>Return mesh-region where FESpace is defined on</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetDirichletRegion">
+<span class="sig-name descname"><span class="pre">GetDirichletRegion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;VorB.BND:</span> <span class="pre">1&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.Region</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetDirichletRegion" title="Link to this definition"></a></dt>
+<dd><p>Return boundary Dirichlet mesh-region of FESpace</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetDofNrs">
+<span class="sig-name descname"><span class="pre">GetDofNrs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.FESpace.GetDofNrs" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>GetDofNrs(self: ngsolve.comp.FESpace, ei: ngsolve.comp.ElementId) -&gt; tuple</p></li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>ei<span class="classifier">ngsolve.comp.ElementId</span></dt><dd><p>input element id</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>GetDofNrs(self: ngsolve.comp.FESpace, ni: ngsolve.comp.NodeId) -&gt; tuple</p></li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>ni<span class="classifier">ngsolve.comp.NodeId</span></dt><dd><p>input node id</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetDofs">
+<span class="sig-name descname"><span class="pre">GetDofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.Region</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pyngcore.pyngcore.BitArray</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetDofs" title="Link to this definition"></a></dt>
+<dd><p>Returns all degrees of freedom in given region.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>region<span class="classifier">ngsolve.comp.Region</span></dt><dd><p>input region</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetFE">
+<span class="sig-name descname"><span class="pre">GetFE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ei</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.ElementId</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetFE" title="Link to this definition"></a></dt>
+<dd><p>Get the finite element to corresponding element id.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>ei<span class="classifier">ngsolve.comp.ElementId</span></dt><dd><p>input element id</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetNDofLevel">
+<span class="sig-name descname"><span class="pre">GetNDofLevel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetNDofLevel" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetOrder">
+<span class="sig-name descname"><span class="pre">GetOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.NodeId</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetOrder" title="Link to this definition"></a></dt>
+<dd><p>return order of node.
+by now, only isotropic order is supported here</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetTrace">
+<span class="sig-name descname"><span class="pre">GetTrace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetTrace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.GetTraceTrans">
+<span class="sig-name descname"><span class="pre">GetTraceTrans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg3</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.GetTraceTrans" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.HideAllDofs">
+<span class="sig-name descname"><span class="pre">HideAllDofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">component</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;ngsolve.ngstd.DummyArgument&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.HideAllDofs" title="Link to this definition"></a></dt>
+<dd><p>set all visible coupling types to HIDDEN_DOFs (will be overwritten by any Update())</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.InvM">
+<span class="sig-name descname"><span class="pre">InvM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseMatrix</span></span></span><a class="headerlink" href="#ngsolve.FESpace.InvM" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.Mass">
+<span class="sig-name descname"><span class="pre">Mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.Region</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseMatrix</span></span></span><a class="headerlink" href="#ngsolve.FESpace.Mass" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.ParallelDofs">
+<span class="sig-name descname"><span class="pre">ParallelDofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.la.ParallelDofs</span></span></span><a class="headerlink" href="#ngsolve.FESpace.ParallelDofs" title="Link to this definition"></a></dt>
+<dd><p>Return dof-identification for MPI-distributed meshes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.Prolongation">
+<span class="sig-name descname"><span class="pre">Prolongation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngmg::Prolongation</span></span></span><a class="headerlink" href="#ngsolve.FESpace.Prolongation" title="Link to this definition"></a></dt>
+<dd><p>Return prolongation operator for use in multi-grid</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.Range">
+<span class="sig-name descname"><span class="pre">Range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">arg0</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.la.DofRange</span></span></span><a class="headerlink" href="#ngsolve.FESpace.Range" title="Link to this definition"></a></dt>
+<dd><p>deprecated, will be only available for ProductSpace</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.SetCouplingType">
+<span class="sig-name descname"><span class="pre">SetCouplingType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.FESpace.SetCouplingType" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic">
+<li><p>SetCouplingType(self: ngsolve.comp.FESpace, dofnr: typing.SupportsInt | typing.SupportsIndex, coupling_type: ngsolve.comp.COUPLING_TYPE) -&gt; None</p>
+<blockquote>
+<div><p>Set coupling type of a degree of freedom.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>dofnr<span class="classifier">int</span></dt><dd><p>input dof number</p>
+</dd>
+<dt>coupling_type<span class="classifier">ngsolve.comp.COUPLING_TYPE</span></dt><dd><p>input coupling type</p>
+</dd>
+</dl>
+<ol class="arabic" start="2">
+<li><p>SetCouplingType(self: ngsolve.comp.FESpace, dofnrs: ngsolve.ngstd.IntRange, coupling_type: ngsolve.comp.COUPLING_TYPE) -&gt; None</p>
+<blockquote>
+<div><p>Set coupling type for interval of dofs.</p>
+</div></blockquote>
+</li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>dofnrs<span class="classifier">Range</span></dt><dd><p>range of dofs</p>
+</dd>
+<dt>coupling_type<span class="classifier">ngsolve.comp.COUPLING_TYPE</span></dt><dd><p>input coupling type</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.SetDefinedOn">
+<span class="sig-name descname"><span class="pre">SetDefinedOn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.Region</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.SetDefinedOn" title="Link to this definition"></a></dt>
+<dd><p>Set the regions on which the FESpace is defined.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>region<span class="classifier">ngsolve.comp.Region</span></dt><dd><p>input region</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.SetHarmonicProlongation">
+<span class="sig-name descname"><span class="pre">SetHarmonicProlongation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngcomp::BilinearForm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sparsecholesky'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.SetHarmonicProlongation" title="Link to this definition"></a></dt>
+<dd><p>use harmonic prolongation w.r.t. bilinear-form</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.SetOrder">
+<span class="sig-name descname"><span class="pre">SetOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.FESpace.SetOrder" title="Link to this definition"></a></dt>
+<dd><p>Overloaded function.</p>
+<ol class="arabic simple">
+<li><p>SetOrder(self: ngsolve.comp.FESpace, element_type: ngsolve.fem.ET, order: typing.SupportsInt | typing.SupportsIndex) -&gt; None</p></li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>element_type<span class="classifier">ngsolve.fem.ET</span></dt><dd><p>input element type</p>
+</dd>
+<dt>order<span class="classifier">object</span></dt><dd><p>input polynomial order</p>
+</dd>
+</dl>
+<ol class="arabic simple" start="2">
+<li><p>SetOrder(self: ngsolve.comp.FESpace, nodeid: ngsolve.comp.NodeId, order: typing.SupportsInt | typing.SupportsIndex) -&gt; None</p></li>
+</ol>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>nodeid<span class="classifier">ngsolve.comp.NodeId</span></dt><dd><p>input node id</p>
+</dd>
+<dt>order<span class="classifier">int</span></dt><dd><p>input polynomial order</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.SolveM">
+<span class="sig-name descname"><span class="pre">SolveM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.Region</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.SolveM" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Solve with the mass-matrix. Available only for L2-like spaces.</p>
+</div></blockquote>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>vec<span class="classifier">ngsolve.la.BaseVector</span></dt><dd><p>input right hand side vector</p>
+</dd>
+<dt>rho<span class="classifier">ngsolve.fem.CoefficientFunction</span></dt><dd><p>input CF</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.TestFunction">
+<span class="sig-name descname"><span class="pre">TestFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="headerlink" href="#ngsolve.FESpace.TestFunction" title="Link to this definition"></a></dt>
+<dd><p>Return a proxy to be used as a testfunction for Symbolic Integrators</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.TnT">
+<span class="sig-name descname"><span class="pre">TnT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#ngsolve.FESpace.TnT" title="Link to this definition"></a></dt>
+<dd><p>Return a tuple of trial and testfunction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.TraceOperator">
+<span class="sig-name descname"><span class="pre">TraceOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracespace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">average</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BaseMatrix</span></span></span><a class="headerlink" href="#ngsolve.FESpace.TraceOperator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.TrialFunction">
+<span class="sig-name descname"><span class="pre">TrialFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">object</span></span></span><a class="headerlink" href="#ngsolve.FESpace.TrialFunction" title="Link to this definition"></a></dt>
+<dd><p>Return a proxy to be used as a trialfunction in Symbolic Integrators</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.Update">
+<span class="sig-name descname"><span class="pre">Update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.Update" title="Link to this definition"></a></dt>
+<dd><p>update space after mesh-refinement</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.FESpace.UpdateDofTables">
+<span class="sig-name descname"><span class="pre">UpdateDofTables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.FESpace" title="ngsolve.comp.FESpace"><span class="pre">ngsolve.comp.FESpace</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.FESpace.UpdateDofTables" title="Link to this definition"></a></dt>
+<dd><p>update dof-tables after changing polynomial order distribution</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.autoupdate">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">autoupdate</span></span><a class="headerlink" href="#ngsolve.FESpace.autoupdate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.components">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">components</span></span><a class="headerlink" href="#ngsolve.FESpace.components" title="Link to this definition"></a></dt>
+<dd><p>deprecated, will be only available for ProductSpace</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.couplingtype">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">couplingtype</span></span><a class="headerlink" href="#ngsolve.FESpace.couplingtype" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.dim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dim</span></span><a class="headerlink" href="#ngsolve.FESpace.dim" title="Link to this definition"></a></dt>
+<dd><p>multi-dim of FESpace</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.globalorder">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">globalorder</span></span><a class="headerlink" href="#ngsolve.FESpace.globalorder" title="Link to this definition"></a></dt>
+<dd><p>query global order of space</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.is_complex">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_complex</span></span><a class="headerlink" href="#ngsolve.FESpace.is_complex" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.loembedding">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">loembedding</span></span><a class="headerlink" href="#ngsolve.FESpace.loembedding" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.lospace">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">lospace</span></span><a class="headerlink" href="#ngsolve.FESpace.lospace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.mesh">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mesh</span></span><a class="headerlink" href="#ngsolve.FESpace.mesh" title="Link to this definition"></a></dt>
+<dd><p>mesh on which the FESpace is created</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.ndof">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ndof</span></span><a class="headerlink" href="#ngsolve.FESpace.ndof" title="Link to this definition"></a></dt>
+<dd><p>number of degrees of freedom</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.ndofglobal">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ndofglobal</span></span><a class="headerlink" href="#ngsolve.FESpace.ndofglobal" title="Link to this definition"></a></dt>
+<dd><p>global number of dofs on MPI-distributed mesh</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.FESpace.type">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#ngsolve.FESpace.type" title="Link to this definition"></a></dt>
+<dd><p>type of finite element space</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="meshes.html" class="btn btn-neutral float-left" title="Meshes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="bilinearforms.html" class="btn btn-neutral float-right" title="Bilinear Forms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

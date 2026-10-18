@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grid Functions &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Coefficient Functions" href="coeffunctions.html" />
+    <link rel="prev" title="Linear Forms" href="linearforms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Grid Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.GridFunction"><code class="docutils literal notranslate"><span class="pre">GridFunction</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.AddMultiDimComponent"><code class="docutils literal notranslate"><span class="pre">GridFunction.AddMultiDimComponent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.CF"><code class="docutils literal notranslate"><span class="pre">GridFunction.CF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Deriv"><code class="docutils literal notranslate"><span class="pre">GridFunction.Deriv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Interpolate"><code class="docutils literal notranslate"><span class="pre">GridFunction.Interpolate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Load"><code class="docutils literal notranslate"><span class="pre">GridFunction.Load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.MDComponent"><code class="docutils literal notranslate"><span class="pre">GridFunction.MDComponent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Operator"><code class="docutils literal notranslate"><span class="pre">GridFunction.Operator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Operators"><code class="docutils literal notranslate"><span class="pre">GridFunction.Operators()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Save"><code class="docutils literal notranslate"><span class="pre">GridFunction.Save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Set"><code class="docutils literal notranslate"><span class="pre">GridFunction.Set()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Trace"><code class="docutils literal notranslate"><span class="pre">GridFunction.Trace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.Update"><code class="docutils literal notranslate"><span class="pre">GridFunction.Update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.autoupdate"><code class="docutils literal notranslate"><span class="pre">GridFunction.autoupdate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.components"><code class="docutils literal notranslate"><span class="pre">GridFunction.components</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.derivname"><code class="docutils literal notranslate"><span class="pre">GridFunction.derivname</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.name"><code class="docutils literal notranslate"><span class="pre">GridFunction.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.space"><code class="docutils literal notranslate"><span class="pre">GridFunction.space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.vec"><code class="docutils literal notranslate"><span class="pre">GridFunction.vec</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ngsolve.GridFunction.vecs"><code class="docutils literal notranslate"><span class="pre">GridFunction.vecs</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="functions.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Grid Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/gridfunctions.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="grid-functions">
+<h1>Grid Functions<a class="headerlink" href="#grid-functions" title="Link to this heading"></a></h1>
+<p>NGSolve grid function documentation portal</p>
+<!-- Using the autodoc tool -->
+<dl class="py class">
+<dt class="sig sig-object py" id="ngsolve.GridFunction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ngsolve.</span></span><span class="sig-name descname"><span class="pre">GridFunction</span></span><a class="headerlink" href="#ngsolve.GridFunction" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>a field approximated in some finite element space</dt><dd><p>Keyword arguments can be:</p>
+</dd>
+<dt>multidim:</dt><dd><p>Multidimensional GridFunction</p>
+</dd>
+<dt>nested: bool = False</dt><dd><p>Generates prolongation matrices for each mesh level and prolongates
+the solution onto the finer grid after a refinement.</p>
+</dd>
+<dt>autoupdate:</dt><dd><p>Automatically update on FE space update</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.AddMultiDimComponent">
+<span class="sig-name descname"><span class="pre">AddMultiDimComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">vec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.la.BaseVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.AddMultiDimComponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.CF">
+<span class="sig-name descname"><span class="pre">CF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">diffop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.fem.DifferentialOperator</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.GridFunction.CF" title="Link to this definition"></a></dt>
+<dd><p>Parameters:</p>
+<dl class="simple">
+<dt>diffop<span class="classifier">ngsolve.fem.DifferentialOperator</span></dt><dd><p>input differential operator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Deriv">
+<span class="sig-name descname"><span class="pre">Deriv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></span><a class="headerlink" href="#ngsolve.GridFunction.Deriv" title="Link to this definition"></a></dt>
+<dd><p>Returns the canonical derivative of the space behind the GridFunction if possible.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Interpolate">
+<span class="sig-name descname"><span class="pre">Interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;ngsolve.ngstd.DummyArgument&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mdcomp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Interpolate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Load">
+<span class="sig-name descname"><span class="pre">Load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Load" title="Link to this definition"></a></dt>
+<dd><p>Loads a gridfunction from a file.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>filename<span class="classifier">string</span></dt><dd><p>input file name</p>
+</dd>
+<dt>parallel<span class="classifier">bool</span></dt><dd><p>input parallel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.MDComponent">
+<span class="sig-name descname"><span class="pre">MDComponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mdcomp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.GridFunctionCoefficientFunction</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.MDComponent" title="Link to this definition"></a></dt>
+<dd><p>select component of multidim GridFunction</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Operator">
+<span class="sig-name descname"><span class="pre">Operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VOL_or_BND</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.GridFunctionCoefficientFunction</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Operator" title="Link to this definition"></a></dt>
+<dd><p>Get access to an operator depending on the FESpace.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>name<span class="classifier">string</span></dt><dd><p>input name of the requested operator</p>
+</dd>
+<dt>VOL_or_BND<span class="classifier">ngsolve.comp.VorB</span></dt><dd><p>input VOL, BND, BBND, …</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Operators">
+<span class="sig-name descname"><span class="pre">Operators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Operators" title="Link to this definition"></a></dt>
+<dd><p>returns list of available differential operators</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Save">
+<span class="sig-name descname"><span class="pre">Save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Save" title="Link to this definition"></a></dt>
+<dd><p>Saves the gridfunction into a file.</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>filename<span class="classifier">string</span></dt><dd><p>input file name</p>
+</dd>
+<dt>parallel<span class="classifier">bool</span></dt><dd><p>input parallel</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Set">
+<span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coeffunctions.html#ngsolve.CoefficientFunction" title="ngsolve.fem.CoefficientFunction"><span class="pre">ngsolve.fem.CoefficientFunction</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">VOL_or_BND</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ngsolve.comp.VorB</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;VorB.VOL:</span> <span class="pre">0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;ngsolve.ngstd.DummyArgument&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_simd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mdcomp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">definedonelements</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pyngcore.pyngcore.BitArray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bonus_intorder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SupportsInt</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">SupportsIndex</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Set" title="Link to this definition"></a></dt>
+<dd><p>Set values</p>
+<p>Parameters:</p>
+<dl class="simple">
+<dt>coefficient<span class="classifier">ngsolve.fem.CoefficientFunction</span></dt><dd><p>input CF to set</p>
+</dd>
+<dt>VOL_or_BND<span class="classifier">ngsolve.comp.VorB</span></dt><dd><p>input VOL, BND, BBND, …</p>
+</dd>
+<dt>definedon<span class="classifier">object</span></dt><dd><p>input definedon region</p>
+</dd>
+<dt>dual<span class="classifier">bool</span></dt><dd><p>If set to true dual shapes are used, otherwise local L2-projection is used.
+Default is False.</p>
+</dd>
+<dt>use_simd<span class="classifier">bool</span></dt><dd><p>If set to false does not use SIMD (for debugging).</p>
+</dd>
+<dt>mdcomp<span class="classifier">int</span></dt><dd><p>.</p>
+</dd>
+<dt>definedonelements<span class="classifier">nullopt</span></dt><dd><p>.</p>
+</dd>
+<dt>bonus_intorder<span class="classifier">int</span></dt><dd><p>Increase numerical integration order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Trace">
+<span class="sig-name descname"><span class="pre">Trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ngsolve.comp.GridFunctionCoefficientFunction</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Trace" title="Link to this definition"></a></dt>
+<dd><p>take canonical boundary trace. This function is optional, added for consistency with proxies</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.Update">
+<span class="sig-name descname"><span class="pre">Update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#ngsolve.GridFunction" title="ngsolve.comp.GridFunction"><span class="pre">ngsolve.comp.GridFunction</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#ngsolve.GridFunction.Update" title="Link to this definition"></a></dt>
+<dd><p>update vector size to finite element space dimension after mesh refinement</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.autoupdate">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">autoupdate</span></span><a class="headerlink" href="#ngsolve.GridFunction.autoupdate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.components">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">components</span></span><a class="headerlink" href="#ngsolve.GridFunction.components" title="Link to this definition"></a></dt>
+<dd><p>list of gridfunctions for compound gridfunction</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.derivname">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">derivname</span></span><a class="headerlink" href="#ngsolve.GridFunction.derivname" title="Link to this definition"></a></dt>
+<dd><p>Name of canonical derivative of the space behind the GridFunction.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.name">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#ngsolve.GridFunction.name" title="Link to this definition"></a></dt>
+<dd><p>Name of the Gridfunction</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.space">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">space</span></span><a class="headerlink" href="#ngsolve.GridFunction.space" title="Link to this definition"></a></dt>
+<dd><p>the finite element space</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.vec">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">vec</span></span><a class="headerlink" href="#ngsolve.GridFunction.vec" title="Link to this definition"></a></dt>
+<dd><p>coefficient vector</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ngsolve.GridFunction.vecs">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">vecs</span></span><a class="headerlink" href="#ngsolve.GridFunction.vecs" title="Link to this definition"></a></dt>
+<dd><p>list of coefficient vectors for multi-dim gridfunction</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="linearforms.html" class="btn btn-neutral float-left" title="Linear Forms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coeffunctions.html" class="btn btn-neutral float-right" title="Coefficient Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

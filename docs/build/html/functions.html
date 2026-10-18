@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Functions &mdash; MLMCMC using NGSolve 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=fc6fd62b"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Solvers" href="solvers.html" />
+    <link rel="prev" title="Coefficient Functions" href="coeffunctions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MLMCMC using NGSolve
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fes.html">Finite Element Spaces</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bilinearforms.html">Bilinear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearforms.html">Linear Forms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gridfunctions.html">Grid Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coeffunctions.html">Coefficient Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.ConstantCF"><code class="docutils literal notranslate"><span class="pre">ConstantCF()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Deviator"><code class="docutils literal notranslate"><span class="pre">Deviator()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.DomainConstantCF"><code class="docutils literal notranslate"><span class="pre">DomainConstantCF()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Grad"><code class="docutils literal notranslate"><span class="pre">Grad()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Laplace"><code class="docutils literal notranslate"><span class="pre">Laplace()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Mass"><code class="docutils literal notranslate"><span class="pre">Mass()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Neumann"><code class="docutils literal notranslate"><span class="pre">Neumann()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Normalize"><code class="docutils literal notranslate"><span class="pre">Normalize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.OuterProduct"><code class="docutils literal notranslate"><span class="pre">OuterProduct()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyCof"><code class="docutils literal notranslate"><span class="pre">PyCof()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyCross"><code class="docutils literal notranslate"><span class="pre">PyCross()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyDet"><code class="docutils literal notranslate"><span class="pre">PyDet()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyId"><code class="docutils literal notranslate"><span class="pre">PyId()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyInv"><code class="docutils literal notranslate"><span class="pre">PyInv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PySkew"><code class="docutils literal notranslate"><span class="pre">PySkew()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PySym"><code class="docutils literal notranslate"><span class="pre">PySym()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.PyTrace"><code class="docutils literal notranslate"><span class="pre">PyTrace()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.Source"><code class="docutils literal notranslate"><span class="pre">Source()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.VectorFacet"><code class="docutils literal notranslate"><span class="pre">VectorFacet()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.curl"><code class="docutils literal notranslate"><span class="pre">curl()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.div"><code class="docutils literal notranslate"><span class="pre">div()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.dt"><code class="docutils literal notranslate"><span class="pre">dt()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.grad"><code class="docutils literal notranslate"><span class="pre">grad()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ngsolve.utils.printonce"><code class="docutils literal notranslate"><span class="pre">printonce()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solvers.html">Solvers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preconditioners.html">Preconditioners</a></li>
+<li class="toctree-l1"><a class="reference internal" href="taskmanager.html">Task Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="linearalgebra.html">Linear Algebra</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensors.html">Tensors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timestepping.html">Time Stepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gui.html">GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MLMCMC using NGSolve</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/functions.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Link to this heading"></a></h1>
+<p>Starting with the contents of utils.py this addresses functions that NGSolve provides and how they are implemented.</p>
+<!-- Using the autodoc tool -->
+<dl class="py function" id="module-ngsolve.utils">
+<dt class="sig sig-object py" id="ngsolve.utils.ConstantCF">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">ConstantCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.ConstantCF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Deviator">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Deviator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Deviator" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.DomainConstantCF">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">DomainConstantCF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.DomainConstantCF" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Grad">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Grad" title="Link to this definition"></a></dt>
+<dd><p>Jacobi-matrix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Laplace">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Laplace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Laplace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Mass">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Mass" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Neumann">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Neumann</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Neumann" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Normalize">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Normalize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.OuterProduct">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">OuterProduct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.OuterProduct" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyCof">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyCof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyCof" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyCross">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyCross</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyCross" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyDet">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyDet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyDet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyId">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyId</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyId" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyInv">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyInv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyInv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PySkew">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PySkew</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PySkew" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PySym">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PySym</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PySym" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.PyTrace">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">PyTrace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.PyTrace" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.Source">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">Source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.Source" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.VectorFacet">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">VectorFacet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.VectorFacet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.curl">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">curl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.curl" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.div">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.div" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.dt">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">dt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">u</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.dt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.grad">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.grad" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ngsolve.utils.printonce">
+<span class="sig-prename descclassname"><span class="pre">ngsolve.utils.</span></span><span class="sig-name descname"><span class="pre">printonce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ngsolve.utils.printonce" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coeffunctions.html" class="btn btn-neutral float-left" title="Coefficient Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="solvers.html" class="btn btn-neutral float-right" title="Solvers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Melayne Barker and Neal Kuperman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+# NGSolve parts to document
+
+## Python Level
+
+- Mesh
+  - Curve
+  - order
+  - dirichlet
+  - MaterialCF
+  - Refine
+  - SetPML
+    - pml.Radial
+  - meshes.py
+    - Make1DMesh
+    - MakeStructured2DMesh
+    - MakeQuadMesh
+    - MakeStructured3DMesh
+      - AddSurfEls
+    - MakeHexMesh
+    - MakePrismMesh
+    - MakeStructuredSurfaceMesh
+- fes
+  - types
+    - H1
+    - HDiv
+    - VectorH1
+    - HCurl
+    - HDivDiv
+    - L2
+    - FacetFESpace
+    - FESpace
+      - h1ho
+  - TrialFunction
+  - TestFunction
+  - TnT
+  - ndof
+  - FreeDofs
+  - fes1*fes2
+  - nograds
+  - order
+- LinearForm
+  - assemble
+- BilinearForm
+  - assemble
+  - AssembleLinearization
+  - mat
+    - Inverse
+    - data
+    - mat*vec
+  - Energy
+  - symmetric
+  - Apply
+  - condense
+  - elementboundary
+  - harmonic_extension
+  - harmonic_extension_trans
+  - inner_solve
+- GridFunction
+  - vec
+    - data
+    - CreateVector
+  - autoupdate
+  - Set
+  - definedon
+  - components
+  - Deriv
+  - Compile
+  - Other
+    - bnd
+- CoefficientFunction
+  - specialcf.normal
+  - specialcf.mesh_size
+- Grad / grad
+- div
+- curl
+- Id
+- trans
+- Trace
+- Parameter
+- *dx or *ds
+  - element_boundary
+  - skeleton
+- Variation
+- InnerProduct
+  - Compile
+- Integrate
+- Norm
+- tang
+- Solvers
+- SolveBVP
+- BVP
+- CGSolver
+- SolveM
+- SuperLU
+- krylovspace.py
+  - LinearSolver
+    - Solve
+    - Height
+    - Width
+    - CreateVector
+    - IsComplex
+    - Mult
+    - Update
+    - CheckResidual
+  - CG calls CGSolver
+    - errors
+    - _SolveImpl
+  - QMR calls QMRSolver
+    - _SolveImpl
+  - TFQMR calls TFQMRSolver
+    - _SolveImpl
+  - MinRes calls MinResSolver
+    - _SolveImpl
+  - RichardsonSolver
+    - _SolveImpl
+  - PreconditionedRichardson
+    - never calls the solver?
+  - GMRes calls GMResSolver
+    - _SolveImpl
+    - arnoldi
+    - givens_rotation
+    - apply_givens_rotation
+    - calcSolution
+  - BramblePasciakCG
+    - update_plot
+- nonlinearsolvers.py
+  - Newton calls NewtonSolver
+    - Solve
+    - SetDirichlet
+    - _UpdateInverse
+  - NewtonMinimization
+- solve_implementation.py
+  - uses .nonlinearsolvers and .krylovspace
+  - Dirichlet
+  - Application
+    - Solve
+  - NonLinearApplication
+    - Solve
+  - LinearApplication
+    - Assemble
+    - Solve
+  - Equation
+    - Solve
+  - _create_lin_appl
+  - Solve wrapper
+- Preconditioner
+  - type
+  - flags
+  - bf
+  - inverse
+  - preconditioners.py
+    - ngsolve.comp
+    - MultiGridPreconditioner
+    - LocalPreconditioner
+    - HCurlAMG
+    - H1AMG
+    - BDDCPreconditioner
+- TaskManager
+- IfPos
+- Eigenvalues.py
+  - Orthogonalize
+  - PINVIT1
+  - PINVIT
+  - LOBPCG
+  - Arnoldi
+  - SOAR
+  - TOAR
+- TensorProductTools.py
+  - AddEdgeEls
+  - SegMesh
+  - MakeHexagonalMesh2D
+  - MakeTensorProductMesh
+  - AddSurfElements
+  - MakeMesh2D
+  - MakeMesh3D
+  - AddSurfElements1D
+  - AddSurfElements2D
+- timestepping.py
+  - ImplicitEuler
+    - Integrate
+    - Step
+  - Newmark
+    - Integrate
+    - Step
+  - CrankNicolson
+    - Integrate
+    - Step
+- utils.py
+  - Laplace
+  - Mass
+  - Source
+  - Neumann
+  - VectorFacet
+  - grad
+  - Grad
+  - curl
+  - div
+  - ConstantCF
+  - DomainConstantCF
+  - Deviator
+  - PyId
+  - PyTrace
+  - PyDet
+  - PyCross
+  - PyCof
+  - PyInv
+  - PySym
+  - PySkew
+  - OuterProduct
+  - Normalize
+  - printonce
+  - dt
+
+- GUI
+  - Draw
+    - mesh
+    - name
+    - autoscale
+    - sd
+  - Redraw
+  - SetVisualization
+    - min
+    - max
+    - deformation
+  - deformation
+  - blocking
+  - input
+  - internal.py
+    - TclVariables
+    - VideoStart
+    - VideoAddFrame
+    - VideoFinalize
+    - SnapShot
+    - Move
+    - Rotate
+    - Zoom
+    - Center
+  - webgui.py
+    - updatePMinMax
+    - getMinMax
+    - _make_trig
+    - _make_quad
+    - get_intrules
+    - GetData
+    - GetNodalP1Data
+    - BuildRenderData
+    - AddFieldLines
+    - FieldLines
+
+- Netgen
+  - unit_square
+    - GenerateMesh
+  - geom2d
+    - unit_square
+    - SplineGeometry
+    - AddPoint
+    - Append
+    - AppendPoint
+    - GenerateMesh
+    - AddRectangle
+    - AddCircle
+    - bcs
+    - r
+    - maxh
+    - SetMaterial
+  - OCC
+    - MakeGeometry
+    - shape - shape
+    - Box
+      - faces
+      - points (corners?)
+      - solids
+    - Cylinder
+      - points
+      - solids
+    - Glue
+    - GenerateMesh
+    - csg
+      - unit_cube
+        - GenerateMesh
+
+- ngsglobals.msg_level
+
+- pickle
+  - Pickler
+  - dump
+  - Unpickler
+
+## C++ Level
+
+looking at netgen/include
